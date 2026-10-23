@@ -18,6 +18,11 @@ import {
   EDITOR_PASTE_IMAGE_EVENT,
 } from "./editor/bridge";
 import type { EditorCommand } from "./editor/format";
+import {
+  expandCommandArguments,
+  parentDirectory,
+  parseCommandArguments,
+} from "./lib/customExport";
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
 import { buildPageCss, normalizeExportOptions } from "./lib/exportOptions";
 import { frontMatterTitle } from "./lib/frontMatter";
@@ -41,6 +46,7 @@ import {
   openFolder,
   pickImageFile,
   readDocument,
+  runExportCommand,
   saveDocument,
   saveHtmlFile,
   saveImageData,
@@ -344,12 +350,12 @@ export default function App() {
     void saveCurrent(true);
   }, [saveCurrent]);
 
-  const handleExportHtml = useCallback(
-    async (options?: ExportOptions): Promise<boolean> => {
+  const exportHtmlFile = useCallback(
+    async (options?: ExportOptions): Promise<FileMeta | null> => {
       const state = useAppStore.getState();
       if (!state.doc.content.trim()) {
         state.showToast(tNow("There is nothing to export yet."), "info");
-        return false;
+        return null;
       }
       const exportOptions = normalizeExportOptions(
         options ?? state.settings.exportOptions,
@@ -373,7 +379,7 @@ export default function App() {
           html,
         );
         if (!meta) {
-          return false;
+          return null;
         }
         useAppStore
           .getState()
@@ -381,13 +387,72 @@ export default function App() {
             tNow("Exported {name}", { name: fileName(meta.path) }),
             "success",
           );
+        return meta;
+      } catch (error) {
+        useAppStore.getState().showToast(errorMessage(error), "error");
+        return null;
+      }
+    },
+    [],
+  );
+
+  const handleExportHtml = useCallback(
+    async (options?: ExportOptions): Promise<boolean> =>
+      Boolean(await exportHtmlFile(options)),
+    [exportHtmlFile],
+  );
+
+  const handleCustomExport = useCallback(
+    async (options?: ExportOptions): Promise<boolean> => {
+      const state = useAppStore.getState();
+      const program = state.settings.customExportProgram.trim();
+      if (!program) {
+        state.showToast(
+          tNow("Configure a custom export command in Preferences first."),
+          "info",
+        );
+        return false;
+      }
+      const args = parseCommandArguments(state.settings.customExportArgs);
+      const meta = await exportHtmlFile(options);
+      if (!meta) {
+        return false;
+      }
+      const title =
+        frontMatterTitle(state.doc.content) ??
+        (state.doc.name.replace(/\.[^.\\/]+$/, "") || tNow("Untitled"));
+      const expanded = expandCommandArguments(args, {
+        input: meta.path,
+        document: state.doc.path ?? "",
+        title,
+      });
+      try {
+        const code = await runExportCommand(
+          program,
+          expanded,
+          parentDirectory(meta.path),
+        );
+        if (code !== 0) {
+          useAppStore
+            .getState()
+            .showToast(
+              tNow("Custom export command exited with code {code}.", {
+                code,
+              }),
+              "error",
+            );
+          return false;
+        }
+        useAppStore
+          .getState()
+          .showToast(tNow("Custom export completed."), "success");
         return true;
       } catch (error) {
         useAppStore.getState().showToast(errorMessage(error), "error");
         return false;
       }
     },
-    [],
+    [exportHtmlFile],
   );
 
   const handleOpenExport = useCallback(() => {
@@ -1195,6 +1260,7 @@ export default function App() {
       insertImagePath: handleInsertImagePath,
       pasteImage: handlePasteImage,
       exportHtml: handleExportHtml,
+      customExport: handleCustomExport,
       openExport: handleOpenExport,
       closeExport: () => setExportOpen(false),
       copyDocument: handleCopyDocument,
@@ -1218,6 +1284,7 @@ export default function App() {
     handleInsertImagePath,
     handlePasteImage,
     handleExportHtml,
+    handleCustomExport,
     handleOpenExport,
     handleCopyDocument,
     handlePrint,
@@ -1327,6 +1394,7 @@ export default function App() {
         hasContent={Boolean(doc.content.trim())}
         onClose={() => setExportOpen(false)}
         onExport={handleExportHtml}
+        onCustomExport={handleCustomExport}
         onPrint={handlePrint}
       />
       {draftToRecover ? (

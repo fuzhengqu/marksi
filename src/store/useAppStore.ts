@@ -110,6 +110,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   emojiAutocomplete: true,
   strictMode: true,
   exportOptions: { ...DEFAULT_EXPORT_OPTIONS },
+  customExportProgram: "",
+  customExportArgs: "",
 };
 
 const emptyDocument: DocumentState = {
@@ -128,6 +130,10 @@ const emptyDocument: DocumentState = {
 
 function pathKey(path: string): string {
   return path.replace(/^\\\\\?\\/, "").replace(/\//g, "\\").toLowerCase();
+}
+
+function persistedString(value: unknown, maxLength: number): string {
+  return typeof value === "string" ? value.slice(0, maxLength) : "";
 }
 
 function recentEntry(path: string): RecentFile {
@@ -346,6 +352,14 @@ export const useAppStore = create<AppStore>()(
             ...(saved.settings ?? {}),
             exportOptions: normalizeExportOptions(
               saved.settings?.exportOptions,
+            ),
+            customExportProgram: persistedString(
+              saved.settings?.customExportProgram,
+              1024,
+            ),
+            customExportArgs: persistedString(
+              saved.settings?.customExportArgs,
+              32_768,
             ),
           },
         };

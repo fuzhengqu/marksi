@@ -353,7 +353,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.05"), "About should show version 0.05", state);
+    assert(state.version?.includes("0.06"), "About should show version 0.06", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -682,7 +682,8 @@ async function main() {
       );
       assert(
         initial.buttons.includes("导出 HTML") &&
-          initial.buttons.includes("打印 / PDF"),
+          initial.buttons.includes("打印 / PDF") &&
+          initial.buttons.includes("自定义导出"),
         "export actions are missing",
         initial,
       );
@@ -807,6 +808,89 @@ async function main() {
         delete window.__MARKSI_EXPORT_CAPTURE__;
       })()`).catch(() => {});
       await rm(exportPath, { force: true });
+      await resetBase();
+    }
+  });
+
+  await test("custom export runs the configured command in the export folder", async () => {
+    await resetBase();
+    const exportPath = resolve(fixtureDir, "custom-export.html");
+    const markerPath = resolve(fixtureDir, "custom-command-marker.txt");
+    const source = "# Custom export\n\nBody";
+    const program = process.platform === "win32" ? "cmd" : "sh";
+    const args =
+      process.platform === "win32"
+        ? "/C\necho {input}>custom-command-marker.txt"
+        : "-c\nprintf '%s' \"{input}\" > custom-command-marker.txt";
+    try {
+      await evaluate(
+        `window.__MARKSI_DEV__.setContent(${JSON.stringify(source)})`,
+      );
+      await evaluate(
+        `window.__MARKSI_DEV__.setSettings(${JSON.stringify({
+          customExportProgram: program,
+          customExportArgs: args,
+        })})`,
+      );
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        window.__MARKSI_EXPORT_CAPTURE__ = null;
+        platform.setSaveDialogForTests(async (options) => {
+          window.__MARKSI_EXPORT_CAPTURE__ = options;
+          return ${JSON.stringify(exportPath)};
+        });
+      })()`);
+      await evaluate("window.__MARKSI_DEV__.openExport()");
+      await waitFor('document.querySelector(".export-dialog")');
+      const action = await evaluate(`(() => {
+        const button = Array.from(document.querySelectorAll(".export-actions button"))
+          .find((node) => node.textContent?.includes("自定义导出"));
+        return { exists: Boolean(button), disabled: button?.disabled };
+      })()`);
+      assert(action.exists, "custom export action is missing", action);
+      assert(!action.disabled, "custom export action should be enabled", action);
+
+      const clicked = await evaluate(`(() => {
+        const button = Array.from(document.querySelectorAll(".export-actions button"))
+          .find((node) => node.textContent?.includes("自定义导出"));
+        button?.click();
+        return Boolean(button);
+      })()`);
+      assert(clicked, "custom export button is missing");
+      await waitFor('!document.querySelector(".export-dialog")', 20_000);
+
+      const state = await evaluate(`({
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        toast: document.querySelector(".toast")?.textContent?.trim() ?? null,
+        capture: window.__MARKSI_EXPORT_CAPTURE__
+      })`);
+      assert(state.content === source, "custom export must not rewrite the source", state);
+      assert(
+        state.capture?.defaultPath?.endsWith(".html"),
+        "custom export should still use the HTML save dialog",
+        state.capture,
+      );
+      assert(
+        state.toast?.includes("自定义导出完成"),
+        "custom export success toast is missing",
+        state,
+      );
+      const html = await readFile(exportPath, "utf8");
+      assert(html.includes("# Custom export") || html.includes("Custom export"), "custom export HTML missing", html.slice(0, 400));
+      const marker = await readFile(markerPath, "utf8");
+      assert(
+        marker.includes(exportPath),
+        "custom command did not run in the export folder with {input}",
+        marker,
+      );
+    } finally {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setSaveDialogForTests(null);
+        delete window.__MARKSI_EXPORT_CAPTURE__;
+      })()`).catch(() => {});
+      await rm(exportPath, { force: true });
+      await rm(markerPath, { force: true });
       await resetBase();
     }
   });

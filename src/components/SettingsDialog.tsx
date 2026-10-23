@@ -6,6 +6,7 @@ import {
   RotateCcw,
   Save,
   Settings,
+  Terminal,
   Type,
   X,
 } from "lucide-react";
@@ -378,6 +379,53 @@ export function SettingsDialog() {
             <p className="settings-note">
               {t(
                 "Unsaved drafts are always kept locally for crash recovery. MarkSI never sends document content anywhere.",
+              )}
+            </p>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-heading">
+              <Terminal size={15} strokeWidth={1.8} />
+              <span>{t("Custom export")}</span>
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Program")}</span>
+                <small>{t("Executable to run after HTML export.")}</small>
+              </div>
+              <input
+                className="settings-text"
+                type="text"
+                value={settings.customExportProgram}
+                placeholder="pandoc"
+                maxLength={1024}
+                spellCheck={false}
+                onChange={(event) =>
+                  update("customExportProgram", event.target.value)
+                }
+                aria-label={t("Program")}
+              />
+            </div>
+            <div className="settings-row settings-row-stacked">
+              <div className="settings-copy">
+                <span>{t("Arguments")}</span>
+                <small>{t("One argument per line.")}</small>
+              </div>
+              <textarea
+                className="settings-textarea"
+                value={settings.customExportArgs}
+                placeholder={"{input}\n-o\n{input}.pdf"}
+                maxLength={32_768}
+                spellCheck={false}
+                onChange={(event) =>
+                  update("customExportArgs", event.target.value)
+                }
+                aria-label={t("Arguments")}
+              />
+            </div>
+            <p className="settings-note">
+              {t(
+                "Placeholders: {input}, {document}, {title}. The HTML file is written first; the command runs without a shell in the exported file's folder, and a non-zero exit code is reported.",
               )}
             </p>
           </section>

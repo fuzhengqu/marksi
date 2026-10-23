@@ -337,6 +337,24 @@ export async function saveHtmlFile(
   });
 }
 
+export async function runExportCommand(
+  program: string,
+  args: string[],
+  workingDirectory: string | null,
+): Promise<number> {
+  if (!isTauri()) {
+    throw new Error(
+      "Custom export commands are only available in the desktop app.",
+    );
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<number>("run_export_command", {
+    program,
+    args,
+    workingDirectory,
+  });
+}
+
 export async function getAppVersion(): Promise<string> {
   if (!isTauri()) {
     return APP_SEMVER;

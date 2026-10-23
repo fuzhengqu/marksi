@@ -171,6 +171,23 @@ const ZH: Record<string, string> = {
   "Exporting…": "正在导出…",
   "Export HTML": "导出 HTML",
   "Close export dialog": "关闭导出对话框",
+  "Custom export": "自定义导出",
+  Program: "程序",
+  "Executable to run after HTML export.":
+    "导出 HTML 后运行的可执行文件。",
+  Arguments: "参数",
+  "One argument per line.": "每行一个参数。",
+  "Placeholders: {input}, {document}, {title}. The HTML file is written first; the command runs without a shell in the exported file's folder, and a non-zero exit code is reported.":
+    "占位符：{input}、{document}、{title}。会先写入 HTML 文件；命令不经过 shell，在导出文件所在文件夹中运行，非零退出代码会被报告。",
+  "Configure a custom export command in Preferences first.":
+    "请先在偏好设置中配置自定义导出命令。",
+  "Configure a custom export command in Preferences to enable this action.":
+    "在偏好设置中配置自定义导出命令后可启用此操作。",
+  "Custom export completed.": "自定义导出完成。",
+  "Custom export command exited with code {code}.":
+    "自定义导出命令退出，代码 {code}。",
+  "Custom export commands are only available in the desktop app.":
+    "自定义导出命令仅适用于桌面应用。",
   "Preferences…": "偏好设置…",
   "Quit MarkSI": "退出 MarkSI",
   "About MarkSI": "关于 MarkSI",

@@ -179,6 +179,16 @@ temporary style element and removes it after `afterprint` or a timeout. Chromium
 and WebView2 honor paper size, orientation, and margins; margin-box headers and
 footers remain engine-dependent, and the native print dialog can override them.
 
+Custom export is opt-in and split across the boundary. `src/lib/customExport.ts`
+parses non-empty argument lines and expands `{input}`, `{document}`, and
+`{title}` without ever joining them into a shell string. `platform.ts` invokes
+the Rust `run_export_command`, which validates program/argument lengths, runs
+the executable directly with an argument vector, sets the working directory to
+the exported file's folder, discards child output, and enforces a 60-second
+timeout. A non-zero exit code is returned to the UI as an error. The user
+configures the program and arguments in Preferences; no command is bundled or
+run implicitly.
+
 ## Interface localization
 
 `src/i18n.ts` owns the English source labels, the Simplified Chinese
@@ -300,6 +310,8 @@ success toasts.
   editor transactions; it is covered by unit tests.
 - `src/lib/frontMatter.ts` owns front-matter extraction and metadata parsing; it
   is covered by unit tests.
+- `src/lib/customExport.ts` owns argument-line parsing, placeholder expansion,
+  and export-folder lookup; it is covered by unit tests.
 - `src/lib/saveName.ts` owns first-heading extraction and filename
   sanitization for new-document save dialogs; it is covered by unit tests.
 - `src/lib/drafts.ts` owns recovery-draft serialization and validation.
@@ -328,12 +340,14 @@ success toasts.
 - Binary/encoding handling lives in Rust, not in the WebView.
 - Image imports are limited to supported formats and 25 MB, and asset folder
   settings reject absolute and parent-traversal paths.
+- Custom export commands are user-configured executables launched without a
+  shell, with bounded arguments and a timeout. No command is bundled.
 - No activation, account, or telemetry subsystem exists.
 
 ## Current surface (M4/M5)
 
 Document commands: `read_document`, `write_document`, `write_export`,
-`list_directory`, and `app_version`. Workspace commands:
+`list_directory`, `app_version`, and `run_export_command`. Workspace commands:
 `list_workspace_files`, `search_workspace`, and `file_modified_ms`. Image
 commands: `import_image_asset`, `save_image_data`, and `read_image_data_url`.
 
@@ -357,7 +371,6 @@ export. The document text is never round-tripped through rendered HTML.
 - Native file watcher with debounce, replacing the current mtime poll when a
   platform watcher is available.
 - SQLite session/history store for multi-window restore and local snapshots.
-- Custom export command with explicit configuration and no shell interpolation.
 - Pandoc adapter (Pandoc is invoked externally, never bundled).
 - PlantUML lazy rendering and a worker for unusually heavy diagrams.
 - Remote image caching and optional uploader integrations.

@@ -149,7 +149,7 @@ the image context menu and are preserved in HTML export and print.
 | Copy as Markdown / HTML / plain text | done | M4 |
 | Pandoc import/export | todo | M5 |
 | Export profiles | done | M5 |
-| Custom export command | todo | M5 |
+| Custom export command | done | M5 |
 | Front matter export options | done | M5 |
 | Page setup / headers / footers | done | M5 |
 
@@ -161,6 +161,13 @@ orientation, margins, and optional header/footer margin boxes. Paper size and
 margins affect both exported HTML and the system print dialog; the operating
 system print dialog may add or override its own headers and footers, and CSS
 margin-box support varies by print engine.
+
+Custom export is opt-in. The user configures an executable and one argument per
+line in Preferences; after the HTML file is written, MarkSI expands `{input}`,
+`{document}`, and `{title}`, runs the executable directly without a shell in the
+export folder, and reports a non-zero exit code. Commands are limited to 64
+arguments, 8 KiB per argument, and a 60-second timeout. The executable is never
+bundled and nothing runs unless the user chooses the custom export action.
 
 ## Appearance and settings
 

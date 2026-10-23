@@ -234,6 +234,12 @@ ease-out; honor `prefers-reduced-motion`.
 - Export HTML writes a standalone file through the native save dialog. Print /
   PDF switches to reading view, injects the same `@page` rules, waits for
   Mermaid rendering, and opens the system print dialog.
+- Preferences can store a custom export executable and one argument per line.
+  When configured, the dialog shows a Custom export action. It saves the HTML
+  first, expands `{input}`, `{document}`, and `{title}` per argument, then runs
+  the executable directly in the export folder. There is no shell, output is
+  discarded, and a non-zero exit code is shown as an error toast. Without a
+  configured program the action is disabled and the dialog explains why.
 - The operating system print dialog may add or override headers and footers.
   CSS margin-box support varies by print engine; the exported HTML remains valid
   when a margin box is ignored.

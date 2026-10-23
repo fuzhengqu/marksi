@@ -2534,6 +2534,32 @@ body.is-resizing-image[data-resize-axis="height"] * {
   box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
+.settings-row-stacked {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.settings-textarea {
+  width: 100%;
+  min-height: 82px;
+  padding: 8px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.settings-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
 .settings-note code {
   padding: 0.08em 0.28em;
   border-radius: 3px;
@@ -2580,7 +2606,9 @@ body.is-resizing-image[data-resize-axis="height"] * {
 
 .export-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   margin-left: auto;
 }

@@ -5,6 +5,7 @@ import {
   LayoutTemplate,
   Printer,
   SlidersHorizontal,
+  Terminal,
   X,
 } from "lucide-react";
 import { useT } from "../i18n";
@@ -27,6 +28,7 @@ interface ExportDialogProps {
   hasContent: boolean;
   onClose: () => void;
   onExport: (options: ExportOptions) => Promise<boolean>;
+  onCustomExport: (options: ExportOptions) => Promise<boolean>;
   onPrint: (options: ExportOptions) => void;
 }
 
@@ -45,6 +47,7 @@ export function ExportDialog({
   hasContent,
   onClose,
   onExport,
+  onCustomExport,
   onPrint,
 }: ExportDialogProps) {
   const t = useT();
@@ -118,6 +121,18 @@ export function ExportDialog({
     }
   }
 
+  async function handleCustomExport(): Promise<void> {
+    commit();
+    setBusy(true);
+    try {
+      if (await onCustomExport(draft)) {
+        onClose();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function handlePrint(): void {
     commit();
     onPrint(draft);
@@ -125,6 +140,8 @@ export function ExportDialog({
   }
 
   const metadataDisabled = !draft.useFrontMatter;
+  const customExportAvailable =
+    settings.customExportProgram.trim().length > 0;
 
   return (
     <div className="modal-scrim" onMouseDown={() => !busy && onClose()}>
@@ -341,6 +358,13 @@ export function ExportDialog({
               {t("Add some content before exporting.")}
             </p>
           ) : null}
+          {!customExportAvailable ? (
+            <p className="settings-note">
+              {t(
+                "Configure a custom export command in Preferences to enable this action.",
+              )}
+            </p>
+          ) : null}
         </div>
 
         <footer className="settings-footer export-footer">
@@ -352,6 +376,21 @@ export function ExportDialog({
             {t("Cancel")}
           </button>
           <div className="export-actions">
+            <button
+              className="button"
+              onClick={() => void handleCustomExport()}
+              disabled={busy || !hasContent || !customExportAvailable}
+              title={
+                customExportAvailable
+                  ? undefined
+                  : t(
+                      "Configure a custom export command in Preferences first.",
+                    )
+              }
+            >
+              <Terminal size={14} strokeWidth={1.8} />
+              {t("Custom export")}
+            </button>
             <button
               className="button"
               onClick={handlePrint}

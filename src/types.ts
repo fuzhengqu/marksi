@@ -130,6 +130,8 @@ export interface AppSettings {
   emojiAutocomplete: boolean;
   strictMode: boolean;
   exportOptions: ExportOptions;
+  customExportProgram: string;
+  customExportArgs: string;
 }
 
 export interface DocumentDraft {
