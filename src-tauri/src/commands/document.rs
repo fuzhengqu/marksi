@@ -242,7 +242,7 @@ fn normalize_line_endings(content: &str) -> (String, String) {
     (normalize_newlines(content), line_ending.to_string())
 }
 
-fn write_atomic(target: &Path, bytes: &[u8]) -> Result<(), String> {
+pub(crate) fn write_atomic(target: &Path, bytes: &[u8]) -> Result<(), String> {
     let parent = target
         .parent()
         .ok_or_else(|| format!("{} has no parent directory", target.display()))?;

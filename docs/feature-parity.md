@@ -94,13 +94,19 @@ that design decisions do not paint us into a corner.
 
 | Feature | Status | Milestone |
 |---|---|---|
-| Insert local image | todo | M4 |
-| Drag/drop image | todo | M4 |
-| Paste image from clipboard | todo | M4 |
-| Copy/move image to asset folder | todo | M4 |
-| Relative path / root URL | todo | M4 |
-| Image zoom and context menu | todo | M4 |
-| Remote image cache | todo | M4 |
+| Insert local image | done | M4 |
+| Drag/drop image | done | M4 |
+| Paste image from clipboard | done | M4 |
+| Copy image to document-relative asset folder | done | M4 |
+| Configurable asset folder | done | M4 |
+| Relative asset paths | done | M4 |
+| Remote image placeholders in preview | done | M4 |
+| Missing-image placeholders | done | M4 |
+| Image lightbox and zoom | done | M4 |
+| Image context menu | todo | M5 |
+| Image resize / dimensions | todo | M5 |
+| Remote image cache | todo | M5 |
+| Root URL / uploader path mode | todo | M5 |
 | Uploader integration (PicGo/PicList/custom) | todo | M5 |
 
 ## Export and import

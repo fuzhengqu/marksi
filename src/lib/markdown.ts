@@ -1,5 +1,6 @@
 import MarkdownIt from "markdown-it";
 import DOMPurify from "dompurify";
+import { classifyImageSource } from "./images";
 import hljs from "highlight.js/lib/core";
 import bash from "highlight.js/lib/languages/bash";
 import c from "highlight.js/lib/languages/c";
@@ -121,14 +122,59 @@ md.renderer.rules.fence = (tokens, index) => {
   ].join("");
 };
 
-md.renderer.rules.image = (tokens, index) => {
-  const token = tokens[index];
-  const alt = String(token.content.trim() || token.attrGet("src") || "Image");
+interface MarkdownEnvironment {
+  imageMode?: "preview" | "export";
+}
+
+function imagePlaceholder(alt: string, label: string, detail?: string): string {
   return [
-    `<span class="image-placeholder" role="img" aria-label="${escapeHtml(alt)}">`,
-    `<span class="image-placeholder-mark" aria-hidden="true">IMG</span>`,
-    `<span>${escapeHtml(alt)}</span>`,
-    "</span>",
+    `<span class="image-placeholder" role="img" aria-label="${escapeHtml(alt)}"`,
+    detail ? ` title="${escapeHtml(detail)}"` : "",
+    `>`,
+    `<span class="image-placeholder-mark" aria-hidden="true">${escapeHtml(label)}</span>`,
+    `<span class="image-placeholder-copy"><span>${escapeHtml(alt)}</span>`,
+    detail
+      ? `<small class="image-placeholder-url">${escapeHtml(detail)}</small>`
+      : "",
+    "</span></span>",
+  ].join("");
+}
+
+md.renderer.rules.image = (tokens, index, _options, environment) => {
+  const token = tokens[index];
+  const raw = String(token.attrGet("src") ?? "").trim();
+  const alt = String(token.content.trim() || "Image");
+  const title = token.attrGet("title");
+  const source = classifyImageSource(raw);
+  const mode = (environment as MarkdownEnvironment | undefined)?.imageMode;
+
+  if (source.kind === "unsafe" || !raw) {
+    return imagePlaceholder(alt, "IMG", raw || "No image source");
+  }
+
+  if (mode === "export") {
+    const titleAttribute = title
+      ? ` title="${escapeHtml(String(title))}"`
+      : "";
+    return `<img src="${escapeHtml(raw)}" alt="${escapeHtml(alt)}"${titleAttribute} loading="lazy" />`;
+  }
+
+  if (source.kind === "remote") {
+    return imagePlaceholder(alt, "REMOTE", raw);
+  }
+
+  if (source.kind === "data") {
+    return [
+      `<img src="${escapeHtml(raw)}" alt="${escapeHtml(alt)}"`,
+      title ? ` title="${escapeHtml(String(title))}"` : "",
+      ` class="markdown-image" data-marksi-image="true" loading="lazy" />`,
+    ].join("");
+  }
+
+  return [
+    `<img data-marksi-src="${escapeHtml(raw)}" alt="${escapeHtml(alt)}"`,
+    title ? ` title="${escapeHtml(String(title))}"` : "",
+    ` class="markdown-image is-loading" loading="lazy" />`,
   ].join("");
 };
 
@@ -186,11 +232,24 @@ function wrapTables(root: Document): void {
   });
 }
 
-export function renderMarkdown(source: string): string {
-  const rendered = md.render(source);
+export function renderMarkdown(
+  source: string,
+  options: { imageMode?: "preview" | "export" } = {},
+): string {
+  const rendered = md.render(source, {
+    imageMode: options.imageMode ?? "preview",
+  });
   const sanitized = DOMPurify.sanitize(rendered, {
     USE_PROFILES: { html: true },
-    ADD_ATTR: ["data-source-line", "data-language", "target", "rel"],
+    ADD_ATTR: [
+      "data-source-line",
+      "data-language",
+      "data-marksi-src",
+      "data-marksi-image",
+      "target",
+      "rel",
+      "loading",
+    ],
     FORBID_TAGS: ["script", "style", "iframe", "object", "embed", "form"],
   });
   const document = new DOMParser().parseFromString(sanitized, "text/html");

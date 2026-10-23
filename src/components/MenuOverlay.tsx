@@ -8,6 +8,7 @@ import {
   FilePlus2,
   FolderOpen,
   FolderX,
+  Image as ImageIcon,
   Info,
   Italic,
   Link2,
@@ -37,6 +38,7 @@ interface MenuOverlayProps {
   onPrint: () => void;
   onToggleView: () => void;
   onFormat: (command: EditorCommand) => void;
+  onInsertImage: () => void;
   onCloseWorkspace: () => void;
   onQuickOpen: () => void;
   onSearchWorkspace: () => void;
@@ -53,6 +55,7 @@ export function MenuOverlay({
   onPrint,
   onToggleView,
   onFormat,
+  onInsertImage,
   onCloseWorkspace,
   onQuickOpen,
   onSearchWorkspace,
@@ -177,6 +180,12 @@ export function MenuOverlay({
           label="Link"
           shortcut="Ctrl K"
           onClick={() => run(() => onFormat("link"))}
+        />
+        <MenuItem
+          icon={<ImageIcon size={16} strokeWidth={1.8} />}
+          label="Image…"
+          shortcut="Ctrl ⇧ I"
+          onClick={() => run(onInsertImage)}
         />
 
         <div className="menu-section-label">View</div>

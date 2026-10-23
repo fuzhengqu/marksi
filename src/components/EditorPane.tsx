@@ -4,7 +4,9 @@ import { EditorView } from "@codemirror/view";
 import { openSearchPanel } from "@codemirror/search";
 import {
   EDITOR_COMMAND_EVENT,
+  EDITOR_INSERT_EVENT,
   EDITOR_SEARCH_EVENT,
+  type EditorInsertRequest,
 } from "../editor/bridge";
 import { runEditorCommand, type EditorCommand } from "../editor/format";
 import {
@@ -145,11 +147,53 @@ export function EditorPane({
       }
       focusSearchField(view, Boolean((event as CustomEvent<boolean>).detail));
     };
+    const onInsert = (event: Event) => {
+      const view = viewRef.current;
+      const request = (event as CustomEvent<EditorInsertRequest>).detail;
+      if (!view || !request?.text) {
+        return;
+      }
+
+      let text = request.text;
+      if (request.block) {
+        const { from, to } = view.state.selection.main;
+        const before = view.state.sliceDoc(Math.max(0, from - 2), from);
+        const after = view.state.sliceDoc(
+          to,
+          Math.min(view.state.doc.length, to + 2),
+        );
+        const prefix =
+          from === 0
+            ? ""
+            : before.endsWith("\n\n")
+              ? ""
+              : before.endsWith("\n")
+                ? "\n"
+                : "\n\n";
+        const suffix =
+          to >= view.state.doc.length
+            ? ""
+            : after.startsWith("\n\n")
+              ? ""
+              : after.startsWith("\n")
+                ? "\n"
+                : "\n\n";
+        text = `${prefix}${text}${suffix}`;
+      }
+
+      view.dispatch({
+        ...view.state.replaceSelection(text),
+        scrollIntoView: true,
+      });
+      view.focus();
+    };
     window.addEventListener(EDITOR_COMMAND_EVENT, onCommand);
     window.addEventListener(EDITOR_SEARCH_EVENT, onSearch);
+    window.addEventListener(EDITOR_INSERT_EVENT, onInsert);
     return () => {
       window.removeEventListener(EDITOR_COMMAND_EVENT, onCommand);
       window.removeEventListener(EDITOR_SEARCH_EVENT, onSearch);
+      window.removeEventListener(EDITOR_INSERT_EVENT, onInsert);
     };
   }, []);
 

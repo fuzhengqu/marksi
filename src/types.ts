@@ -82,12 +82,20 @@ export interface WorkspaceSearchMatch {
   preview: string;
 }
 
+export interface ImageAsset {
+  path: string;
+  relativePath: string;
+  name: string;
+  size: number;
+}
+
 export interface AppSettings {
   editorFontSize: number;
   contentWidth: number;
   spellcheck: boolean;
   autoSave: boolean;
   autoSaveDelayMs: number;
+  imageAssetFolder: string;
 }
 
 export interface DocumentDraft {

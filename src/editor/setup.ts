@@ -29,6 +29,7 @@ import {
   placeholder,
   rectangularSelection,
 } from "@codemirror/view";
+import { EDITOR_PASTE_IMAGE_EVENT } from "./bridge";
 import { markdownHighlightStyle, markEditorTheme } from "./theme";
 import { formattingKeymap } from "./format";
 
@@ -95,6 +96,27 @@ export function createEditorExtensions(callbacks: EditorCallbacks): Extension[] 
     EditorView.domEventHandlers({
       focus: () => {
         callbacks.onFocus?.();
+      },
+      paste: (event) => {
+        const items = event.clipboardData?.items;
+        if (!items) {
+          return false;
+        }
+        for (const item of Array.from(items)) {
+          if (item.kind !== "file" || !item.type.startsWith("image/")) {
+            continue;
+          }
+          const file = item.getAsFile();
+          if (!file) {
+            continue;
+          }
+          event.preventDefault();
+          window.dispatchEvent(
+            new CustomEvent<File>(EDITOR_PASTE_IMAGE_EVENT, { detail: file }),
+          );
+          return true;
+        }
+        return false;
       },
     }),
   ];

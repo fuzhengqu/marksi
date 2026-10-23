@@ -94,6 +94,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   spellcheck: true,
   autoSave: false,
   autoSaveDelayMs: 1_500,
+  imageAssetFolder: "assets",
 };
 
 const emptyDocument: DocumentState = {
@@ -305,6 +306,16 @@ export const useAppStore = create<AppStore>()(
         sidebarOpen: state.sidebarOpen,
         settings: state.settings,
       }),
+      merge: (persisted, current) => {
+        const saved = (persisted ?? {}) as Partial<
+          Pick<AppStore, "recent" | "theme" | "sidebarOpen" | "settings">
+        >;
+        return {
+          ...current,
+          ...saved,
+          settings: { ...DEFAULT_SETTINGS, ...(saved.settings ?? {}) },
+        };
+      },
     },
   ),
 );

@@ -14,6 +14,9 @@ pub fn run() {
             commands::workspace::list_workspace_files,
             commands::workspace::search_workspace,
             commands::workspace::file_modified_ms,
+            commands::image::import_image_asset,
+            commands::image::save_image_data,
+            commands::image::read_image_data_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running MarkSI");

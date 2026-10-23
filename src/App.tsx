@@ -9,22 +9,42 @@ import { StatusBar } from "./components/StatusBar";
 import { TitleBar } from "./components/TitleBar";
 import { Toast } from "./components/Toast";
 import { Welcome } from "./components/Welcome";
-import { dispatchEditorCommand, dispatchEditorSearch } from "./editor/bridge";
+import {
+  dispatchEditorCommand,
+  dispatchEditorInsert,
+  dispatchEditorSearch,
+  EDITOR_PASTE_IMAGE_EVENT,
+} from "./editor/bridge";
 import type { EditorCommand } from "./editor/format";
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
 import {
+  altTextFromFileName,
+  buildImageMarkdown,
+  fileToBase64,
+  isImagePath,
+  pastedImageName,
+} from "./lib/images";
+import {
   fileName,
   getFileModifiedMs,
+  importImageAsset,
   isTauri,
   listDirectory,
   openDocument,
   openFolder,
+  pickImageFile,
   readDocument,
   saveDocument,
   saveHtmlFile,
+  saveImageData,
 } from "./lib/platform";
 import { useAppStore } from "./store/useAppStore";
-import type { AppSettings, DocumentDraft } from "./types";
+import type {
+  AppSettings,
+  DocumentDraft,
+  FileMeta,
+  ImageAsset,
+} from "./types";
 
 const PreviewPane = lazy(() =>
   import("./components/PreviewPane").then((module) => ({
@@ -58,6 +78,7 @@ export default function App() {
   const viewMode = useAppStore((state) => state.viewMode);
   const gotoLine = useAppStore((state) => state.gotoLine);
   const settings = useAppStore((state) => state.settings);
+  const workspacePath = useAppStore((state) => state.workspace?.path ?? null);
   const [draftToRecover, setDraftToRecover] =
     useState<DocumentDraft | null>(() => loadDraft());
   const savingRef = useRef(false);
@@ -192,14 +213,15 @@ export default function App() {
   }, []);
 
   const saveCurrent = useCallback(
-    async (saveAs: boolean, silent = false) => {
+    async (saveAs: boolean, silent = false): Promise<FileMeta | null> => {
       const state = useAppStore.getState();
       const current = state.doc;
       const originalPath = current.path;
       const content = current.content;
+      let meta: FileMeta | null = null;
       savingRef.current = true;
       try {
-        const meta = await saveDocument(
+        meta = await saveDocument(
           {
             path: current.path,
             name: current.name,
@@ -228,6 +250,7 @@ export default function App() {
       } finally {
         savingRef.current = false;
       }
+      return meta;
     },
     [],
   );
@@ -276,6 +299,127 @@ export default function App() {
     }
     window.requestAnimationFrame(() => dispatchEditorCommand(command));
   }, []);
+
+  const ensureImageTarget = useCallback(async (): Promise<{
+    path: string;
+    folder: string;
+  } | null> => {
+    let state = useAppStore.getState();
+    if (!state.doc.path) {
+      const saved = await saveCurrent(true, true);
+      if (!saved) {
+        useAppStore
+          .getState()
+          .showToast(
+            "Save the document before inserting a local image.",
+            "info",
+          );
+        return null;
+      }
+      state = useAppStore.getState();
+    }
+    if (!state.doc.path) {
+      return null;
+    }
+    return {
+      path: state.doc.path,
+      folder: state.settings.imageAssetFolder.trim() || "assets",
+    };
+  }, [saveCurrent]);
+
+  const insertImageAsset = useCallback((asset: ImageAsset) => {
+    const state = useAppStore.getState();
+    const markdown = buildImageMarkdown(
+      altTextFromFileName(asset.name),
+      asset.relativePath,
+    );
+    if (state.viewMode !== "source") {
+      state.setViewMode("source");
+    }
+    window.requestAnimationFrame(() => dispatchEditorInsert(markdown, true));
+    state.showToast(`Inserted image ${asset.name}`, "success");
+  }, []);
+
+  const handleInsertImage = useCallback(async () => {
+    if (!isTauri()) {
+      useAppStore
+        .getState()
+        .showToast("Local images are available in the desktop app.", "info");
+      return;
+    }
+    const target = await ensureImageTarget();
+    if (!target) {
+      return;
+    }
+    try {
+      const sourcePath = await pickImageFile();
+      if (!sourcePath) {
+        return;
+      }
+      const asset = await importImageAsset(
+        target.path,
+        sourcePath,
+        target.folder,
+      );
+      insertImageAsset(asset);
+    } catch (error) {
+      useAppStore.getState().showToast(errorMessage(error), "error");
+    }
+  }, [ensureImageTarget, insertImageAsset]);
+
+  const handleInsertImagePath = useCallback(
+    async (sourcePath: string) => {
+      if (!isTauri()) {
+        useAppStore
+          .getState()
+          .showToast("Local images are available in the desktop app.", "info");
+        return;
+      }
+      const target = await ensureImageTarget();
+      if (!target) {
+        return;
+      }
+      try {
+        const asset = await importImageAsset(
+          target.path,
+          sourcePath,
+          target.folder,
+        );
+        insertImageAsset(asset);
+      } catch (error) {
+        useAppStore.getState().showToast(errorMessage(error), "error");
+      }
+    },
+    [ensureImageTarget, insertImageAsset],
+  );
+
+  const handlePasteImage = useCallback(
+    async (file: File) => {
+      if (!isTauri()) {
+        useAppStore
+          .getState()
+          .showToast("Pasted images are available in the desktop app.", "info");
+        return;
+      }
+      const target = await ensureImageTarget();
+      if (!target) {
+        return;
+      }
+      try {
+        const dataBase64 = await fileToBase64(file);
+        const asset = await saveImageData(
+          target.path,
+          pastedImageName(file.type),
+          target.folder,
+          dataBase64,
+        );
+        insertImageAsset(asset);
+      } catch (error) {
+        useAppStore.getState().showToast(errorMessage(error), "error");
+      }
+    },
+    [ensureImageTarget, insertImageAsset],
+  );
 
   const handlePrint = useCallback(() => {
     const state = useAppStore.getState();
@@ -548,6 +692,17 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const handler = (event: Event) => {
+      const file = (event as CustomEvent<File>).detail;
+      if (file instanceof File) {
+        void handlePasteImage(file);
+      }
+    };
+    window.addEventListener(EDITOR_PASTE_IMAGE_EVENT, handler);
+    return () => window.removeEventListener(EDITOR_PASTE_IMAGE_EVENT, handler);
+  }, [handlePasteImage]);
+
+  useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       const mod = event.ctrlKey || event.metaKey;
       if (!mod) {
@@ -597,7 +752,10 @@ export default function App() {
         return;
       }
 
-      if (key === "s") {
+      if (key === "i" && event.shiftKey) {
+        event.preventDefault();
+        void handleInsertImage();
+      } else if (key === "s") {
         event.preventDefault();
         void saveCurrent(event.shiftKey);
       } else if (key === "o") {
@@ -632,7 +790,13 @@ export default function App() {
     };
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
-  }, [handleNew, handleOpen, handleOpenFolder, saveCurrent]);
+  }, [
+    handleInsertImage,
+    handleNew,
+    handleOpen,
+    handleOpenFolder,
+    saveCurrent,
+  ]);
 
   useEffect(() => {
     if (!isTauri()) {
@@ -648,6 +812,10 @@ export default function App() {
           }
           const path = event.payload.paths[0];
           if (!path) {
+            return;
+          }
+          if (isImagePath(path)) {
+            void handleInsertImagePath(path);
             return;
           }
           try {
@@ -672,7 +840,7 @@ export default function App() {
     return () => {
       unlisten?.();
     };
-  }, [handleOpenPath]);
+  }, [handleInsertImagePath, handleOpenPath]);
 
   const isEmpty = !doc.path && doc.content.trim().length === 0;
 
@@ -695,6 +863,9 @@ export default function App() {
       setViewMode: (mode: "source" | "preview") =>
         useAppStore.getState().setViewMode(mode),
       format: handleFormat,
+      insertImage: handleInsertImage,
+      insertImagePath: handleInsertImagePath,
+      pasteImage: handlePasteImage,
       exportHtml: handleExportHtml,
       print: handlePrint,
       openQuickOpen: () => useAppStore.getState().setQuickOpen(true),
@@ -712,6 +883,9 @@ export default function App() {
     handleCloseWorkspace,
     handleToggleView,
     handleFormat,
+    handleInsertImage,
+    handleInsertImagePath,
+    handlePasteImage,
     handleExportHtml,
     handlePrint,
   ]);
@@ -747,7 +921,12 @@ export default function App() {
                 </div>
               }
             >
-              <PreviewPane content={doc.content} gotoLine={gotoLine} />
+              <PreviewPane
+                content={doc.content}
+                documentPath={doc.path}
+                workspacePath={workspacePath}
+                gotoLine={gotoLine}
+              />
             </Suspense>
           ) : null}
           {isEmpty ? (
@@ -778,6 +957,7 @@ export default function App() {
         onPrint={handlePrint}
         onToggleView={handleToggleView}
         onFormat={handleFormat}
+        onInsertImage={handleInsertImage}
         onCloseWorkspace={handleCloseWorkspace}
         onQuickOpen={() => useAppStore.getState().setQuickOpen(true)}
         onSearchWorkspace={() => {

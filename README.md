@@ -7,12 +7,12 @@ designed around a calm, single-document writing surface: a slim title bar, a
 collapsible file/outline/search sidebar, a centered source editor, and a quiet
 status bar.
 
-> Status: MVP (M3). The desktop shell, source editor, file open/save,
+> Status: MVP (M4). The desktop shell, source editor, file open/save,
 > encoding-aware IO, workspace browser, outline, search, themes, rendered
-> preview, formatting commands, find/replace, HTML/PDF export, preferences,
-> quick open, workspace full-text search, autosave, crash recovery, and
-> external-change detection are implemented. See `docs/feature-parity.md` for
-> the roadmap.
+> preview, formatting commands, find/replace, HTML/PDF export, local image
+> assets, preferences, quick open, workspace full-text search, autosave, crash
+> recovery, and external-change detection are implemented. See
+> `docs/feature-parity.md` for the roadmap.
 
 ## Principles
 
@@ -82,10 +82,25 @@ M3 adds the workspace and reliability layer:
 - Workspace indexing, search, and modification-time queries run in Rust instead
   of scanning the WebView.
 
-Preview images render as labelled placeholders until local asset handling lands
-in M4. Raw HTML is escaped and inert, unsafe URLs are rejected, and remote images
-are never loaded implicitly. Draft recovery stores its snapshot in WebView
-`localStorage` and never transmits document content.
+M4 adds the local image workflow:
+
+- Insert an image from disk with `Ctrl+Shift+I` or the application menu. The
+  file is copied into a document-relative asset folder with a collision-safe
+  name.
+- Drag and drop image files onto the window, or paste an image from the
+  clipboard; both flows use the same asset pipeline.
+- Configure the asset folder under Preferences > Images. Absolute paths and
+  paths that traverse outside the document folder are rejected.
+- Preview local PNG, JPEG, GIF, WebP, BMP, SVG, AVIF, and ICO images up to 25 MB.
+  Rust reads the asset and supplies a data URL to the WebView.
+- Click a rendered image to open the lightbox. Zoom from 50% to 400% with the
+  toolbar, `+`, `-`, and `0`; `Esc` closes it.
+- Missing local images and remote images render as labelled placeholders in
+  preview. HTML export keeps relative asset paths and remote URLs.
+
+Raw HTML remains escaped and inert, unsafe URLs are rejected, and remote images
+are never fetched by the preview renderer. Draft recovery stores its snapshot in
+WebView `localStorage` and never transmits document content.
 
 ## Development
 

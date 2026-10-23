@@ -121,6 +121,11 @@ tr:nth-child(even) td { background: #faf9f7; }
   border-width: 0 1.5px 1.5px 0;
   transform: rotate(45deg);
 }
+.markdown-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
 .image-placeholder {
   display: inline-flex;
   align-items: center;
@@ -131,6 +136,16 @@ tr:nth-child(even) td { background: #faf9f7; }
   background: #f5f3ef;
   color: #74777b;
   font-size: 0.9em;
+}
+.image-placeholder-copy { display: inline-flex; flex-direction: column; gap: 1px; }
+.image-placeholder-url {
+  max-width: 46ch;
+  overflow: hidden;
+  color: #9a9c9e;
+  font-family: "Cascadia Code", monospace;
+  font-size: 0.72em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .image-placeholder-mark {
   padding: 1px 3px;
@@ -170,7 +185,7 @@ export function buildStandaloneHtml({
   content,
 }: ExportDocumentOptions): string {
   const safeTitle = escapeHtml(title.trim() || "Untitled");
-  const body = renderMarkdown(content);
+  const body = renderMarkdown(content, { imageMode: "export" });
   return `<!doctype html>
 <html lang="en">
 <head>

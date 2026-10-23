@@ -1,4 +1,4 @@
-# MarkSI UI specification (M3)
+# MarkSI UI specification (M4)
 
 ## Layout
 
@@ -76,6 +76,7 @@ ease-out; honor `prefers-reduced-motion`.
 - `Ctrl+Shift+B`: toggle the sidebar.
 - `Ctrl+/`: toggle source and rendered preview.
 - `Ctrl+B` / `Ctrl+I` / `Ctrl+K`: bold / italic / link.
+- `Ctrl+Shift+I`: insert a local image.
 - Hamburger opens an overlay menu; Escape closes it.
 - Sidebar tabs are keyboard reachable and preserve state.
 - Unsaved changes are always visible via a dot next to the title.
@@ -88,6 +89,23 @@ ease-out; honor `prefers-reduced-motion`.
 - A clean document reloads when its file changes externally; a dirty document
   keeps local edits and raises a conflict toast.
 - Toast messages are transient, non-blocking, and never contain document text.
+
+## Images
+
+- The menu exposes Image... under Format. Insertion uses the same flow as
+  `Ctrl+Shift+I`, drag/drop, and clipboard paste.
+- Inserted images are placed on their own block, with blank lines added at the
+  caret when needed. The alt text is derived from the asset filename.
+- Preferences > Images configures a document-relative asset folder. The default
+  is `assets`; absolute paths and `..` traversal are rejected.
+- Local images render inline in preview. Remote images, unsafe sources, and
+  missing files render as labelled placeholders instead of making a network
+  request.
+- Clicking a rendered image opens a full-window lightbox over a dimmed scrim.
+  The toolbar provides zoom out, zoom in, reset, and close. `+`, `-`, `0`, and
+  `Esc` work from the keyboard. Zoom is bounded to 50%-400%.
+- The lightbox is a viewing surface only; it never edits the Markdown source or
+  copies an asset.
 
 ## Distinctive choices
 

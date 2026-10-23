@@ -2,6 +2,7 @@ import type {
   DocumentPayload,
   FileEntry,
   FileMeta,
+  ImageAsset,
   LineEnding,
   WorkspaceFile,
   WorkspaceSearchMatch,
@@ -102,6 +103,77 @@ export async function openFolder(): Promise<string | null> {
   const { open } = await import("@tauri-apps/plugin-dialog");
   const selected = await open({ multiple: false, directory: true });
   return typeof selected === "string" ? selected : null;
+}
+
+export async function pickImageFile(): Promise<string | null> {
+  if (!isTauri()) {
+    return null;
+  }
+  const { open } = await import("@tauri-apps/plugin-dialog");
+  const selected = await open({
+    multiple: false,
+    directory: false,
+    filters: [
+      {
+        name: "Images",
+        extensions: [
+          "png",
+          "jpg",
+          "jpeg",
+          "gif",
+          "webp",
+          "bmp",
+          "svg",
+          "avif",
+          "ico",
+        ],
+      },
+      { name: "All files", extensions: ["*"] },
+    ],
+  });
+  return typeof selected === "string" ? selected : null;
+}
+
+export async function importImageAsset(
+  documentPath: string,
+  sourcePath: string,
+  folder: string,
+): Promise<ImageAsset> {
+  if (!isTauri()) {
+    throw new Error("Local images are only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<ImageAsset>("import_image_asset", {
+    documentPath,
+    sourcePath,
+    folder,
+  });
+}
+
+export async function saveImageData(
+  documentPath: string,
+  fileName: string,
+  folder: string,
+  dataBase64: string,
+): Promise<ImageAsset> {
+  if (!isTauri()) {
+    throw new Error("Pasted images are only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<ImageAsset>("save_image_data", {
+    documentPath,
+    fileName,
+    folder,
+    dataBase64,
+  });
+}
+
+export async function readImageDataUrl(path: string): Promise<string> {
+  if (!isTauri()) {
+    throw new Error("Local image previews are only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<string>("read_image_data_url", { path });
 }
 
 export async function listDirectory(path: string): Promise<FileEntry[]> {

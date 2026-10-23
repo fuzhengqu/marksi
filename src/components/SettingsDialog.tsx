@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { RotateCcw, Save, Settings, Type, X } from "lucide-react";
+import { Image as ImageIcon, RotateCcw, Save, Settings, Type, X } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import type { AppSettings, Theme } from "../types";
 
@@ -165,6 +165,35 @@ export function SettingsDialog() {
                 onChange={(value) => update("spellcheck", value)}
               />
             </div>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-heading">
+              <ImageIcon size={15} strokeWidth={1.8} />
+              <span>Images</span>
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>Asset folder</span>
+                <small>Relative to the document folder.</small>
+              </div>
+              <input
+                className="settings-text"
+                type="text"
+                value={settings.imageAssetFolder}
+                placeholder="assets"
+                spellCheck={false}
+                onChange={(event) =>
+                  update("imageAssetFolder", event.target.value)
+                }
+                aria-label="Image asset folder"
+              />
+            </div>
+            <p className="settings-note">
+              Inserted, dropped, and pasted images are copied into this folder.
+              Use a relative path such as <code>assets</code> or{" "}
+              <code>media/images</code>.
+            </p>
           </section>
 
           <section className="settings-section">
