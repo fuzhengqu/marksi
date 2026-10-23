@@ -8,6 +8,7 @@ import {
   Copy,
   Eye,
   FileDown,
+  FileInput,
   FileOutput,
   FilePlus2,
   FileText,
@@ -63,6 +64,7 @@ interface MenuOverlayProps {
   onExport: () => void;
   onExportImage: () => void;
   onPandocExport: () => void;
+  onPandocImport: () => void;
   onPrint: () => void;
   onCopy: (format: CopyFormat) => void;
   onToggleView: () => void;
@@ -86,6 +88,7 @@ export function MenuOverlay({
   onExport,
   onExportImage,
   onPandocExport,
+  onPandocImport,
   onPrint,
   onCopy,
   onToggleView,
@@ -284,6 +287,11 @@ export function MenuOverlay({
                 icon={<FileOutput size={16} strokeWidth={1.8} />}
                 label={t("Pandoc export…")}
                 onClick={() => run(onPandocExport)}
+              />
+              <MenuItem
+                icon={<FileInput size={16} strokeWidth={1.8} />}
+                label={t("Pandoc import…")}
+                onClick={() => run(onPandocImport)}
               />
               <MenuItem
                 icon={<Printer size={16} strokeWidth={1.8} />}

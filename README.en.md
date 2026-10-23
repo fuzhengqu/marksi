@@ -27,8 +27,8 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   profiles; front matter metadata and page setup controls; print or save as PDF
   through the system print dialog; an optional user-configured export command
   that runs without a shell; PNG image export; optional Pandoc export to DOCX,
-  ODT, EPUB, LaTeX, or RTF (Pandoc is not bundled); copy as Markdown, HTML, or
-  plain text.
+  ODT, EPUB, LaTeX, or RTF and import from DOCX, ODT, EPUB, RTF, or HTML
+  (Pandoc is not bundled); copy as Markdown, HTML, or plain text.
 - **Reliability**: optional autosave for named documents, unsaved-work recovery,
   and external-change notices.
 - **Interface**: Chinese and English, built-in light and dark themes, and

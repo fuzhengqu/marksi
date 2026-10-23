@@ -15,6 +15,7 @@ pub fn run() {
             commands::export::run_export_command,
             commands::pandoc::pandoc_version,
             commands::pandoc::pandoc_export,
+            commands::pandoc::pandoc_import,
             commands::workspace::list_workspace_files,
             commands::workspace::search_workspace,
             commands::workspace::file_modified_ms,

@@ -60,6 +60,7 @@ interface AppStore {
   searchScope: SearchScope;
 
   newDocument: () => void;
+  setImportedDocument: (name: string, content: string) => void;
   setLoadedDocument: (payload: DocumentPayload) => void;
   setContent: (content: string) => void;
   markSaved: (meta: FileMeta, savedContent?: string) => void;
@@ -177,6 +178,19 @@ export const useAppStore = create<AppStore>()(
           viewMode: "preview",
           menuOpen: false,
         })),
+
+      setImportedDocument: (name, content) =>
+        set({
+          doc: {
+            ...emptyDocument,
+            name,
+            content,
+            dirty: true,
+          },
+          cursor: { line: 1, column: 1 },
+          viewMode: "preview",
+          menuOpen: false,
+        }),
 
       setLoadedDocument: (payload) => {
         const name = fileName(payload.path);

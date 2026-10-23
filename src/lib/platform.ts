@@ -37,7 +37,18 @@ export type TestSaveDialog = (
   options: SaveDialogOptions,
 ) => Promise<string | null>;
 
+export interface OpenDialogOptions {
+  filters: Array<{ name: string; extensions: string[] }>;
+  multiple?: boolean;
+  directory?: boolean;
+}
+
+export type TestOpenDialog = (
+  options: OpenDialogOptions,
+) => Promise<string | null>;
+
 let testSaveDialog: TestSaveDialog | null = null;
+let testOpenDialog: TestOpenDialog | null = null;
 
 /**
  * Lets the E2E suite observe and answer the save dialog without opening a
@@ -46,6 +57,12 @@ let testSaveDialog: TestSaveDialog | null = null;
 export function setSaveDialogForTests(dialog: TestSaveDialog | null): void {
   if (import.meta.env.DEV) {
     testSaveDialog = dialog;
+  }
+}
+
+export function setOpenDialogForTests(dialog: TestOpenDialog | null): void {
+  if (import.meta.env.DEV) {
+    testOpenDialog = dialog;
   }
 }
 
@@ -438,6 +455,52 @@ export async function pandocExport(
     documentPath: request.documentPath,
     outputPath: request.outputPath,
     format: request.format,
+  });
+}
+
+export interface PandocImportResult {
+  content: string;
+  mediaCount: number;
+}
+
+const PANDOC_IMPORT_FILTERS = [
+  {
+    name: "Pandoc documents",
+    extensions: ["docx", "odt", "epub", "rtf", "html", "htm"],
+  },
+];
+
+export async function pickPandocImportFile(): Promise<string | null> {
+  if (!isTauri()) {
+    throw new Error("Pandoc is only available in the desktop app.");
+  }
+  if (testOpenDialog) {
+    return testOpenDialog({
+      filters: PANDOC_IMPORT_FILTERS,
+      multiple: false,
+      directory: false,
+    });
+  }
+  const { open } = await import("@tauri-apps/plugin-dialog");
+  const selected = await open({
+    multiple: false,
+    directory: false,
+    filters: PANDOC_IMPORT_FILTERS,
+  });
+  return typeof selected === "string" ? selected : null;
+}
+
+export async function pandocImport(
+  program: string,
+  inputPath: string,
+): Promise<PandocImportResult> {
+  if (!isTauri()) {
+    throw new Error("Pandoc is only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<PandocImportResult>("pandoc_import", {
+    program,
+    inputPath,
   });
 }
 

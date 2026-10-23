@@ -1,6 +1,6 @@
 [package]
 name = "marksi"
-version = "0.8.0"
+version = "0.9.0"
 description = "MarkSI - a focused Markdown studio for Windows and Linux"
 authors = ["MarkSI contributors"]
 edition = "2021"
@@ -26,6 +26,7 @@ tempfile = "3"
 dunce = "1"
 walkdir = "2"
 base64 = "0.22"
+regex = "1"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = ["Win32_Storage_FileSystem"] }

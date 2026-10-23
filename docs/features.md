@@ -148,7 +148,7 @@ the image context menu and are preserved in HTML export and print.
 | Export image | done | M5 |
 | Copy as Markdown / HTML / plain text | done | M4 |
 | Pandoc export (DOCX/ODT/EPUB/LaTeX/RTF) | done | M5 |
-| Pandoc import (DOCX/ODT/EPUB/RTF/HTML) | todo | M5 |
+| Pandoc import (DOCX/ODT/EPUB/RTF/HTML) | done | M5 |
 | Export profiles | done | M5 |
 | Custom export command | done | M5 |
 | Front matter export options | done | M5 |
@@ -186,6 +186,13 @@ folder as its resource path, then saves the result atomically. Pandoc is never
 bundled or downloaded. It may fetch remote images referenced by the document,
 so the UI states that explicitly; relative local images require a saved
 document.
+
+Pandoc import accepts DOCX, ODT, EPUB, RTF, HTML, and HTM. It converts to Pandoc
+Markdown in a temporary folder, embeds extracted images as data URLs in the new
+document, and opens the result as an unsaved Markdown document named after the
+source file. Only safe media paths inside the temporary media folder are
+embedded; unknown formats and traversal paths remain untouched. The user must
+save the imported document to choose its final location.
 
 ## Appearance and settings
 

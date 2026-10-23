@@ -16,6 +16,7 @@ describe("translate", () => {
     expect(translate("zh-CN", "Page setup")).toBe("页面设置");
     expect(translate("zh-CN", "Export with Pandoc")).toBe("使用 Pandoc 导出");
     expect(translate("zh-CN", "Pandoc export…")).toBe("Pandoc 导出…");
+    expect(translate("zh-CN", "Pandoc import…")).toBe("Pandoc 导入…");
   });
 
   it("returns the source label for English", () => {

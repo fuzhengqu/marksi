@@ -46,6 +46,12 @@ export function pandocFormatInfo(format: PandocFormat): PandocFormatInfo {
   );
 }
 
+export function pandocImportName(inputPath: string): string {
+  const fileName = inputPath.split(/[\\/]/).pop() ?? "";
+  const base = fileName.replace(/\.[^.]+$/, "").trim();
+  return `${base || "Imported"}.md`;
+}
+
 export function pandocExportName(
   documentName: string,
   format: PandocFormat,

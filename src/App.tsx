@@ -27,6 +27,7 @@ import {
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
 import { buildPageCss, normalizeExportOptions } from "./lib/exportOptions";
 import { frontMatterTitle } from "./lib/frontMatter";
+import { pandocImportName } from "./lib/pandoc";
 import { resolveSaveName } from "./lib/saveName";
 import { tNow, useT } from "./i18n";
 import { clampZoom, stepZoom } from "./lib/zoom";
@@ -45,7 +46,10 @@ import {
   listDirectory,
   openDocument,
   openFolder,
+  pandocImport,
+  pandocVersion,
   pickImageFile,
+  pickPandocImportFile,
   readDocument,
   runExportCommand,
   saveDocument,
@@ -501,6 +505,48 @@ export default function App() {
   const handleOpenPandoc = useCallback(() => {
     setPandocOpen(true);
   }, []);
+
+  const handlePandocImport = useCallback(async () => {
+    if (!(await confirmDiscard())) {
+      return;
+    }
+    const state = useAppStore.getState();
+    try {
+      await pandocVersion(state.settings.pandocPath);
+      const inputPath = await pickPandocImportFile();
+      if (!inputPath) {
+        return;
+      }
+      state.setLoading(true);
+      const result = await pandocImport(
+        state.settings.pandocPath,
+        inputPath,
+      );
+      useAppStore
+        .getState()
+        .setImportedDocument(
+          pandocImportName(inputPath),
+          result.content,
+        );
+      useAppStore
+        .getState()
+        .showToast(
+          result.mediaCount > 0
+            ? tNow("Imported {name} with {count} embedded images.", {
+                name: fileName(inputPath),
+                count: result.mediaCount,
+              })
+            : tNow("Imported {name}", {
+                name: fileName(inputPath),
+              }),
+          "success",
+        );
+    } catch (error) {
+      useAppStore.getState().showToast(errorMessage(error), "error");
+    } finally {
+      useAppStore.getState().setLoading(false);
+    }
+  }, [confirmDiscard]);
 
   const handleCopyDocument = useCallback(async (format: CopyFormat) => {
     const state = useAppStore.getState();
@@ -1309,6 +1355,7 @@ export default function App() {
       closeExport: () => setExportOpen(false),
       openPandoc: handleOpenPandoc,
       closePandoc: () => setPandocOpen(false),
+      pandocImport: handlePandocImport,
       copyDocument: handleCopyDocument,
       print: handlePrint,
       openQuickOpen: () => useAppStore.getState().setQuickOpen(true),
@@ -1334,6 +1381,7 @@ export default function App() {
     handleCustomExport,
     handleOpenExport,
     handleOpenPandoc,
+    handlePandocImport,
     handleCopyDocument,
     handlePrint,
   ]);
@@ -1412,6 +1460,7 @@ export default function App() {
         onExport={handleOpenExport}
         onExportImage={() => void handleExportImage()}
         onPandocExport={handleOpenPandoc}
+        onPandocImport={() => void handlePandocImport()}
         onPrint={handlePrint}
         onCopy={handleCopyDocument}
         onToggleView={handleToggleView}

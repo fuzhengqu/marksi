@@ -2,8 +2,11 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
+use base64::{engine::general_purpose::STANDARD, Engine as _};
+use regex::Regex;
 use serde::Serialize;
 
 use super::document::{resolve_write_target, write_atomic};
@@ -12,14 +15,25 @@ const MAX_PROGRAM_LENGTH: usize = 4096;
 const MAX_DIAGNOSTIC_BYTES: usize = 4096;
 const MAX_ERROR_CHARS: usize = 2000;
 const MAX_OUTPUT_BYTES: u64 = 256 * 1024 * 1024;
+const MAX_IMPORT_BYTES: u64 = 64 * 1024 * 1024;
+const MAX_IMPORT_CONTENT_BYTES: usize = 128 * 1024 * 1024;
+const MAX_EMBEDDED_MEDIA_BYTES: usize = 64 * 1024 * 1024;
 const VERSION_TIMEOUT: Duration = Duration::from_secs(10);
 const EXPORT_TIMEOUT: Duration = Duration::from_secs(180);
+const IMPORT_TIMEOUT: Duration = Duration::from_secs(180);
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PandocExportResult {
     path: String,
     size: u64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PandocImportResult {
+    content: String,
+    media_count: usize,
 }
 
 struct ProcessOutput {
@@ -169,6 +183,140 @@ fn build_export_args(
     Ok(args)
 }
 
+fn import_format(path: &Path) -> Result<&'static str, String> {
+    let extension = path
+        .extension()
+        .and_then(|value| value.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    match extension.as_str() {
+        "docx" => Ok("docx"),
+        "odt" => Ok("odt"),
+        "epub" => Ok("epub"),
+        "rtf" => Ok("rtf"),
+        "html" | "htm" => Ok("html"),
+        _ => Err(format!("Unsupported Pandoc import format: .{extension}")),
+    }
+}
+
+fn build_import_args(
+    format: &str,
+    input: &Path,
+    output: &Path,
+    resource_directory: &Path,
+) -> Vec<String> {
+    vec![
+        format!("--from={format}"),
+        "--to=markdown+pipe_tables+task_lists+strikeout".to_string(),
+        format!("--output={}", output.to_string_lossy()),
+        "--extract-media=media".to_string(),
+        format!("--resource-path={}", resource_directory.to_string_lossy()),
+        input.to_string_lossy().into_owned(),
+    ]
+}
+
+fn hex_value(byte: u8) -> Option<u8> {
+    match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        b'A'..=b'F' => Some(byte - b'A' + 10),
+        _ => None,
+    }
+}
+
+fn percent_decode(value: &str) -> String {
+    let bytes = value.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'%' && index + 2 < bytes.len() {
+            if let (Some(high), Some(low)) =
+                (hex_value(bytes[index + 1]), hex_value(bytes[index + 2]))
+            {
+                decoded.push(high * 16 + low);
+                index += 3;
+                continue;
+            }
+        }
+        decoded.push(bytes[index]);
+        index += 1;
+    }
+    String::from_utf8_lossy(&decoded).into_owned()
+}
+
+fn media_mime(path: &Path) -> Option<&'static str> {
+    let extension = path
+        .extension()
+        .and_then(|value| value.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    match extension.as_str() {
+        "png" => Some("image/png"),
+        "jpg" | "jpeg" => Some("image/jpeg"),
+        "gif" => Some("image/gif"),
+        "webp" => Some("image/webp"),
+        "svg" => Some("image/svg+xml"),
+        "bmp" => Some("image/bmp"),
+        "tif" | "tiff" => Some("image/tiff"),
+        _ => None,
+    }
+}
+
+fn media_data_url(
+    relative_path: &str,
+    media_root: &Path,
+    embedded_bytes: &mut usize,
+) -> Option<String> {
+    let decoded = percent_decode(relative_path);
+    let relative = decoded.strip_prefix("media/")?;
+    if relative.is_empty() {
+        return None;
+    }
+    let root = dunce::canonicalize(media_root).ok()?;
+    let file = dunce::canonicalize(media_root.join(relative)).ok()?;
+    if !file.starts_with(&root) || !file.is_file() {
+        return None;
+    }
+    let mime = media_mime(&file)?;
+    let length = fs::metadata(&file).ok()?.len() as usize;
+    if length > MAX_EMBEDDED_MEDIA_BYTES.saturating_sub(*embedded_bytes) {
+        return None;
+    }
+    let bytes = fs::read(&file).ok()?;
+    if bytes.is_empty() {
+        return None;
+    }
+    *embedded_bytes += bytes.len();
+    Some(format!("data:{mime};base64,{}", STANDARD.encode(bytes)))
+}
+
+fn embed_media(markdown: &str, media_root: &Path) -> (String, usize) {
+    static MEDIA_LINK: OnceLock<Regex> = OnceLock::new();
+    let pattern = MEDIA_LINK.get_or_init(|| {
+        Regex::new(r"\]\(<(media/[^>]+)>|\]\((media/[^)\s]+)").expect("media link regex")
+    });
+
+    let mut embedded_bytes = 0;
+    let mut count = 0;
+    let content = pattern
+        .replace_all(markdown, |captures: &regex::Captures| {
+            let Some(path) = captures
+                .get(1)
+                .or_else(|| captures.get(2))
+                .map(|value| value.as_str())
+            else {
+                return captures[0].to_string();
+            };
+            let Some(data_url) = media_data_url(path, media_root, &mut embedded_bytes) else {
+                return captures[0].to_string();
+            };
+            count += 1;
+            format!("]({data_url}")
+        })
+        .into_owned();
+    (content, count)
+}
+
 #[tauri::command]
 pub async fn pandoc_version(program: String) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
@@ -272,6 +420,61 @@ pub async fn pandoc_export(
     .map_err(|error| format!("Pandoc export task failed: {error}"))?
 }
 
+#[tauri::command]
+pub async fn pandoc_import(
+    program: String,
+    input_path: String,
+) -> Result<PandocImportResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let input = dunce::canonicalize(Path::new(&input_path))
+            .map_err(|error| format!("Cannot open Pandoc input: {error}"))?;
+        if !input.is_file() {
+            return Err("Pandoc input is not a file.".to_string());
+        }
+        let format = import_format(&input)?;
+        let resource_directory = input
+            .parent()
+            .filter(|value| value.is_dir())
+            .map(Path::to_path_buf)
+            .ok_or_else(|| "Pandoc input has no parent folder.".to_string())?;
+        let temporary = tempfile::tempdir()
+            .map_err(|error| format!("Cannot create a Pandoc workspace: {error}"))?;
+        let output = temporary.path().join("output.md");
+        let args = build_import_args(format, &input, &output, &resource_directory);
+        let program = pandoc_program(&program);
+        let result = run_process(&program, &args, Some(temporary.path()), IMPORT_TIMEOUT)?;
+        if result.code != 0 {
+            return Err(format!(
+                "Pandoc exited with code {}.{}",
+                result.code,
+                error_detail(&result.stderr)
+            ));
+        }
+
+        let metadata = fs::metadata(&output)
+            .map_err(|error| format!("Pandoc did not write Markdown: {error}"))?;
+        if metadata.len() == 0 {
+            return Err("Pandoc produced an empty Markdown file.".to_string());
+        }
+        if metadata.len() > MAX_IMPORT_BYTES {
+            return Err("Pandoc import is larger than 64 MB.".to_string());
+        }
+        let markdown = fs::read_to_string(&output)
+            .map_err(|error| format!("Cannot read Pandoc Markdown: {error}"))?;
+        let (content, media_count) = embed_media(&markdown, &temporary.path().join("media"));
+        if content.len() > MAX_IMPORT_CONTENT_BYTES {
+            return Err("Pandoc import is larger than 128 MB.".to_string());
+        }
+
+        Ok(PandocImportResult {
+            content,
+            media_count,
+        })
+    })
+    .await
+    .map_err(|error| format!("Pandoc import task failed: {error}"))?
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -327,6 +530,58 @@ mod tests {
         )
         .expect("latex args");
         assert!(latex.contains(&"--standalone".to_string()));
+    }
+
+    #[test]
+    fn maps_import_formats_and_arguments() {
+        assert_eq!(import_format(Path::new("note.docx")).expect("docx"), "docx");
+        assert_eq!(import_format(Path::new("note.HTML")).expect("html"), "html");
+        assert!(import_format(Path::new("note.pdf")).is_err());
+
+        let args = build_import_args(
+            "docx",
+            Path::new("input.docx"),
+            Path::new("output.md"),
+            Path::new("."),
+        );
+        assert!(args.contains(&"--from=docx".to_string()));
+        assert!(args.contains(&"--extract-media=media".to_string()));
+        assert!(args.contains(&"--to=markdown+pipe_tables+task_lists+strikeout".to_string()));
+        assert_eq!(args.last().expect("input"), "input.docx");
+    }
+
+    #[test]
+    fn embeds_only_safe_media_files() {
+        let directory = tempfile::tempdir().expect("tempdir");
+        let media = directory.path().join("media");
+        fs::create_dir(&media).expect("media dir");
+        fs::write(media.join("image.png"), [0x89, 0x50, 0x4E, 0x47]).expect("png");
+        fs::write(media.join("image one.png"), [0x89, 0x50, 0x4E, 0x47]).expect("spaced png");
+        fs::write(media.join("notes.txt"), b"notes").expect("text");
+        fs::write(directory.path().join("secret.png"), [0x89]).expect("secret");
+
+        let markdown = [
+            "![a](media/image.png)",
+            "![b](<media/image one.png>)",
+            "![c](media/../secret.png)",
+            "[d](media/notes.txt)",
+        ]
+        .join("\n");
+        let (content, count) = embed_media(&markdown, &media);
+        assert_eq!(count, 2);
+        assert_eq!(content.matches("data:image/png;base64,").count(), 2);
+        assert!(content.contains("media/../secret.png"));
+        assert!(content.contains("media/notes.txt"));
+    }
+
+    #[test]
+    fn decodes_percent_paths() {
+        assert_eq!(
+            percent_decode("media/image%20one.png"),
+            "media/image one.png"
+        );
+        assert_eq!(percent_decode("media/image.png"), "media/image.png");
+        assert_eq!(percent_decode("media/100%"), "media/100%");
     }
 
     #[test]

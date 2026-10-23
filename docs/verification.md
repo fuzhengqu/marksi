@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.08` product version.
+- About dialog close behavior and display of the `0.09` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -102,6 +102,9 @@ The E2E suite currently covers:
   filter, source retention, and persisted executable path. The check runs only
   when `.tmp/pandoc/portable/pandoc-3.12.1/pandoc.exe` is present and is skipped
   otherwise; the manual checklist covers a fresh external install.
+- Pandoc import of a real DOCX containing a local image: conversion, image
+  data-URL embedding, unsaved dirty document state, source name, import filter,
+  and rendered image in reading view.
 - Pandoc detection from Preferences, including the reported version.
 - Mermaid rendering in reading mode, including SVG sanitization checks.
 - Auto pairing, smart punctuation, and emoji completion.
@@ -121,13 +124,14 @@ formatting, zoom math, strict-heading and lax-list normalization, front-matter
 parsing, save-name extraction/sanitization, image helpers, image-source scanning
 and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
-Pandoc format metadata and filenames, minimal text-change calculation,
-quick-open ranking, and analysis helpers.
+Pandoc format metadata plus export/import filenames, minimal text-change
+calculation, quick-open ranking, and analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic text and binary writes,
 image import and data URLs, workspace listing/search, file timestamps,
 custom-command validation, successful/non-zero execution, missing executables,
 working-directory handling, Pandoc argument construction, format allowlisting,
-and bounded process-output capture.
+bounded process-output capture, media path validation, percent-decoded paths,
+and media embedding limits.
 
 ## Limits and native-dialog checks
 
@@ -152,7 +156,10 @@ rejected, and very large documents should be checked manually before release.
 Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the
-manual DOCX/EPUB check.
+manual DOCX/EPUB check. Imported images are inlined as data URLs, which can make
+the Markdown source large; very large imported documents should be checked
+manually for memory and save-size behavior. PDF import/export is not offered
+because it requires an additional PDF engine.
 
 No finite test suite can prove the absence of every bug. The gate guarantees
 that all listed automated paths pass and that no known reproducible failure is

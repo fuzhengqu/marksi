@@ -123,6 +123,10 @@ const ZH: Record<string, string> = {
   "Export…": "导出…",
   "Image (PNG)…": "图片 (PNG)…",
   "Pandoc export…": "Pandoc 导出…",
+  "Pandoc import…": "Pandoc 导入…",
+  "Imported {name}": "已导入 {name}",
+  "Imported {name} with {count} embedded images.":
+    "已导入 {name}，内嵌 {count} 张图片。",
   "Export with Pandoc": "使用 Pandoc 导出",
   "Convert the current Markdown with an external Pandoc.":
     "使用外部 Pandoc 转换当前 Markdown。",

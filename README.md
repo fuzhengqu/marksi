@@ -24,8 +24,8 @@ MarkSI 是一个免费、开源的 Markdown 编辑器，使用 Rust 与 Tauri �
 - **导出与复制**：使用文档、打印、极简或自定义配置档导出独立 HTML；
   控制 front matter 元数据和页面设置；通过系统打印对话框打印或另存为 PDF；
   可选自定义导出命令（显式配置，不经过 shell）；导出为 PNG 图片；
-  可选 Pandoc 导出 DOCX、ODT、EPUB、LaTeX 或 RTF（不打包 Pandoc）；
-  复制为 Markdown、HTML 或纯文本。
+  可选 Pandoc 导出 DOCX、ODT、EPUB、LaTeX 或 RTF，以及导入 DOCX、ODT、EPUB、
+  RTF 或 HTML（不打包 Pandoc）；复制为 Markdown、HTML 或纯文本。
 - **可靠性**：已命名文档可选自动保存、未保存内容恢复、外部修改提示。
 - **界面**：中英文界面、内置明暗主题、界面缩放。
 - **隐私**：无账户、无遥测；文档保留在本机；原始 HTML 不会作为活动内容执行，

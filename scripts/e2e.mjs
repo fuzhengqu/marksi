@@ -1,6 +1,10 @@
+import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 const port = process.env.MARKSI_CDP_PORT ?? "9222";
 const origin = process.env.MARKSI_E2E_ORIGIN ?? "localhost:1420";
@@ -344,6 +348,7 @@ async function main() {
     assert(state.labels.includes("导出…"), "export dialog entry missing", state);
     assert(state.labels.includes("图片 (PNG)…"), "image export entry missing", state);
     assert(state.labels.includes("Pandoc 导出…"), "Pandoc export entry missing", state);
+    assert(state.labels.includes("Pandoc 导入…"), "Pandoc import entry missing", state);
     assert(state.labels.includes("偏好设置…"), "preferences missing", state);
     assert(state.last === "退出 MarkSI", "quit should be last", state);
     assert(!state.footer, "menu footer must be gone", state);
@@ -360,7 +365,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.08"), "About should show version 0.08", state);
+    assert(state.version?.includes("0.09"), "About should show version 0.09", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1099,6 +1104,84 @@ async function main() {
   }
 
   if (existsSync(pandocExecutable)) {
+    await test("Pandoc import opens a DOCX and embeds its image", async () => {
+      await resetBase();
+      const sourcePath = resolve(fixtureDir, "pandoc-import-source.md");
+      const docxPath = resolve(fixtureDir, "pandoc-import-source.docx");
+      try {
+        await writeFile(
+          sourcePath,
+          "# Imported\n\n![icon](icon.png)\n\nImported body.",
+          "utf8",
+        );
+        await execFileAsync(pandocExecutable, [
+          sourcePath,
+          "-o",
+          docxPath,
+          `--resource-path=${fixtureDir}`,
+        ]);
+        await evaluate(
+          `window.__MARKSI_DEV__.setSettings(${JSON.stringify({
+            pandocPath: pandocExecutable,
+          })})`,
+        );
+        await evaluate(`(async () => {
+          const platform = await import("/src/lib/platform.ts");
+          window.__MARKSI_IMPORT_CAPTURE__ = null;
+          platform.setOpenDialogForTests(async (options) => {
+            window.__MARKSI_IMPORT_CAPTURE__ = options;
+            return ${JSON.stringify(docxPath)};
+          });
+        })()`);
+        await evaluate("window.__MARKSI_DEV__.pandocImport()");
+        await waitFor(
+          'window.__MARKSI_DEV__.getState().doc.name === "pandoc-import-source.md"',
+          20_000,
+        );
+
+        const state = await evaluate(`({
+          content: window.__MARKSI_DEV__.getState().doc.content,
+          path: window.__MARKSI_DEV__.getState().doc.path,
+          dirty: window.__MARKSI_DEV__.getState().doc.dirty,
+          viewMode: window.__MARKSI_DEV__.getState().viewMode,
+          toast: document.querySelector(".toast")?.textContent?.trim() ?? null,
+          capture: window.__MARKSI_IMPORT_CAPTURE__
+        })`);
+        assert(state.content.includes("Imported"), "imported heading is missing", state);
+        assert(
+          state.content.includes("data:image/png;base64,"),
+          "embedded DOCX image was not inlined",
+          state,
+        );
+        assert(state.path === null, "imported document should be unsaved", state);
+        assert(state.dirty, "imported document should be dirty", state);
+        assert(state.viewMode === "preview", "import should open in preview", state);
+        assert(state.toast?.includes("已导入"), "import success toast is missing", state);
+        assert(
+          state.capture?.filters?.[0]?.extensions?.includes("docx"),
+          "Pandoc import filter is wrong",
+          state.capture,
+        );
+
+        await evaluate(
+          'window.__MARKSI_DEV__.getState().setViewMode("reading")',
+        );
+        await waitFor(
+          'document.querySelector(".markdown-body img[src^=\\"data:image/png\\"]")',
+          10_000,
+        );
+      } finally {
+        await evaluate(`(async () => {
+          const platform = await import("/src/lib/platform.ts");
+          platform.setOpenDialogForTests(null);
+          delete window.__MARKSI_IMPORT_CAPTURE__;
+        })()`).catch(() => {});
+        await rm(sourcePath, { force: true });
+        await rm(docxPath, { force: true });
+        await resetBase();
+      }
+    });
+
     await test("Preferences detects the configured Pandoc", async () => {
       await resetBase();
       try {

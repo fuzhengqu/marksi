@@ -266,6 +266,19 @@ ease-out; honor `prefers-reduced-motion`.
   the same atomic file path as other exports. The native save dialog filters by
   the selected format.
 
+## Pandoc import
+
+- File > Pandoc import... first checks that Pandoc is available, then opens a
+  native picker filtered to DOCX, ODT, EPUB, RTF, HTML, and HTM.
+- The current document is replaced only after the discard confirmation. The
+  converted Markdown opens as a dirty, unsaved document named after the source
+  file and switches to live preview.
+- Extracted images are embedded as data URLs so the imported document does not
+  depend on temporary media paths. Only files inside Pandoc's temporary media
+  folder are embedded; path traversal and unknown media types remain literal.
+- Import formats and the external-tool requirement are stated in the menu and
+  documented; Pandoc is never bundled.
+
 ## Images
 
 - The menu exposes Image... under Format. Insertion uses the same flow as

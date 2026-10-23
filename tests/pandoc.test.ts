@@ -4,6 +4,7 @@ import {
   pandocExportName,
   pandocExportPath,
   pandocFormatInfo,
+  pandocImportName,
 } from "../src/lib/pandoc";
 
 describe("pandoc formats", () => {
@@ -12,6 +13,14 @@ describe("pandoc formats", () => {
     expect(new Set(extensions).size).toBe(extensions.length);
     expect(pandocFormatInfo("latex").extension).toBe("tex");
     expect(pandocFormatInfo("rtf").extension).toBe("rtf");
+  });
+});
+
+describe("pandoc import names", () => {
+  it("uses the source filename with a Markdown extension", () => {
+    expect(pandocImportName("D:\\docs\\report.docx")).toBe("report.md");
+    expect(pandocImportName("/docs/report.epub")).toBe("report.md");
+    expect(pandocImportName("")).toBe("Imported.md");
   });
 });
 

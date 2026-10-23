@@ -208,6 +208,14 @@ the result atomically. Pandoc is never bundled or downloaded. The UI states
 that Pandoc may fetch remote images and that relative local images require a
 saved document.
 
+Pandoc import converts DOCX, ODT, EPUB, RTF, HTML, or HTM to Pandoc Markdown in
+a temporary folder. The Rust command runs Pandoc with `--extract-media`, reads
+the Markdown, and replaces safe `media/...` image references with data URLs
+after canonicalizing each file and checking it stays inside the temporary media
+folder. The resulting content opens as a dirty unsaved document. Unsupported
+media types and traversal paths are left literal, and the temporary workspace is
+removed when the command returns.
+
 ## Interface localization
 
 `src/i18n.ts` owns the English source labels, the Simplified Chinese
@@ -333,8 +341,8 @@ success toasts.
   and export-folder lookup; it is covered by unit tests.
 - `src/lib/exportImage.ts` owns PNG naming, capture-scale limits, readiness
   waits, and reading-view capture; pure helpers are covered by unit tests.
-- `src/lib/pandoc.ts` owns Pandoc format metadata and export filename helpers;
-  it is covered by unit tests.
+- `src/lib/pandoc.ts` owns Pandoc format metadata plus export/import filename
+  helpers; it is covered by unit tests.
 - `src/lib/saveName.ts` owns first-heading extraction and filename
   sanitization for new-document save dialogs; it is covered by unit tests.
 - `src/lib/drafts.ts` owns recovery-draft serialization and validation.
@@ -368,14 +376,16 @@ success toasts.
 - PNG exports are decoded from base64 and capped at 128 MB before an atomic
   write.
 - Pandoc is an optional external process with fixed arguments, a timeout, and
-  bounded diagnostics. It is not bundled or downloaded.
+  bounded diagnostics. It is not bundled or downloaded. Imported media is
+  embedded only after canonical path validation against the temporary folder.
 - No activation, account, or telemetry subsystem exists.
 
 ## Current surface (M4/M5)
 
 Document commands: `read_document`, `write_document`, `write_export`,
 `write_export_binary`, `list_directory`, `app_version`,
-`run_export_command`, `pandoc_version`, and `pandoc_export`. Workspace commands:
+`run_export_command`, `pandoc_version`, `pandoc_export`, and
+`pandoc_import`. Workspace commands:
 `list_workspace_files`, `search_workspace`, and `file_modified_ms`. Image
 commands: `import_image_asset`, `save_image_data`, and `read_image_data_url`.
 
@@ -399,7 +409,6 @@ export. The document text is never round-tripped through rendered HTML.
 - Native file watcher with debounce, replacing the current mtime poll when a
   platform watcher is available.
 - SQLite session/history store for multi-window restore and local snapshots.
-- Pandoc import adapter (Pandoc is invoked externally, never bundled).
 - PlantUML lazy rendering and a worker for unusually heavy diagrams.
 - Remote image caching and optional uploader integrations.
 - Cross-platform print-to-PDF adapters.
