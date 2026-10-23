@@ -91,11 +91,14 @@ ease-out; honor `prefers-reduced-motion`.
   HTML / plain text.
 - `Ctrl+=` / `Ctrl+-` / `Ctrl+0`: zoom the interface in, out, or reset to
   100%.
-- Hamburger reveals an IDEA-style menu bar immediately to its right: File,
-  Edit, Format, View, Help. The category row is the only thing shown on first
-  click; clicking a category opens its dropdown. Escape or an outside click
-  closes the row. Export and Preferences are File items; Edit contains the copy
-  actions.
+- Hamburger reveals an IDEA-style menu bar. File takes over the hamburger’s
+  position, followed by Edit, Format, View, and Help; the hamburger is hidden
+  while the bar is open. The category row is the only thing shown on first
+  click; clicking a category opens its dropdown, and moving across categories
+  switches the dropdown while it is open. Clicking blank space closes the bar
+  and restores the hamburger. Escape also closes it. Export and Preferences are
+  File items; Edit contains the copy actions. The menu has no per-dropdown
+  footer.
 - Sidebar tabs are keyboard reachable and preserve state. An empty workspace
   shows four actions above Recent files: Open file, Open folder, Quick open,
   and New document. There is no footer action row.

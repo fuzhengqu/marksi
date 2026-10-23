@@ -167,8 +167,11 @@ M4 also adds typing assistance and interface zoom:
 The interface and writing flow also include:
 
 - An IDEA-style menu bar. The hamburger reveals File, Edit, Format, View, and
-  Help immediately to its right; clicking a category opens only that category’s
-  dropdown. Export and Preferences live under File.
+  Help in its own space: File takes over the hamburger position and the other
+  labels follow to the right. Clicking a category opens that dropdown; moving
+  across the bar switches categories while a dropdown is open. Clicking blank
+  space closes the bar and restores the hamburger. Export and Preferences live
+  under File.
 - The empty workspace exposes Open file, Open folder, Quick open, and New
   document above Recent files. The bottom action row is removed entirely.
 - New-document actions clear the editor, dismiss the welcome surface, focus the

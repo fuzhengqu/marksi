@@ -162,6 +162,16 @@ export function MenuOverlay({
               aria-haspopup="true"
               aria-expanded={active}
               className={`menu-bar-item ${active ? "is-active" : ""}`}
+              onMouseEnter={(event) => {
+                if (!activeSection) {
+                  return;
+                }
+                const box = event.currentTarget.getBoundingClientRect();
+                setDropdownLeft(
+                  Math.max(8, Math.min(box.left, window.innerWidth - 268)),
+                );
+                setActiveSection(item.id);
+              }}
               onClick={(event) => {
                 const box = event.currentTarget.getBoundingClientRect();
                 setDropdownLeft(
@@ -447,11 +457,6 @@ export function MenuOverlay({
             </>
           ) : null}
 
-          <div className="menu-footer">
-            <span className="menu-footer-mark">M</span>
-            <span>{t("MarkSI · MIT licensed")}</span>
-            <Check size={13} strokeWidth={1.8} />
-          </div>
         </div>
       ) : null}
 

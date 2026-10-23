@@ -1773,7 +1773,8 @@
 /* Menu                                                               */
 /* ------------------------------------------------------------------ */
 
-.titlebar.is-menu-open .brand {
+.titlebar.is-menu-open .brand,
+.titlebar.is-menu-open .menu-button {
   visibility: hidden;
 }
 
@@ -1787,7 +1788,7 @@
 .menu-bar {
   position: fixed;
   top: 0;
-  left: 52px;
+  left: 8px;
   z-index: 45;
   display: flex;
   height: var(--titlebar-height);
