@@ -11,6 +11,7 @@ import {
   Loader2,
   RefreshCw,
   Search,
+  X,
 } from "lucide-react";
 import { extractOutline } from "../editor/analyze";
 import { useT } from "../i18n";
@@ -171,6 +172,7 @@ function FilesPanel({
   onShowToast,
 }: FilesPanelProps) {
   const t = useT();
+  const removeRecent = useAppStore((state) => state.removeRecent);
   return (
     <div className="panel-scroll">
       <div className="panel-heading">
@@ -234,15 +236,24 @@ function FilesPanel({
           ) : (
             <div className="recent-list">
               {recent.slice(0, 8).map((item) => (
-                <button
-                  key={item.path}
-                  className="recent-item"
-                  onClick={() => onOpenFile(item.path)}
-                  title={item.path}
-                >
-                  <FileText size={14} strokeWidth={1.7} />
-                  <span className="recent-name">{item.name}</span>
-                </button>
+                <div key={item.path} className="recent-item">
+                  <button
+                    className="recent-open"
+                    onClick={() => onOpenFile(item.path)}
+                    title={item.path}
+                  >
+                    <FileText size={14} strokeWidth={1.7} />
+                    <span className="recent-name">{item.name}</span>
+                  </button>
+                  <button
+                    className="recent-remove"
+                    onClick={() => removeRecent(item.path)}
+                    title={t("Remove from recent")}
+                    aria-label={t("Remove from recent")}
+                  >
+                    <X size={12} strokeWidth={2} />
+                  </button>
+                </div>
               ))}
             </div>
           )}

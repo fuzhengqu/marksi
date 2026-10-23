@@ -581,6 +581,82 @@ async function main() {
     await evaluate('window.__MARKSI_DEV__.getState().setViewMode("preview")');
   });
 
+  await test("recent files reveal per-item close and File > Clear recent files", async () => {
+    const saved = await evaluate("window.__MARKSI_DEV__.getState().recent");
+    const recentOne = resolve(fixtureDir, "recent-one.md");
+    const recentTwo = resolve(fixtureDir, "recent-two.md");
+    await evaluate(
+      `window.__MARKSI_DEV__.getState().addRecent(${JSON.stringify(recentOne)}); window.__MARKSI_DEV__.getState().addRecent(${JSON.stringify(recentTwo)}); window.__MARKSI_DEV__.getState().setSidebarTab("files")`,
+    );
+    await waitFor('document.querySelectorAll(".recent-item").length >= 2');
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: 700,
+      y: 300,
+      button: "none",
+    });
+    await sleep(220);
+    const beforeHover = await evaluate(
+      'getComputedStyle(document.querySelector(".recent-remove")).opacity',
+    );
+    assert(beforeHover === "0", "recent close should be hidden by default", beforeHover);
+
+    const itemPoint = await evaluate(`(() => {
+      const box = document.querySelector(".recent-item").getBoundingClientRect();
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    })()`);
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: itemPoint.x,
+      y: itemPoint.y,
+      button: "none",
+    });
+    await sleep(250);
+    const afterHover = await evaluate(`({
+      opacity: getComputedStyle(document.querySelector(".recent-remove")).opacity,
+      pointer: getComputedStyle(document.querySelector(".recent-remove")).pointerEvents
+    })`);
+    assert(afterHover.opacity === "1", "recent close should appear on hover", afterHover);
+    assert(afterHover.pointer === "auto", "recent close should be clickable on hover", afterHover);
+
+    await clickSelector(".recent-item .recent-remove");
+    await sleep(200);
+    const afterRemove = await evaluate(`({
+      hasRemoved: window.__MARKSI_DEV__.getState().recent.some((entry) => entry.path.includes("recent-two.md")),
+      count: window.__MARKSI_DEV__.getState().recent.length
+    })`);
+    assert(!afterRemove.hasRemoved, "per-item close did not remove the recent entry", afterRemove);
+
+    await clickSelector(".menu-button");
+    await clickSelector(".menu-bar-item");
+    await waitFor(
+      'Array.from(document.querySelectorAll(".menu-dropdown .menu-item-label")).some((node) => node.textContent?.includes("清除最近文件"))',
+    );
+    const clearButton = await evaluate(`(() => {
+      const button = Array.from(document.querySelectorAll(".menu-dropdown .menu-item")).find((node) => node.textContent?.includes("清除最近文件"));
+      if (!button) return null;
+      const box = button.getBoundingClientRect();
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2, disabled: button.disabled };
+    })()`);
+    assert(clearButton && !clearButton.disabled, "clear recent item should be enabled", clearButton);
+    await clickPoint(clearButton.x, clearButton.y);
+    await sleep(250);
+    const afterClear = await evaluate(`({
+      count: window.__MARKSI_DEV__.getState().recent.length,
+      items: document.querySelectorAll(".recent-item").length,
+      empty: document.querySelector(".recent-empty")?.textContent ?? null
+    })`);
+    assert(afterClear.count === 0, "clear recent did not empty the store", afterClear);
+    assert(afterClear.items === 0, "recent UI still has items", afterClear);
+    assert(afterClear.empty?.includes("暂无最近文档"), "empty recent copy is missing", afterClear);
+
+    await evaluate(`(async () => {
+      const { useAppStore } = await import("/src/store/useAppStore.ts");
+      useAppStore.setState({ recent: ${JSON.stringify(saved)} });
+    })()`);
+    await sleep(200);
+  });
+
   await test("zoom shortcuts and reset work", async () => {
     await resetBase();
     await clickSelector(".cm-content");

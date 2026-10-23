@@ -78,6 +78,7 @@ The E2E suite currently covers:
 - Mermaid rendering in reading mode, including SVG sanitization checks.
 - Auto pairing, smart punctuation, and emoji completion.
 - Local image context menu and lightbox action.
+- Recent-file hover remove button and File > Clear recent files.
 - Zoom shortcut and reset behavior.
 - Final cleanup and removal of fixture paths from recent files.
 

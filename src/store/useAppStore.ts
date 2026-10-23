@@ -82,6 +82,7 @@ interface AppStore {
   dismissToast: () => void;
 
   addRecent: (path: string) => void;
+  removeRecent: (path: string) => void;
   clearRecent: () => void;
   setWorkspace: (path: string, entries: FileEntry[]) => void;
   setWorkspaceLoading: (loading: boolean) => void;
@@ -291,6 +292,13 @@ export const useAppStore = create<AppStore>()(
             recentEntry(path),
             ...state.recent.filter((entry) => pathKey(entry.path) !== pathKey(path)),
           ].slice(0, 12),
+        })),
+
+      removeRecent: (path) =>
+        set((state) => ({
+          recent: state.recent.filter(
+            (entry) => pathKey(entry.path) !== pathKey(path),
+          ),
         })),
 
       clearRecent: () => set({ recent: [] }),

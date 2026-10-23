@@ -102,6 +102,9 @@ ease-out; honor `prefers-reduced-motion`.
 - Sidebar tabs are keyboard reachable and preserve state. An empty workspace
   shows four actions above Recent files: Open file, Open folder, Quick open,
   and New document. There is no footer action row.
+- Recent rows keep their remove `×` hidden until the row is hovered or the
+  button receives keyboard focus. The button removes only that row. File >
+  Clear recent files removes the entire list and leaves the empty-state copy.
 - New document clears the editor, hides the welcome surface, focuses the blank
   editor, and shows a confirmation toast so the transition is unambiguous.
 - Unsaved changes are always visible via a dot next to the title.

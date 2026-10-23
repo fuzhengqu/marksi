@@ -175,6 +175,8 @@ The interface and writing flow also include:
   Quit live under File.
 - The empty workspace exposes Open file, Open folder, Quick open, and New
   document above Recent files. The bottom action row is removed entirely.
+- Recent file rows reveal a remove button on hover or keyboard focus; it removes
+  only that entry. File > Clear recent files empties the whole list.
 - New-document actions clear the editor, dismiss the welcome surface, focus the
   blank editor, and show a confirmation toast so the transition is unambiguous.
 - A Chinese-first interface with an English option, and a live-preview editing

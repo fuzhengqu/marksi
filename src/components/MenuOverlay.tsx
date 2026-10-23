@@ -30,6 +30,7 @@ import {
   Settings,
   Strikethrough,
   Sun,
+  Trash2,
   X,
   ZoomIn,
   ZoomOut,
@@ -98,6 +99,7 @@ export function MenuOverlay({
   const theme = useAppStore((state) => state.theme);
   const viewMode = useAppStore((state) => state.viewMode);
   const workspace = useAppStore((state) => state.workspace);
+  const recent = useAppStore((state) => state.recent);
   const settings = useAppStore((state) => state.settings);
   const toggleTheme = useAppStore((state) => state.toggleTheme);
   const toggleSidebar = useAppStore((state) => state.toggleSidebar);
@@ -236,6 +238,18 @@ export function MenuOverlay({
                   onClick={() => run(onCloseWorkspace)}
                 />
               ) : null}
+              <MenuItem
+                icon={<Trash2 size={16} strokeWidth={1.8} />}
+                label={t("Clear recent files")}
+                disabled={recent.length === 0}
+                onClick={() =>
+                  run(() => {
+                    const state = useAppStore.getState();
+                    state.clearRecent();
+                    state.showToast(t("Recent files cleared."), "success");
+                  })
+                }
+              />
               <div className="menu-separator" />
               <MenuItem
                 icon={<Save size={16} strokeWidth={1.8} />}
