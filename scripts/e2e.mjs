@@ -246,20 +246,28 @@ async function main() {
   await connect();
   await reloadApp();
 
-  await test("boots with Chinese UI, preview mode, and welcome screen", async () => {
+  await test("boots directly into the editor with its empty prompt", async () => {
     const state = await evaluate(`({
       language: document.documentElement.lang,
       viewMode: window.__MARKSI_DEV__.getState().viewMode,
       name: document.querySelector(".document-title")?.textContent,
       welcome: Boolean(document.querySelector(".welcome")),
       live: Boolean(document.querySelector(".cm-live-preview")),
+      placeholder: document.querySelector(".cm-placeholder")?.textContent ?? null,
+      focused: document.activeElement?.classList.contains("cm-content") ?? false,
       tabs: Array.from(document.querySelectorAll(".sidebar-tab span")).map((node) => node.textContent)
     })`);
     assert(state.language === "zh-CN", "html lang should be zh-CN", state);
     assert(state.viewMode === "preview", "default view should be preview", state);
     assert(state.name === "未命名.md", "default name should be Chinese", state);
-    assert(state.welcome, "initial welcome screen should be visible", state);
+    assert(!state.welcome, "welcome overlay must not be shown", state);
     assert(state.live, "live preview should be mounted", state);
+    assert(
+      state.placeholder?.includes("开始写作"),
+      "empty editor prompt should remain visible",
+      state,
+    );
+    assert(state.focused, "editor should be focused on startup", state);
     assert(
       JSON.stringify(state.tabs) === JSON.stringify(["文件", "大纲", "搜索"]),
       "sidebar tabs should be Chinese",
@@ -347,7 +355,7 @@ async function main() {
     await waitFor('!document.querySelector(".about-dialog")');
   });
 
-  await test("new document hides welcome and focuses a blank preview", async () => {
+  await test("new document focuses a blank preview", async () => {
     await evaluate(
       'window.__MARKSI_DEV__.getState().setMenuOpen(false); window.__MARKSI_DEV__.getState().setSettingsOpen(false)',
     );
@@ -361,7 +369,7 @@ async function main() {
       focused: document.activeElement?.classList.contains("cm-content") ?? false,
       toast: document.querySelector(".toast")?.textContent?.trim() ?? null
     })`);
-    assert(!state.welcome, "welcome should be dismissed", state);
+    assert(!state.welcome, "welcome overlay must remain absent", state);
     assert(state.content === "", "new document should be empty", state);
     assert(state.viewMode === "preview", "new document should open in preview", state);
     assert(state.focused, "editor should be focused", state);

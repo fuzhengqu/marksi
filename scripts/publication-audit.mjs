@@ -101,7 +101,15 @@ function scanText(text, location, findings) {
 
 function scanFile(path) {
   const findings = [];
-  const buffer = readFileSync(path);
+  let buffer;
+  try {
+    buffer = readFileSync(path);
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      return [{ kind: "tracked file missing", location: path }];
+    }
+    throw error;
+  }
   const text = textOf(buffer);
   if (text !== null) {
     scanText(text, path, findings);

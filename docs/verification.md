@@ -70,12 +70,13 @@ release checklist.
 
 The E2E suite currently covers:
 
-- Chinese-first boot, document title, welcome screen, and preview default.
+- Chinese-first boot directly into the editor, document title, empty prompt,
+  focus, and preview default.
 - Sidebar workspace actions and absence of the old footer.
 - IDEA-style menu replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
 - About dialog close behavior.
-- New-document transition, welcome dismissal, focus, and toast.
+- New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
   complete save/write flow still runs.

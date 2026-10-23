@@ -110,11 +110,14 @@ ease-out; honor `prefers-reduced-motion`.
 - Recent rows keep their remove `×` hidden until the row is hovered or the
   button receives keyboard focus. The button removes only that row. File >
   Clear recent files removes the entire list and leaves the empty-state copy.
-- New document clears the editor, hides the welcome surface, focuses the blank
-  editor, and shows a confirmation toast so the transition is unambiguous.
+- MarkSI boots directly into the editable live-preview surface. There is no
+  full-screen welcome page; an empty document shows the editor prompt and is
+  ready for typing immediately.
+- New document clears the editor, focuses the blank editor, and shows a
+  confirmation toast so the transition is unambiguous.
 - Unsaved changes are always visible via a dot next to the title.
-- The welcome surface appears only for the initial empty untitled document;
-  typing, opening a file, or choosing New document dismisses it.
+- The initial empty untitled document uses the normal editor surface; typing,
+  opening a file, or choosing New document replaces the empty state directly.
 - Preferences apply immediately and are persisted locally. Reset restores the
   documented defaults.
 - Recovery is always user-confirmed: MarkSI never silently overwrites an

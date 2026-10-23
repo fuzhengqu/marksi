@@ -64,20 +64,8 @@ const ZH: Record<string, string> = {
     "搜索已打开文件夹中的所有 Markdown 和文本文件。",
   "Search the current document. Use Ctrl+Shift+F to search the whole folder.":
     "搜索当前文档。使用 Ctrl+Shift+F 搜索整个文件夹。",
-  "Welcome to MarkSI": "欢迎使用 MarkSI",
-  "Local-first Markdown": "本地优先的 Markdown",
-  "Local-first Markdown studio": "本地优先的 Markdown 工作台",
-  "Write in Markdown. Keep it yours.": "用 Markdown 写作，内容始终属于你。",
-  "Write in the quiet.": "安静地写作。",
-  "MIT licensed · no account · no telemetry":
-    "MIT 许可 · 无需账户 · 无遥测",
-  "MarkSI keeps your Markdown plain, your files local, and the interface out of the way. Start with a blank page or pick up where you left off.":
-    "MarkSI 让 Markdown 保持纯文本、文件保存本地，并让界面保持安静。新建空白页面，或从上次离开的地方继续。",
   "New document": "新建文档",
-  Recent: "最近",
   "open": "打开",
-  "new": "新建",
-  "save": "保存",
   "Read only": "只读",
   "Read-only mode (Ctrl Alt R)": "只读模式 (Ctrl Alt R)",
   "Document encoding": "文档编码",

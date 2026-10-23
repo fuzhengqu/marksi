@@ -8,7 +8,7 @@ import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { TitleBar } from "./components/TitleBar";
 import { Toast } from "./components/Toast";
-import { Welcome } from "./components/Welcome";
+
 import {
   dispatchEditorCommand,
   dispatchEditorImageResize,
@@ -78,7 +78,6 @@ function samePath(left: string | null, right: string | null): boolean {
 export default function App() {
   const t = useT();
   const doc = useAppStore((state) => state.doc);
-  const recent = useAppStore((state) => state.recent);
   const sidebarOpen = useAppStore((state) => state.sidebarOpen);
   const theme = useAppStore((state) => state.theme);
   const viewMode = useAppStore((state) => state.viewMode);
@@ -87,16 +86,7 @@ export default function App() {
   const workspacePath = useAppStore((state) => state.workspace?.path ?? null);
   const [draftToRecover, setDraftToRecover] =
     useState<DocumentDraft | null>(() => loadDraft());
-  const [showWelcome, setShowWelcome] = useState(
-    () => !useAppStore.getState().doc.path && !useAppStore.getState().doc.content,
-  );
   const savingRef = useRef(false);
-
-  useEffect(() => {
-    if (doc.path || doc.content.trim()) {
-      setShowWelcome(false);
-    }
-  }, [doc.content, doc.path]);
 
   useEffect(() => {
     document.documentElement.lang = settings.language;
@@ -183,7 +173,6 @@ export default function App() {
     if (!(await confirmDiscard())) {
       return;
     }
-    setShowWelcome(false);
     useAppStore.getState().newDocument();
     useAppStore.getState().showToast(tNow("New blank document created."), "success");
     window.requestAnimationFrame(() => {
@@ -1107,8 +1096,6 @@ export default function App() {
     };
   }, [handleInsertImagePath, handleOpenPath]);
 
-  const isEmpty = !doc.path && doc.content.trim().length === 0;
-
   useEffect(() => {
     if (!import.meta.env.DEV) {
       return;
@@ -1210,15 +1197,6 @@ export default function App() {
                 onResizeImage={handleResizeImage}
               />
             </Suspense>
-          ) : null}
-          {isEmpty && showWelcome ? (
-            <Welcome
-              recent={recent}
-              onNew={handleNew}
-              onOpen={() => void handleOpen()}
-              onOpenFolder={() => void handleOpenFolder()}
-              onOpenRecent={(path) => void handleOpenPath(path)}
-            />
           ) : null}
           {doc.loading ? (
             <div className="loading-veil" aria-live="polite">

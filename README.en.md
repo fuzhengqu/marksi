@@ -181,8 +181,11 @@ The interface and writing flow also include:
   document above Recent files. The bottom action row is removed entirely.
 - Recent file rows reveal a remove button on hover or keyboard focus; it removes
   only that entry. File > Clear recent files empties the whole list.
-- New-document actions clear the editor, dismiss the welcome surface, focus the
-  blank editor, and show a confirmation toast so the transition is unambiguous.
+- MarkSI opens directly into the editable live-preview surface; there is no
+  full-screen welcome page. An empty document keeps the editor prompt and is
+  ready for typing immediately.
+- New-document actions clear the editor, focus the blank editor, and show a
+  confirmation toast so the transition is unambiguous.
 - Saving a new document suggests its first level-one heading as the filename;
   documents without an H1 keep the localized untitled name. Existing documents
   retain their filename for Save As.
