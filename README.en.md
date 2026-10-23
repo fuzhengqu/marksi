@@ -19,6 +19,24 @@ status bar.
 > autosave, crash recovery, and external-change detection are implemented. See
 > `docs/feature-parity.md` for the roadmap.
 
+## Versioning
+
+The product display version starts at **0.01** and increases by exactly one
+step for each bug-fix or feature release: `0.02`, `0.03`, and so on. Versions
+must not be skipped. npm, Cargo, and Tauri require semver, so the technical
+release `0.1.0` maps to the product version `0.01`, `0.2.0` maps to `0.02`, and
+the About dialog displays the product version.
+
+Before a release, run:
+
+```bash
+npm run version:bump
+```
+
+The command updates all manifests by one step and refuses malformed version
+states. The publication audit also rejects version-file mismatches and skipped
+steps.
+
 ## Principles
 
 - **Markdown is the source of truth.** MarkSI never rewrites your document

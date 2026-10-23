@@ -268,6 +268,58 @@ if (tracked.includes("LICENSE")) {
   }
 }
 
+const packageVersion = JSON.parse(readFileSync("package.json", "utf8")).version;
+const packageLock = JSON.parse(readFileSync("package-lock.json", "utf8"));
+const cargoVersion = /^version = "([^"]+)"/m.exec(
+  readFileSync("src-tauri/Cargo.toml", "utf8"),
+)?.[1];
+const cargoLockVersion =
+  /\[\[package\]\]\r?\nname = "marksi"\r?\nversion = "([^"]+)"/.exec(
+    readFileSync("src-tauri/Cargo.lock", "utf8"),
+  )?.[1];
+const tauriVersion = JSON.parse(
+  readFileSync("src-tauri/tauri.conf.json", "utf8"),
+).version;
+const versions = new Set([
+  packageVersion,
+  packageLock.version,
+  packageLock.packages?.[""]?.version,
+  cargoVersion,
+  cargoLockVersion,
+  tauriVersion,
+]);
+if (versions.size !== 1) {
+  findings.push({
+    kind: "version mismatch between package, lock, Cargo, and Tauri",
+    location: [...versions].filter(Boolean).join(", "),
+  });
+}
+if (!/^0\.\d+\.0$/.test(packageVersion)) {
+  findings.push({
+    kind: "release version must be 0.x.0",
+    location: packageVersion,
+  });
+}
+try {
+  const parentPackage = JSON.parse(
+    git(["show", "HEAD^:package.json"]).toString("utf8"),
+  );
+  if (parentPackage.version !== packageVersion) {
+    const previous = /^0\.(\d+)\.0$/.exec(parentPackage.version);
+    const expected = previous
+      ? `0.${Number(previous[1]) + 1}.0`
+      : null;
+    if (packageVersion !== expected) {
+      findings.push({
+        kind: "release version skipped a step",
+        location: `${parentPackage.version} -> ${packageVersion}`,
+      });
+    }
+  }
+} catch {
+  // The root commit has no parent package version to compare.
+}
+
 const lock = JSON.parse(readFileSync("package-lock.json", "utf8"));
 for (const [name, entry] of Object.entries(lock.packages ?? {})) {
   const licenses = Array.isArray(entry.license) ? entry.license : [entry.license];

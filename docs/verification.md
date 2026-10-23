@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - IDEA-style menu replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior.
+- About dialog close behavior and display of the `0.01` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -94,11 +94,14 @@ The E2E suite currently covers:
 - Recent-file hover remove button and File > Clear recent files.
 - Zoom shortcut and reset behavior.
 - Final cleanup and removal of fixture paths from recent files.
+- Version consistency across npm, Cargo, Tauri, and lockfiles, plus rejection of
+  skipped release steps during the publication audit.
 
-Vitest covers formatting, smart typing, emoji catalogs, i18n, zoom math,
-front-matter parsing, save-name extraction/sanitization, image helpers,
-image-source scanning and width/height clamping, minimal text-change
-calculation, quick-open ranking, and analysis helpers.
+Vitest covers formatting, smart typing, emoji catalogs, i18n, version display
+formatting, zoom math, front-matter parsing, save-name
+extraction/sanitization, image helpers, image-source scanning and width/height
+clamping, minimal text-change calculation, quick-open ranking, and analysis
+helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic writes, image import and
 data URLs, workspace listing/search, and file timestamps.
 

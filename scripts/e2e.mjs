@@ -347,10 +347,12 @@ async function main() {
     await waitFor('document.querySelector(".about-dialog")');
     const state = await evaluate(`({
       buttons: Array.from(document.querySelectorAll(".about-dialog button")).map((node) => node.textContent?.trim()),
-      bottom: Boolean(document.querySelector(".about-button"))
+      bottom: Boolean(document.querySelector(".about-button")),
+      version: document.querySelector(".about-version")?.textContent?.trim() ?? null
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
+    assert(state.version?.includes("0.01"), "About should show version 0.01", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });

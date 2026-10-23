@@ -38,6 +38,7 @@ import {
 import type { EditorCommand } from "../editor/format";
 import { useT } from "../i18n";
 import { closeApplication, getAppVersion } from "../lib/platform";
+import { displayVersion } from "../lib/version";
 import { ZOOM_MAX, ZOOM_MIN } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { CopyFormat } from "../types";
@@ -531,7 +532,7 @@ interface AboutDialogProps {
 
 function AboutDialog({ open, onClose }: AboutDialogProps) {
   const t = useT();
-  const [version, setVersion] = useState("0.1.0");
+  const [version, setVersion] = useState(() => displayVersion());
 
   useEffect(() => {
     if (!open) {
@@ -540,7 +541,7 @@ function AboutDialog({ open, onClose }: AboutDialogProps) {
     let mounted = true;
     void getAppVersion().then((value) => {
       if (mounted) {
-        setVersion(value);
+        setVersion(displayVersion(value));
       }
     });
     return () => {

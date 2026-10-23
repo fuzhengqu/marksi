@@ -7,6 +7,7 @@ import type {
   WorkspaceFile,
   WorkspaceSearchMatch,
 } from "../types";
+import { APP_SEMVER } from "./version";
 
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -336,13 +337,13 @@ export async function saveHtmlFile(
 
 export async function getAppVersion(): Promise<string> {
   if (!isTauri()) {
-    return "0.1.0";
+    return APP_SEMVER;
   }
   try {
     const { invoke } = await import("@tauri-apps/api/core");
     return await invoke<string>("app_version");
   } catch {
-    return "0.1.0";
+    return APP_SEMVER;
   }
 }
 

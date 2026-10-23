@@ -115,6 +115,8 @@ ease-out; honor `prefers-reduced-motion`.
   ready for typing immediately.
 - New document clears the editor, focuses the blank editor, and shows a
   confirmation toast so the transition is unambiguous.
+- About displays the product version, starting at `0.01`. Each bug-fix or
+  feature release increments it by exactly `0.01`; versions never skip.
 - Unsaved changes are always visible via a dot next to the title.
 - The initial empty untitled document uses the normal editor surface; typing,
   opening a file, or choosing New document replaces the empty state directly.
