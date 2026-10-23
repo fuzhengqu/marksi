@@ -22,6 +22,7 @@ import {
   PanelLeft,
   PenLine,
   Printer,
+  RotateCcw,
   Save,
   SaveAll,
   Search,
@@ -29,9 +30,12 @@ import {
   Strikethrough,
   Sun,
   X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import type { EditorCommand } from "../editor/format";
 import { getAppVersion } from "../lib/platform";
+import { ZOOM_MAX, ZOOM_MIN } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { CopyFormat } from "../types";
 
@@ -47,6 +51,9 @@ interface MenuOverlayProps {
   onToggleView: () => void;
   onFormat: (command: EditorCommand) => void;
   onInsertImage: () => void;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onResetZoom: () => void;
   onCloseWorkspace: () => void;
   onQuickOpen: () => void;
   onSearchWorkspace: () => void;
@@ -65,6 +72,9 @@ export function MenuOverlay({
   onToggleView,
   onFormat,
   onInsertImage,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom,
   onCloseWorkspace,
   onQuickOpen,
   onSearchWorkspace,
@@ -263,6 +273,28 @@ export function MenuOverlay({
           onClick={() =>
             run(() => updateSettings({ readOnlyMode: !settings.readOnlyMode }))
           }
+        />
+        <div className="menu-separator" />
+        <MenuItem
+          icon={<ZoomIn size={16} strokeWidth={1.8} />}
+          label="Zoom in"
+          shortcut="Ctrl +"
+          disabled={settings.zoomLevel >= ZOOM_MAX - 0.001}
+          onClick={() => run(onZoomIn)}
+        />
+        <MenuItem
+          icon={<ZoomOut size={16} strokeWidth={1.8} />}
+          label="Zoom out"
+          shortcut="Ctrl -"
+          disabled={settings.zoomLevel <= ZOOM_MIN + 0.001}
+          onClick={() => run(onZoomOut)}
+        />
+        <MenuItem
+          icon={<RotateCcw size={16} strokeWidth={1.8} />}
+          label="Actual size"
+          shortcut="Ctrl 0"
+          disabled={Math.abs(settings.zoomLevel - 1) < 0.001}
+          onClick={() => run(onResetZoom)}
         />
 
         <div className="menu-section-label">Copy</div>

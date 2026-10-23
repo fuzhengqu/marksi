@@ -94,6 +94,7 @@ export interface ImageAsset {
 export interface AppSettings {
   editorFontSize: number;
   contentWidth: number;
+  zoomLevel: number;
   spellcheck: boolean;
   autoSave: boolean;
   autoSaveDelayMs: number;
@@ -101,6 +102,9 @@ export interface AppSettings {
   focusMode: boolean;
   typewriterMode: boolean;
   readOnlyMode: boolean;
+  autoPair: boolean;
+  smartPunctuation: boolean;
+  emojiAutocomplete: boolean;
 }
 
 export interface DocumentDraft {

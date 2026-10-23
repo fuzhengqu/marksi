@@ -17,7 +17,7 @@ that design decisions do not paint us into a corner.
 | Window size/position/session restore | todo | M6 |
 | Light / dark appearance | done | M1 |
 | System appearance following | todo | M6 |
-| Zoom in/out/reset | todo | M4 |
+| Zoom in/out/reset | done | M4 |
 | Windows 11 snap layouts support | todo | M6 |
 | Single instance / file forwarding | todo | M6 |
 | CLI file open | todo | M6 |
@@ -63,10 +63,10 @@ that design decisions do not paint us into a corner.
 | Focus mode | done | M4 |
 | Typewriter mode | done | M4 |
 | Read-only mode | done | M4 |
-| Auto pair brackets and Markdown markers | todo | M4 |
-| Smart punctuation | todo | M4 |
+| Auto pair brackets and Markdown markers | done | M4 |
+| Smart punctuation | done | M4 |
 | Spellcheck | done | M3 |
-| Emoji autocomplete | todo | M4 |
+| Emoji autocomplete | done | M4 |
 | IME / CJK input coverage | todo | M7 |
 | Large-document performance mode | todo | M7 |
 

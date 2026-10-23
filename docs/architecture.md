@@ -43,9 +43,9 @@ source mode and live preview operate on the same text.
 
 ## Local persistence
 
-Settings (including writing-mode preferences), theme, recent files, and sidebar
-state are kept in WebView `localStorage` through the Zustand store's `persist`
-middleware. Persisted
+Settings (including writing-mode, typing, and interface-zoom preferences),
+theme, recent files, and sidebar state are kept in WebView `localStorage`
+through the Zustand store's `persist` middleware. Persisted
 settings are merged with current defaults so older profiles gain new fields
 without losing saved preferences. The recovery draft is a separate,
 version-tolerant record under `marksi-recovery-draft`. It is written 700 ms
@@ -133,6 +133,45 @@ guards around formatting and image insertion. Search, selection, copy, export,
 and print remain available. The three mode flags live in `AppSettings` and are
 persisted with the rest of the preferences.
 
+## Typing assistance
+
+`src/editor/smartTyping.ts` installs a single high-precedence input handler for
+auto-pairing, smart punctuation, and the emoji colon trigger. The handler
+returns a small edit plan rather than dispatching ad hoc changes; the same plan
+functions are unit-tested with a real Markdown syntax tree. This keeps the
+interaction rules independent of the WebView and makes the literal-context
+boundaries explicit.
+
+Auto pair uses CodeMirror's `closeBrackets` for brackets and quotes, plus a
+Markdown-aware handler for `*`, `_`, `~`, `=`, `$`, and backticks. The handler
+leaves block-leading markers literal, promotes a single empty pair to a double
+pair, skips existing closing runs, avoids splitting snake_case identifiers, and
+suppresses marker pairing inside code, link destinations, and front matter.
+
+Smart punctuation is off by default. It produces curly quotes and apostrophes,
+en/em dashes, and ellipses, and declines to edit code, link destinations/titles,
+indented code, front matter, unmatched inline-code spans, and line-leading
+dash syntax. `isLiteralContext` combines the Lezer tree with inexpensive line
+checks for constructs the parser cannot recognize while they are still being
+typed.
+
+Emoji completion is provided through editor language data, so the normal
+autocompletion extension owns the popup and keyboard behavior. A colon typed in
+prose schedules completion explicitly; the completion source matches the alias
+prefix and replaces it with Unicode. `src/editor/emojis.ts` is a curated,
+dependency-free alias catalog. The three typing preferences live in
+`AppSettings` and are reconfigured through a dedicated compartment.
+
+## Interface zoom
+
+`src/lib/zoom.ts` owns the 80%–160% bounds, 10% steps, clamping, and percentage
+formatting. App startup and preference changes call Tauri's
+`getCurrentWebview().setZoom(scale)`; the capability set includes
+`core:webview:allow-set-webview-zoom`. If the API is unavailable, the same
+effect sets a CSS `zoom` property as a fallback. The View menu, keyboard, and
+Preferences slider all update the persisted `zoomLevel` setting. Editor text
+size and writing-column width remain independent preferences.
+
 ## Document copy
 
 Copy actions operate on the entire document. `src/lib/clipboardText.ts` writes
@@ -165,13 +204,15 @@ success toasts.
 - `src/lib/frontMatter.ts` owns front-matter extraction and metadata parsing; it
   is covered by unit tests.
 - `src/lib/drafts.ts` owns recovery-draft serialization and validation.
+- `src/lib/zoom.ts` owns zoom bounds, stepping, clamping, and percentage
+  formatting; it has no DOM or Tauri dependency.
 - `src/lib/clipboardText.ts` owns plain-text clipboard writes and the legacy
   fallback.
 - `src/lib/clipboard.ts` owns sanitized HTML/plain-text document
   representations and rich clipboard writes.
 - `src/store/useAppStore.ts` owns document and shell state.
-- `src/editor/` contains editor setup, view modes, and Markdown analysis
-  helpers.
+- `src/editor/` contains editor setup, view modes, smart typing, the emoji
+  catalog, and Markdown analysis helpers.
 - Components never call Rust file commands directly.
 
 ## Rust boundaries

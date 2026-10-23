@@ -10,9 +10,9 @@ status bar.
 > Status: MVP (M4). The desktop shell, source editor, file open/save,
 > encoding-aware IO, workspace browser, outline, search, themes, rendered
 > preview, extended Markdown, local image assets, formatting commands,
-> find/replace, HTML/PDF export, writing modes, document copy actions,
-> preferences, quick open, workspace full-text search, autosave, crash recovery,
-> and external-change detection are implemented. See
+> find/replace, HTML/PDF export, writing modes, smart typing, interface zoom,
+> document copy actions, preferences, quick open, workspace full-text search,
+> autosave, crash recovery, and external-change detection are implemented. See
 > `docs/feature-parity.md` for the roadmap.
 
 ## Principles
@@ -135,6 +135,24 @@ M4 also adds writing modes and document copy actions:
 - Writing-mode preferences persist locally. Shortcuts: `Ctrl+Alt+F` focus,
   `Ctrl+Alt+T` typewriter, `Ctrl+Alt+R` read-only, `Ctrl+Alt+C` Markdown,
   `Ctrl+Alt+H` HTML, and `Ctrl+Alt+P` plain text.
+
+M4 also adds typing assistance and interface zoom:
+
+- Auto pair closes brackets, quotes, and Markdown emphasis markers. A second
+  marker promotes a single pair to a double pair; typing before an existing
+  closing run moves over it instead of duplicating it. Line-leading block
+  syntax stays literal so lists, rules, fences, and front matter remain easy to
+  type. The behavior can be disabled in Preferences.
+- Opt-in smart punctuation converts quotes, apostrophes, double/triple
+  hyphens, and three periods to curly quotes, en/em dashes, and ellipses. It
+  skips code, link destinations and titles, YAML front matter, and
+  line-leading Markdown syntax.
+- Emoji autocomplete suggests common `:shortcode:` aliases and inserts the
+  Unicode emoji directly. It is dependency-free, never changes the renderer,
+  and can be disabled in Preferences.
+- Interface zoom scales the whole window from 80% to 160% with `Ctrl+=`,
+  `Ctrl+-`, `Ctrl+0`, the View menu, or Preferences > Appearance. The level
+  persists across launches.
 
 Raw HTML remains escaped and inert, unsafe URLs are rejected, and remote images
 are never fetched by the preview renderer. Math rendering disables KaTeX's

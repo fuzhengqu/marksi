@@ -1,9 +1,4 @@
-import {
-  autocompletion,
-  closeBrackets,
-  closeBracketsKeymap,
-  completionKeymap,
-} from "@codemirror/autocomplete";
+import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import {
   defaultKeymap,
   history,
@@ -57,7 +52,6 @@ export function createEditorExtensions(callbacks: EditorCallbacks): Extension[] 
     highlightSpecialChars(),
     highlightSelectionMatches(),
     bracketMatching(),
-    closeBrackets(),
     autocompletion(),
     indentOnInput(),
     EditorState.allowMultipleSelections.of(true),
@@ -73,7 +67,6 @@ export function createEditorExtensions(callbacks: EditorCallbacks): Extension[] 
     placeholder("Start writing. Markdown is all you need."),
     keymap.of([
       ...formattingKeymap(),
-      ...closeBracketsKeymap,
       ...defaultKeymap,
       ...searchKeymap,
       ...historyKeymap,

@@ -56,6 +56,8 @@ Typography:
 - Editor: same family, 16px by default, line-height 1.7. The preference range
   is 14–22px.
 - Writing column: 860px by default. The preference range is 680–1100px.
+- Interface zoom: 100% by default. The preference range is 80%–160% in 10%
+  steps and scales the whole application surface.
 - Code: `Cascadia Code`, `JetBrains Mono`, Consolas, monospace, 13.5px.
 
 Spacing: 4 / 8 / 12 / 16 / 24 / 32. Radii: 6 / 10 / 14. Motion: 150–220ms
@@ -81,6 +83,8 @@ ease-out; honor `prefers-reduced-motion`.
   read-only mode.
 - `Ctrl+Alt+C` / `Ctrl+Alt+H` / `Ctrl+Alt+P`: copy the document as Markdown /
   HTML / plain text.
+- `Ctrl+=` / `Ctrl+-` / `Ctrl+0`: zoom the interface in, out, or reset to
+  100%.
 - Hamburger opens an overlay menu; Escape closes it.
 - Sidebar tabs are keyboard reachable and preserve state.
 - Unsaved changes are always visible via a dot next to the title.
@@ -110,6 +114,40 @@ ease-out; honor `prefers-reduced-motion`.
   items are disabled, and the status bar displays a Read only badge.
 - Writing modes are persisted with the other preferences and restore on the
   next launch.
+
+## Typing assistance
+
+- Auto pair closes `()`, `[]`, `{}`, quotes, and the Markdown markers `*`, `_`,
+  `~`, `=`, `$`, and `` ` ``. Typing the same marker again promotes an empty
+  single pair to a double pair, which makes `**bold**` and `~~strike~~` quick.
+  Typing immediately before an existing closing run moves over it instead of
+  duplicating it.
+- Auto pair leaves block-leading markers alone. A line that starts with `*`, `-`,
+  `_`, `=`, `$`, or a backtick keeps the literal marker so lists, rules, setext
+  headings, fences, and display math can be typed normally. Inside code, link
+  destinations, and front matter, marker pairing is suppressed.
+- Smart punctuation is an opt-in preference and is off by default so Markdown
+  syntax remains literal unless the writer asks for typographic input. When
+  enabled it produces curly quotes, apostrophes, en/em dashes (`--`/`---`), and
+  ellipses (`...`). It skips code, incomplete and complete link destinations and
+  titles, YAML front matter, indented code, and line-leading dash syntax.
+- Emoji autocomplete offers a curated set of common GitHub-style aliases after
+  `:`. Accepting a suggestion replaces the alias with its Unicode emoji. The
+  popup is suppressed in code, link destinations, and front matter; the
+  preference can turn it off without affecting the rest of the editor.
+- The three typing preferences apply immediately through editor compartments
+  and persist locally.
+
+## Interface zoom
+
+- View > Zoom in, Zoom out, and Actual size mirror `Ctrl+=`, `Ctrl+-`, and
+  `Ctrl+0`. The menu items disable at the 80% and 160% bounds, and Actual size
+  disables at 100%.
+- Preferences > Appearance exposes the same range as a slider. Zoom affects the
+  whole window rather than only editor text; editor text size and writing-column
+  width remain separate preferences.
+- On Tauri the WebView zoom API is used; if it is unavailable, the frontend
+  falls back to a CSS scale. The selected level persists across launches.
 
 ## Copy actions
 

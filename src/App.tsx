@@ -17,6 +17,7 @@ import {
 } from "./editor/bridge";
 import type { EditorCommand } from "./editor/format";
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
+import { clampZoom, stepZoom } from "./lib/zoom";
 import {
   altTextFromFileName,
   buildImageMarkdown,
@@ -83,6 +84,41 @@ export default function App() {
   const [draftToRecover, setDraftToRecover] =
     useState<DocumentDraft | null>(() => loadDraft());
   const savingRef = useRef(false);
+
+  useEffect(() => {
+    const zoom = clampZoom(settings.zoomLevel);
+    let cancelled = false;
+
+    if (!isTauri()) {
+      document.documentElement.style.setProperty("zoom", String(zoom));
+      return;
+    }
+
+    void import("@tauri-apps/api/webview")
+      .then(({ getCurrentWebview }) => {
+        if (!cancelled) {
+          return getCurrentWebview().setZoom(zoom);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          document.documentElement.style.setProperty("zoom", String(zoom));
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [settings.zoomLevel]);
+
+  const adjustZoom = useCallback((direction: 1 | -1 | 0) => {
+    const state = useAppStore.getState();
+    const next =
+      direction === 0 ? 1 : stepZoom(state.settings.zoomLevel, direction);
+    if (next !== state.settings.zoomLevel) {
+      state.updateSettings({ zoomLevel: next });
+    }
+  }, []);
 
   const confirmDiscard = useCallback(async () => {
     const current = useAppStore.getState().doc;
@@ -790,6 +826,27 @@ export default function App() {
       }
       const key = event.key.toLowerCase();
 
+      if (!event.altKey) {
+        if (key === "=" || key === "+" || event.code === "NumpadAdd") {
+          event.preventDefault();
+          event.stopPropagation();
+          adjustZoom(1);
+          return;
+        }
+        if (key === "-" || event.code === "NumpadSubtract") {
+          event.preventDefault();
+          event.stopPropagation();
+          adjustZoom(-1);
+          return;
+        }
+        if (key === "0") {
+          event.preventDefault();
+          event.stopPropagation();
+          adjustZoom(0);
+          return;
+        }
+      }
+
       if (event.altKey && !event.shiftKey) {
         if (key === "f" || key === "t" || key === "r") {
           event.preventDefault();
@@ -897,6 +954,7 @@ export default function App() {
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
   }, [
+    adjustZoom,
     handleCopyDocument,
     handleInsertImage,
     handleNew,
@@ -1023,6 +1081,9 @@ export default function App() {
             focusMode={settings.focusMode}
             typewriterMode={settings.typewriterMode}
             spellcheck={settings.spellcheck}
+            autoPair={settings.autoPair}
+            smartPunctuation={settings.smartPunctuation}
+            emojiAutocomplete={settings.emojiAutocomplete}
           />
           {viewMode === "preview" ? (
             <Suspense
@@ -1070,6 +1131,9 @@ export default function App() {
         onToggleView={handleToggleView}
         onFormat={handleFormat}
         onInsertImage={handleInsertImage}
+        onZoomIn={() => adjustZoom(1)}
+        onZoomOut={() => adjustZoom(-1)}
+        onResetZoom={() => adjustZoom(0)}
         onCloseWorkspace={handleCloseWorkspace}
         onQuickOpen={() => useAppStore.getState().setQuickOpen(true)}
         onSearchWorkspace={() => {

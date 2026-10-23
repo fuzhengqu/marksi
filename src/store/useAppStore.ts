@@ -91,6 +91,7 @@ interface AppStore {
 export const DEFAULT_SETTINGS: AppSettings = {
   editorFontSize: 16,
   contentWidth: 860,
+  zoomLevel: 1,
   spellcheck: true,
   autoSave: false,
   autoSaveDelayMs: 1_500,
@@ -98,6 +99,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   focusMode: false,
   typewriterMode: false,
   readOnlyMode: false,
+  autoPair: true,
+  smartPunctuation: false,
+  emojiAutocomplete: true,
 };
 
 const emptyDocument: DocumentState = {

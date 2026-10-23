@@ -8,6 +8,7 @@ import {
   Type,
   X,
 } from "lucide-react";
+import { ZOOM_MAX, ZOOM_MIN, zoomPercent } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { AppSettings, Theme } from "../types";
 
@@ -139,6 +140,27 @@ export function SettingsDialog() {
 
             <div className="settings-row">
               <div className="settings-copy">
+                <span>Interface zoom</span>
+                <small>
+                  {zoomPercent(settings.zoomLevel)}% · Scale the whole window.
+                </small>
+              </div>
+              <input
+                className="settings-range"
+                type="range"
+                min={Math.round(ZOOM_MIN * 100)}
+                max={Math.round(ZOOM_MAX * 100)}
+                step={10}
+                value={zoomPercent(settings.zoomLevel)}
+                onChange={(event) =>
+                  update("zoomLevel", Number(event.target.value) / 100)
+                }
+                aria-label="Interface zoom"
+              />
+            </div>
+
+            <div className="settings-row">
+              <div className="settings-copy">
                 <span>Writing column</span>
                 <small>{settings.contentWidth}px</small>
               </div>
@@ -171,6 +193,41 @@ export function SettingsDialog() {
                 label="Spell check"
                 checked={settings.spellcheck}
                 onChange={(value) => update("spellcheck", value)}
+              />
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>Auto pair</span>
+                <small>
+                  Close brackets, quotes, and Markdown markers as you type.
+                </small>
+              </div>
+              <Toggle
+                label="Auto pair brackets and Markdown markers"
+                checked={settings.autoPair}
+                onChange={(value) => update("autoPair", value)}
+              />
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>Smart punctuation</span>
+                <small>Use curly quotes, dashes, and ellipses in prose.</small>
+              </div>
+              <Toggle
+                label="Smart punctuation"
+                checked={settings.smartPunctuation}
+                onChange={(value) => update("smartPunctuation", value)}
+              />
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>Emoji autocomplete</span>
+                <small>Suggest emoji when you type a colon alias.</small>
+              </div>
+              <Toggle
+                label="Emoji autocomplete"
+                checked={settings.emojiAutocomplete}
+                onChange={(value) => update("emojiAutocomplete", value)}
               />
             </div>
           </section>

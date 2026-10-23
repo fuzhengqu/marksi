@@ -13,6 +13,7 @@ import {
   createEditorExtensions,
   editorContentAttributes,
 } from "../editor/setup";
+import { smartTyping } from "../editor/smartTyping";
 import {
   centerSelection,
   focusMode,
@@ -29,6 +30,9 @@ interface EditorPaneProps {
   focusMode: boolean;
   typewriterMode: boolean;
   spellcheck: boolean;
+  autoPair: boolean;
+  smartPunctuation: boolean;
+  emojiAutocomplete: boolean;
 }
 
 function focusSearchField(view: EditorView, replace: boolean): void {
@@ -65,6 +69,9 @@ export function EditorPane({
   focusMode: focusModeEnabled,
   typewriterMode: typewriterModeEnabled,
   spellcheck,
+  autoPair,
+  smartPunctuation,
+  emojiAutocomplete,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -73,10 +80,14 @@ export function EditorPane({
   const focusModeRef = useRef(focusModeEnabled);
   const typewriterModeRef = useRef(typewriterModeEnabled);
   const spellcheckRef = useRef(spellcheck);
+  const autoPairRef = useRef(autoPair);
+  const smartPunctuationRef = useRef(smartPunctuation);
+  const emojiAutocompleteRef = useRef(emojiAutocomplete);
   const [editableCompartment] = useState(() => new Compartment());
   const [focusModeCompartment] = useState(() => new Compartment());
   const [typewriterModeCompartment] = useState(() => new Compartment());
   const [spellcheckCompartment] = useState(() => new Compartment());
+  const [typingCompartment] = useState(() => new Compartment());
   const callbacksRef = useRef({
     onChange: useAppStore.getState().setContent,
     onCursor: useAppStore.getState().setCursor,
@@ -101,6 +112,12 @@ export function EditorPane({
   useEffect(() => {
     spellcheckRef.current = spellcheck;
   }, [spellcheck]);
+
+  useEffect(() => {
+    autoPairRef.current = autoPair;
+    smartPunctuationRef.current = smartPunctuation;
+    emojiAutocompleteRef.current = emojiAutocomplete;
+  }, [autoPair, emojiAutocomplete, smartPunctuation]);
 
   useEffect(() => {
     callbacksRef.current = {
@@ -131,6 +148,13 @@ export function EditorPane({
         spellcheckCompartment.of(
           editorContentAttributes(spellcheckRef.current),
         ),
+        typingCompartment.of(
+          smartTyping({
+            autoPair: autoPairRef.current,
+            smartPunctuation: smartPunctuationRef.current,
+            emojiAutocomplete: emojiAutocompleteRef.current,
+          }),
+        ),
       ],
     });
 
@@ -149,6 +173,7 @@ export function EditorPane({
     focusModeCompartment,
     spellcheckCompartment,
     typewriterModeCompartment,
+    typingCompartment,
   ]);
 
   useEffect(() => {
@@ -208,6 +233,23 @@ export function EditorPane({
       ),
     });
   }, [spellcheck, spellcheckCompartment]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) {
+      return;
+    }
+    view.dispatch({
+      effects: typingCompartment.reconfigure(
+        smartTyping({ autoPair, smartPunctuation, emojiAutocomplete }),
+      ),
+    });
+  }, [
+    autoPair,
+    emojiAutocomplete,
+    smartPunctuation,
+    typingCompartment,
+  ]);
 
   useEffect(() => {
     const onCommand = (event: Event) => {
@@ -305,6 +347,13 @@ export function EditorPane({
             spellcheckCompartment.of(
               editorContentAttributes(spellcheckRef.current),
             ),
+            typingCompartment.of(
+              smartTyping({
+                autoPair: autoPairRef.current,
+                smartPunctuation: smartPunctuationRef.current,
+                emojiAutocomplete: emojiAutocompleteRef.current,
+              }),
+            ),
           ],
         }),
       );
@@ -316,6 +365,7 @@ export function EditorPane({
     focusModeCompartment,
     spellcheckCompartment,
     typewriterModeCompartment,
+    typingCompartment,
   ]);
 
   useEffect(() => {
