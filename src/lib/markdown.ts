@@ -85,7 +85,7 @@ md.use(footnote)
   .use(sub)
   .use(sup)
   .use(markdownItAttrs, {
-    allowedAttributes: ["width", "height"],
+    allowedAttributes: ["width", "height", "fit"],
   })
   .use(alert, {
     titleRenderer: (tokens, index) => {
@@ -344,12 +344,16 @@ md.renderer.rules.fence = (tokens, index) => {
 };
 
 function imageDimensionAttributes(token: Token): string {
-  return (["width", "height"] as const)
+  const dimensions = (["width", "height"] as const)
     .map((name) => {
       const raw = String(token.attrGet(name) ?? "").trim();
       return raw && /^\d{1,4}$/.test(raw) ? ` ${name}="${raw}"` : "";
     })
     .join("");
+  const fit = String(token.attrGet("fit") ?? "").trim().toLowerCase();
+  return /^(contain|cover)$/.test(fit)
+    ? `${dimensions} data-fit="${fit}"`
+    : dimensions;
 }
 
 function imagePlaceholder(alt: string, label: string, detail?: string): string {
@@ -523,6 +527,7 @@ export function renderMarkdown(
       "data-marksi-image",
       "data-image-index",
       "data-axis",
+      "data-fit",
       "data-mermaid-source",
       "target",
       "rel",

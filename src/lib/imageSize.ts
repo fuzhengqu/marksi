@@ -542,8 +542,55 @@ export function setImageHeight(
   return setImageSize(source, imageIndex, null, height, expectedAlt);
 }
 
+export type ImageFit = "contain" | "cover";
+
+function setAttribute(attrs: string, name: string, value: string): string {
+  const pattern = new RegExp(`(^|\\s)${name}\\s*=\\s*[^\\s}]+`, "i");
+  if (pattern.test(attrs)) {
+    return attrs.replace(pattern, `$1${name}=${value}`);
+  }
+  const trimmed = attrs.trim();
+  return `${trimmed ? `${trimmed} ` : ""}${name}=${value}`;
+}
+
 /**
- * Removes width/height from the nth image while retaining unrelated attributes.
+ * Applies contain/cover to an image. Missing dimensions are filled from the
+ * current rendered size so object-fit has a real box to work with.
+ */
+export function setImageFit(
+  source: string,
+  imageIndex: number,
+  fit: ImageFit,
+  width: number | null | undefined,
+  height: number | null | undefined,
+  expectedAlt?: string,
+): string {
+  const occurrence = targetOccurrence(source, imageIndex, expectedAlt);
+  if (!occurrence) {
+    return source;
+  }
+  const attrs =
+    occurrence.attrsFrom !== null && occurrence.attrsTo !== null
+      ? source.slice(occurrence.attrsFrom + 1, occurrence.attrsTo - 1)
+      : "";
+  const hasWidth = /(?:^|\s)width\s*=/i.test(attrs);
+  const hasHeight = /(?:^|\s)height\s*=/i.test(attrs);
+  const updated = setAttribute(
+    updateDimensions(
+      attrs,
+      hasWidth ? null : width,
+      hasHeight ? null : height,
+    ),
+    "fit",
+    fit,
+  );
+  return `${source.slice(0, occurrence.to)}{${updated}}${source.slice(
+    occurrence.attrsTo ?? occurrence.to,
+  )}`;
+}
+
+/**
+ * Removes width/height/fit from the nth image while retaining unrelated attributes.
  */
 export function clearImageSize(
   source: string,
@@ -556,7 +603,7 @@ export function clearImageSize(
   }
   const attrs = source.slice(occurrence.attrsFrom + 1, occurrence.attrsTo - 1);
   const remaining = attrs
-    .replace(/(?:^|\s)(?:width|height)\s*=\s*[^\s}]+/gi, "")
+    .replace(/(?:^|\s)(?:width|height|fit)\s*=\s*[^\s}]+/gi, "")
     .replace(/\s+/g, " ")
     .trim();
   if (!remaining) {
@@ -595,4 +642,15 @@ export function imageHeightFromAttributes(
   attrs: string | null | undefined,
 ): number | null {
   return dimensionFromAttributes(attrs, "height", clampImageHeight);
+}
+
+export function imageFitFromAttributes(
+  attrs: string | null | undefined,
+): ImageFit | null {
+  const match = /(?:^|\s)fit\s*=\s*([^\s}]+)/i.exec(attrs ?? "");
+  if (!match) {
+    return null;
+  }
+  const value = match[1].toLowerCase();
+  return value === "contain" || value === "cover" ? value : null;
 }

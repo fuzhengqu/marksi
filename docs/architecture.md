@@ -95,13 +95,16 @@ data-URL images do not expose file actions. This menu is presentation-only and
 never rewrites the Markdown source.
 
 Image dimensions use a constrained Markdown attribute block:
-`![alt](image.png){width=320 height=180}`. `markdown-it-attrs` is configured to
-accept only `width` and `height`; the image renderer validates each as a
-four-digit pixel value before emitting HTML, and DOMPurify remains the final
-boundary. The renderer wraps local and data-URL images in a positioning frame
-and appends keyboard-focusable width and height handles unless read-only mode or
-the footnote section disables them. Width-only images keep their intrinsic
-aspect ratio; explicit height is applied independently.
+`![alt](image.png){width=320 height=180 fit=contain}`. `markdown-it-attrs` is
+configured to accept only `width`, `height`, and `fit`; the image renderer
+validates dimensions as four-digit pixel values and fit as `contain` or
+`cover`, then emits a sanitized `data-fit` attribute. DOMPurify remains the
+final boundary. The renderer wraps local and data-URL images in a positioning
+frame and appends keyboard-focusable width and height handles unless read-only
+mode or the footnote section disables them. Width-only images keep their
+intrinsic aspect ratio; explicit height is applied independently. Fit menus
+fill missing dimensions from the currently rendered image so object-fit has a
+real box; Original size removes width, height, and fit.
 
 `src/lib/imageSize.ts` maps the rendered handle back to canonical source. Its
 scanner skips fenced and inline code, YAML front matter, footnote bodies, and
@@ -116,8 +119,9 @@ rather than replacing the store content. `EditorPane` computes the source
 update from its current CodeMirror document and commits one annotated
 transaction, so the change is undoable/redoable and does not rebuild the editor
 state. The annotation is the only doc-changing transaction permitted while the
-reading view's editor is otherwise read-only. Width and height are emitted in
-exported HTML; fit modes such as contain/cover remain future work.
+reading view's editor is otherwise read-only. Width, height, and fit modes are
+emitted in exported HTML; contain/cover use CSS object-fit with a background
+for letterboxed areas.
 
 ## Extended Markdown
 

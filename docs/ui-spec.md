@@ -233,15 +233,19 @@ ease-out; honor `prefers-reduced-motion`.
 - Clicking a rendered image opens a full-window lightbox over a dimmed scrim.
   The toolbar provides zoom out, zoom in, reset, and close. `+`, `-`, `0`, and
   `Esc` work from the keyboard. Zoom is bounded to 50%-400%.
-- Right-click a loaded local image for a compact action menu: View image, Copy
-  image path, Open image, and Reveal in folder. The menu stays inside the
-  viewport, follows the shared menu-item visual language, and dismisses on
-  Escape, outside click, scroll, or resize. Placeholders and remote images do
-  not open it.
-- Image dimensions are written in the canonical source as width and optional
-  height attributes: `![alt](image.png){width=320 height=180}`. The attribute
-  block must follow the image immediately; resizing normalizes a spaced block
-  onto the image. Width-only images preserve their aspect ratio.
+- Right-click a loaded image for a compact action menu: View image, Fit:
+  contain, Fit: cover, Original size, and local-file actions (Copy image path,
+  Open image, Reveal in folder). Fit and reset actions are hidden in read-only
+  mode. The menu stays inside the viewport, follows the shared menu-item visual
+  language, and dismisses on Escape, outside click, scroll, or resize.
+  Placeholders and remote images do not open it.
+- Image dimensions are written in the canonical source as width, optional
+  height, and optional fit attributes:
+  `![alt](image.png){width=320 height=180 fit=contain}`. The attribute block
+  must follow the image immediately; resizing normalizes a spaced block onto
+  the image. Width-only images preserve their aspect ratio. Fit modes fill
+  missing dimensions from the current rendered size and use `object-fit`
+  contain or cover; Original size removes width, height, and fit.
 - Loaded images in reading view reveal a width handle at the right edge and a
   height handle at the bottom edge on hover or keyboard focus when read-only
   mode is off. Drag the width handle horizontally or use Left/Right; drag the
@@ -252,9 +256,9 @@ ease-out; honor `prefers-reduced-motion`.
 - Handles are omitted in read-only mode and for footnote images; placeholders
   and remote images are not resizable. Resizing is the only source-editing
   affordance in reading view; text remains read-only.
-- Width and height attributes are preserved through reading view, HTML export,
-  rich clipboard HTML, and print. The lightbox remains a viewing surface and
-  never edits the Markdown source or copies an asset.
+- Width, height, and fit attributes are preserved through reading view, HTML
+  export, rich clipboard HTML, and print. The lightbox remains a viewing surface
+  and never edits the Markdown source or copies an asset.
 
 ## Mermaid diagrams
 

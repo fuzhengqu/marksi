@@ -352,7 +352,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.03"), "About should show version 0.03", state);
+    assert(state.version?.includes("0.04"), "About should show version 0.04", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -735,7 +735,15 @@ async function main() {
     );
     assert(
       JSON.stringify(labels) ===
-        JSON.stringify(["查看图片", "复制图片路径", "打开图片", "在文件夹中显示"]),
+        JSON.stringify([
+          "查看图片",
+          "适应：包含",
+          "适应：覆盖",
+          "原始尺寸",
+          "复制图片路径",
+          "打开图片",
+          "在文件夹中显示",
+        ]),
       "image context menu is incomplete",
       labels,
     );
@@ -749,6 +757,93 @@ async function main() {
     );
     await press("Escape", "Escape", 27);
     await evaluate('window.__MARKSI_DEV__.getState().setViewMode("preview")');
+  });
+
+  await test("image fit controls update the rendered image and reset cleanly", async () => {
+    await resetBase();
+    const imageDoc = resolve(fixtureDir, "image-fit.md");
+    await writeFile(imageDoc, "![icon](icon.png)\n", "utf8");
+    await evaluate(
+      `window.__MARKSI_DEV__.openPath(${JSON.stringify(imageDoc)})`,
+    );
+    await waitFor(
+      'window.__MARKSI_DEV__.getState().doc.path === ' +
+        JSON.stringify(imageDoc),
+      10_000,
+    );
+    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+    await waitFor(
+      'document.querySelector("img.markdown-image[data-marksi-resolved]")',
+      10_000,
+    );
+    await sleep(250);
+
+    async function openImageMenu() {
+      await evaluate(`(() => {
+        const image = document.querySelector("img.markdown-image");
+        const box = image.getBoundingClientRect();
+        image.dispatchEvent(new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          button: 2,
+          clientX: box.left + box.width / 2,
+          clientY: box.top + box.height / 2
+        }));
+      })()`);
+      await sleep(220);
+    }
+
+    async function clickImageMenuLabel(label) {
+      const clicked = await evaluate(`(() => {
+        const button = Array.from(document.querySelectorAll(".image-context-menu .menu-item"))
+          .find((node) => node.textContent?.includes(${JSON.stringify(label)}));
+        button?.click();
+        return Boolean(button);
+      })()`);
+      assert(clicked, `image menu action missing: ${label}`);
+      await sleep(450);
+    }
+
+    await openImageMenu();
+    await clickImageMenuLabel("适应：包含");
+    const contained = await evaluate(`({
+      content: window.__MARKSI_DEV__.getState().doc.content,
+      fit: document.querySelector("img.markdown-image")?.getAttribute("data-fit"),
+      objectFit: getComputedStyle(document.querySelector("img.markdown-image")).objectFit
+    })`);
+    assert(
+      contained.content.includes("fit=contain") &&
+        contained.content.includes("width=") &&
+        contained.content.includes("height="),
+      "contain fit did not write dimensions and fit to source",
+      contained,
+    );
+    assert(contained.fit === "contain", "contain fit was not rendered", contained);
+    assert(contained.objectFit === "contain", "contain object-fit missing", contained);
+
+    await openImageMenu();
+    await clickImageMenuLabel("适应：覆盖");
+    const covered = await evaluate(`({
+      content: window.__MARKSI_DEV__.getState().doc.content,
+      fit: document.querySelector("img.markdown-image")?.getAttribute("data-fit"),
+      objectFit: getComputedStyle(document.querySelector("img.markdown-image")).objectFit
+    })`);
+    assert(covered.content.includes("fit=cover"), "cover fit was not written", covered);
+    assert(covered.fit === "cover", "cover fit was not rendered", covered);
+    assert(covered.objectFit === "cover", "cover object-fit missing", covered);
+
+    await openImageMenu();
+    await clickImageMenuLabel("原始尺寸");
+    const reset = await evaluate(`({
+      content: window.__MARKSI_DEV__.getState().doc.content,
+      fit: document.querySelector("img.markdown-image")?.getAttribute("data-fit"),
+      width: document.querySelector("img.markdown-image")?.getAttribute("width"),
+      height: document.querySelector("img.markdown-image")?.getAttribute("height")
+    })`);
+    assert(reset.content === "![icon](icon.png)\n", "original size did not reset source", reset);
+    assert(reset.fit === null, "original size left data-fit behind", reset);
+    assert(reset.width === null && reset.height === null, "original size left dimensions", reset);
+    await resetBase();
   });
 
   await test("image width attributes, drag write-back, and undo work", async () => {

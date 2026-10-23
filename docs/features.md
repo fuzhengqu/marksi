@@ -128,7 +128,7 @@ fully lax continuation blocks to the future continuation/quote item above.
 | Image context menu | done | M5 |
 | Image width resize (drag handle) | done | M5 |
 | Image height resize (drag handle) | done | M5 |
-| Image fit controls (contain/cover) | todo | M5 |
+| Image fit controls (contain/cover) | done | M5 |
 | Remote image cache | todo | M5 |
 | Root URL / uploader path mode | todo | M5 |
 | Uploader integration (PicGo/PicList/custom) | todo | M5 |

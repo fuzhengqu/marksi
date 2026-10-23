@@ -445,6 +445,37 @@ export default function App() {
     [],
   );
 
+  const handleFitImage = useCallback(
+    (
+      imageIndex: number,
+      fit: "contain" | "cover",
+      width: number,
+      height: number,
+      alt: string,
+    ) => {
+      const state = useAppStore.getState();
+      if (state.settings.readOnlyMode) {
+        return;
+      }
+      dispatchEditorImageResize({
+        imageIndex,
+        fit,
+        width,
+        height,
+        alt,
+      });
+    },
+    [],
+  );
+
+  const handleResetImage = useCallback((imageIndex: number, alt: string) => {
+    const state = useAppStore.getState();
+    if (state.settings.readOnlyMode) {
+      return;
+    }
+    dispatchEditorImageResize({ imageIndex, reset: true, alt });
+  }, []);
+
   const handleFormat = useCallback(
     (command: EditorCommand) => {
       if (!ensureEditable()) {
@@ -1197,6 +1228,8 @@ export default function App() {
                 gotoLine={gotoLine}
                 theme={theme}
                 onResizeImage={handleResizeImage}
+                onFitImage={handleFitImage}
+                onResetImage={handleResetImage}
               />
             </Suspense>
           ) : null}

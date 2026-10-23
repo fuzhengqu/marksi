@@ -8,12 +8,14 @@ import {
 } from "react";
 import {
   Copy,
+  Crop,
   ExternalLink,
   Eye,
   FolderOpen,
   Minus,
   Plus,
   RotateCcw,
+  Scan,
   X,
 } from "lucide-react";
 import { useT } from "../i18n";
@@ -43,6 +45,14 @@ interface PreviewPaneProps {
     height: number | null,
     alt: string,
   ) => void;
+  onFitImage: (
+    imageIndex: number,
+    fit: "contain" | "cover",
+    width: number,
+    height: number,
+    alt: string,
+  ) => void;
+  onResetImage: (imageIndex: number, alt: string) => void;
 }
 
 interface LightboxImage {
@@ -56,6 +66,10 @@ interface ImageContextMenu {
   src: string;
   alt: string;
   path: string | null;
+  imageIndex: number | null;
+  width: number;
+  height: number;
+  fit: string | null;
 }
 
 const imageCache = new Map<string, Promise<string>>();
@@ -127,6 +141,8 @@ export function PreviewPane({
   gotoLine,
   theme,
   onResizeImage,
+  onFitImage,
+  onResetImage,
 }: PreviewPaneProps) {
   const t = useT();
   const debouncedContent = useDebouncedValue(content, 90);
@@ -457,15 +473,22 @@ export function PreviewPane({
     }
 
     event.preventDefault();
+    const frame = image.closest(".markdown-image-frame");
+    const imageIndex = Number(frame?.getAttribute("data-image-index"));
+    const rect = image.getBoundingClientRect();
     const path = image.dataset.marksiResolved ?? image.dataset.marksiSrc ?? null;
     const width = 228;
-    const height = 176;
+    const height = 300;
     setContextMenu({
       x: Math.max(8, Math.min(event.clientX, window.innerWidth - width - 8)),
       y: Math.max(8, Math.min(event.clientY, window.innerHeight - height - 8)),
       src: image.src,
       alt: image.alt || t("Image"),
       path,
+      imageIndex: Number.isInteger(imageIndex) ? imageIndex : null,
+      width: rect.width,
+      height: rect.height,
+      fit: image.dataset.fit ?? null,
     });
   }
 
@@ -575,6 +598,65 @@ export function PreviewPane({
             </span>
             <span className="menu-item-label">{t("View image")}</span>
           </button>
+          {contextMenu.imageIndex !== null && !readOnlyMode ? (
+            <>
+              <div className="menu-separator" />
+              <button
+                type="button"
+                className="menu-item"
+                role="menuitem"
+                onClick={() => {
+                  setContextMenu(null);
+                  onFitImage(
+                    contextMenu.imageIndex!,
+                    "contain",
+                    contextMenu.width,
+                    contextMenu.height,
+                    contextMenu.alt,
+                  );
+                }}
+              >
+                <span className="menu-item-icon">
+                  <Scan size={15} strokeWidth={1.8} />
+                </span>
+                <span className="menu-item-label">{t("Fit: contain")}</span>
+              </button>
+              <button
+                type="button"
+                className="menu-item"
+                role="menuitem"
+                onClick={() => {
+                  setContextMenu(null);
+                  onFitImage(
+                    contextMenu.imageIndex!,
+                    "cover",
+                    contextMenu.width,
+                    contextMenu.height,
+                    contextMenu.alt,
+                  );
+                }}
+              >
+                <span className="menu-item-icon">
+                  <Crop size={15} strokeWidth={1.8} />
+                </span>
+                <span className="menu-item-label">{t("Fit: cover")}</span>
+              </button>
+              <button
+                type="button"
+                className="menu-item"
+                role="menuitem"
+                onClick={() => {
+                  setContextMenu(null);
+                  onResetImage(contextMenu.imageIndex!, contextMenu.alt);
+                }}
+              >
+                <span className="menu-item-icon">
+                  <RotateCcw size={15} strokeWidth={1.8} />
+                </span>
+                <span className="menu-item-label">{t("Original size")}</span>
+              </button>
+            </>
+          ) : null}
           {contextMenu.path &&
           !contextMenu.path.startsWith("data:") ? (
             <>

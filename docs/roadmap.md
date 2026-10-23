@@ -7,19 +7,19 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.03**
-- Technical version: **0.3.0**
+- Product version: **0.04**
+- Technical version: **0.4.0**
 - Foundation milestones M1 and M3 are complete.
 - M2 core is complete; golden Markdown tests remain open.
 - M4 core is complete, with six planned file/workspace items still open.
-- M5 is in progress with eleven completed items and eleven open items.
+- M5 is in progress with twelve completed items and ten open items.
 - M6 and M7 have not started.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **75 done, 4 wip,
-40 todo, 1 deferred** across 120 items.
+is the source for exact status values. Current raw count: **76 done, 4 wip,
+39 todo, 1 deferred** across 120 items.
 
 ## Milestone definitions
 
@@ -107,13 +107,12 @@ Exit criteria:
 
 Current M5 completion order:
 
-1. Image fit controls (complete the image sizing surface).
-2. Export profiles, front matter options, page setup, and custom export command.
-3. Export image.
-4. Optional Pandoc import/export, with external-tool detection and no bundling.
-5. Remote image cache, root URL/path mode, and uploader integration, after the
+1. Export profiles, front matter options, page setup, and custom export command.
+2. Export image.
+3. Optional Pandoc import/export, with external-tool detection and no bundling.
+4. Remote image cache, root URL/path mode, and uploader integration, after the
    network/privacy design is reviewed.
-6. Lax list continuation/quote indentation and remaining fuzz cases.
+5. Lax list continuation/quote indentation and remaining fuzz cases.
 
 Remote image and uploader work must not silently enable background network
 requests. They require explicit user action, clear cache behavior, and tests

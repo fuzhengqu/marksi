@@ -15,6 +15,8 @@ export interface EditorImageResizeRequest {
   imageIndex: number;
   width?: number | null;
   height?: number | null;
+  fit?: "contain" | "cover" | null;
+  reset?: boolean;
   alt: string;
 }
 

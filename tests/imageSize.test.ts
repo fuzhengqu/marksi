@@ -4,8 +4,10 @@ import {
   clampImageWidth,
   clearImageSize,
   findImageOccurrences,
+  imageFitFromAttributes,
   imageHeightFromAttributes,
   imageWidthFromAttributes,
+  setImageFit,
   setImageHeight,
   setImageSize,
   setImageWidth,
@@ -180,12 +182,33 @@ describe("setImageWidth", () => {
     ).toBe("![alt](image.png){width=320 height=180}");
   });
 
-  it("clears image width and height while preserving other attributes", () => {
+  it("adds contain/cover fit and fills missing dimensions", () => {
+    expect(
+      setImageFit("![alt](image.png)", 0, "contain", 320, 180),
+    ).toBe("![alt](image.png){width=320 height=180 fit=contain}");
+    expect(
+      setImageFit(
+        "![alt](image.png){width=320 height=180 fit=cover}",
+        0,
+        "contain",
+        320,
+        180,
+      ),
+    ).toBe("![alt](image.png){width=320 height=180 fit=contain}");
+    expect(
+      setImageFit("![alt](image.png){width=320}", 0, "cover", 320, 180),
+    ).toBe("![alt](image.png){width=320 height=180 fit=cover}");
+  });
+
+  it("clears image width, height, and fit while preserving other attributes", () => {
     expect(clearImageSize("![alt](image.png){width=320 height=180}", 0)).toBe(
       "![alt](image.png)",
     );
     expect(
-      clearImageSize("![alt](image.png){.photo width=320 height=180}", 0),
+      clearImageSize(
+        "![alt](image.png){.photo width=320 height=180 fit=contain}",
+        0,
+      ),
     ).toBe("![alt](image.png){.photo}");
     expect(clearImageSize("![alt](image.png)", 0, "alt")).toBe(
       "![alt](image.png)",
@@ -205,5 +228,8 @@ describe("setImageWidth", () => {
     expect(imageWidthFromAttributes("height=200")).toBeNull();
     expect(imageHeightFromAttributes("height=200 width=320")).toBe(200);
     expect(imageHeightFromAttributes("width=320")).toBeNull();
+    expect(imageFitFromAttributes("width=320 fit=contain")).toBe("contain");
+    expect(imageFitFromAttributes("fit=cover")).toBe("cover");
+    expect(imageFitFromAttributes("fit=stretch")).toBeNull();
   });
 });

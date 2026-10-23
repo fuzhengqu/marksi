@@ -1357,6 +1357,16 @@ body.is-resizing-image[data-resize-axis="height"] * {
   height: auto;
 }
 
+.markdown-body .markdown-image[data-fit="contain"] {
+  object-fit: contain;
+  background: var(--sidebar-bg);
+}
+
+.markdown-body .markdown-image[data-fit="cover"] {
+  object-fit: cover;
+  background: var(--sidebar-bg);
+}
+
 .markdown-body .markdown-image.is-loading {
   min-width: 220px;
   min-height: 72px;

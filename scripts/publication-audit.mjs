@@ -306,24 +306,32 @@ if (!/^0\.\d+\.0$/.test(packageVersion)) {
     location: packageVersion,
   });
 }
+let previousVersion = null;
 try {
-  const parentPackage = JSON.parse(
-    git(["show", "HEAD^:package.json"]).toString("utf8"),
-  );
-  if (parentPackage.version !== packageVersion) {
-    const previous = /^0\.(\d+)\.0$/.exec(parentPackage.version);
-    const expected = previous
-      ? `0.${Number(previous[1]) + 1}.0`
-      : null;
-    if (packageVersion !== expected) {
-      findings.push({
-        kind: "release version skipped a step",
-        location: `${parentPackage.version} -> ${packageVersion}`,
-      });
-    }
+  const headVersion = JSON.parse(
+    git(["show", "HEAD:package.json"]).toString("utf8"),
+  ).version;
+  if (headVersion !== packageVersion) {
+    previousVersion = headVersion;
+  } else {
+    previousVersion = JSON.parse(
+      git(["show", "HEAD^:package.json"]).toString("utf8"),
+    ).version;
   }
 } catch {
   // The root commit has no parent package version to compare.
+}
+if (previousVersion && previousVersion !== packageVersion) {
+  const previous = /^0\.(\d+)\.0$/.exec(previousVersion);
+  const expected = previous
+    ? `0.${Number(previous[1]) + 1}.0`
+    : null;
+  if (packageVersion !== expected) {
+    findings.push({
+      kind: "release version skipped a step",
+      location: `${previousVersion} -> ${packageVersion}`,
+    });
+  }
 }
 
 const lock = JSON.parse(readFileSync("package-lock.json", "utf8"));

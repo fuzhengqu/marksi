@@ -241,6 +241,14 @@ tr:nth-child(even) td { background: #faf9f7; }
 .markdown-body img:not([height]) {
   height: auto;
 }
+.markdown-body img[data-fit="contain"] {
+  object-fit: contain;
+  background: #f5f3ef;
+}
+.markdown-body img[data-fit="cover"] {
+  object-fit: cover;
+  background: #f5f3ef;
+}
 .image-placeholder {
   display: inline-flex;
   align-items: center;

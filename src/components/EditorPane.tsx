@@ -17,7 +17,7 @@ import {
 } from "../editor/setup";
 import { livePreview } from "../editor/livePreview";
 import { searchPhrases } from "../i18n";
-import { setImageSize } from "../lib/imageSize";
+import { clearImageSize, setImageFit, setImageSize } from "../lib/imageSize";
 import { minimalTextChange } from "../lib/textChange";
 import { smartTyping } from "../editor/smartTyping";
 import {
@@ -390,13 +390,24 @@ export function EditorPane({
         return;
       }
       const current = view.state.doc.toString();
-      const next = setImageSize(
-        current,
-        request.imageIndex,
-        request.width,
-        request.height,
-        request.alt,
-      );
+      const next = request.reset
+        ? clearImageSize(current, request.imageIndex, request.alt)
+        : request.fit
+          ? setImageFit(
+              current,
+              request.imageIndex,
+              request.fit,
+              request.width,
+              request.height,
+              request.alt,
+            )
+          : setImageSize(
+              current,
+              request.imageIndex,
+              request.width,
+              request.height,
+              request.alt,
+            );
       const change = minimalTextChange(current, next);
       if (!change) {
         return;

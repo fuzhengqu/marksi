@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.03` product version.
+- About dialog close behavior and display of the `0.04` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -89,9 +89,10 @@ The E2E suite currently covers:
 - Mermaid rendering in reading mode, including SVG sanitization checks.
 - Auto pairing, smart punctuation, and emoji completion.
 - Local image context menu and lightbox action.
-- Image width/height attributes, width and height drag handles, reference-style
-  image drag, undo/redo of resize transactions, code-fence safety, and
-  read-only suppression of resize handles.
+- Image width/height attributes, width and height drag handles, contain/cover
+  fit controls with original-size reset, reference-style image drag, undo/redo
+  of resize transactions, code-fence safety, and read-only suppression of
+  resize handles.
 - Recent-file hover remove button and File > Clear recent files.
 - Zoom shortcut and reset behavior.
 - Final cleanup and removal of fixture paths from recent files.
@@ -101,8 +102,8 @@ The E2E suite currently covers:
 Vitest covers formatting, smart typing, emoji catalogs, i18n, version display
 formatting, zoom math, strict-heading and lax-list normalization, front-matter
 parsing, save-name extraction/sanitization, image helpers, image-source scanning and
-width/height clamping, minimal text-change calculation, quick-open ranking, and
-analysis helpers.
+width/height/fit handling, minimal text-change calculation, quick-open ranking,
+and analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic writes, image import and
 data URLs, workspace listing/search, and file timestamps.
 
