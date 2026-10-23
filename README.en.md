@@ -9,15 +9,18 @@ designed around a calm, single-document writing surface: a slim title bar, a
 collapsible file/outline/search sidebar, a centered source editor, and a quiet
 status bar.
 
-> Status: MVP (M4, M5 in progress). The desktop shell, source editor, editable
-> live preview, reading view, bilingual Chinese/English interface, file
-> open/save, encoding-aware IO, workspace browser, outline, search, themes,
-> extended Markdown, Mermaid diagrams, local image assets, image resizing,
-> formatting commands, find/replace, HTML/PDF export, writing modes, smart
-> typing, interface zoom,
+> Status: MVP. M1 and M3 are complete; M2 core and M4 core are usable. M4 still
+> has six file/workspace debt items, M5 is in progress, and M6/M7 have not
+> started. See [`docs/roadmap.md`](docs/roadmap.md) for milestone scope,
+> priorities, and exit criteria, and
+> [`docs/feature-parity.md`](docs/feature-parity.md) for the detailed feature
+> inventory. The desktop shell, source editor, editable live preview, reading
+> view, bilingual Chinese/English interface, file open/save, encoding-aware IO,
+> workspace browser, outline, search, themes, extended Markdown, Mermaid
+> diagrams, local image assets, image resizing, formatting commands,
+> find/replace, HTML/PDF export, writing modes, smart typing, interface zoom,
 > document copy actions, preferences, quick open, workspace full-text search,
-> autosave, crash recovery, and external-change detection are implemented. See
-> `docs/feature-parity.md` for the roadmap.
+> autosave, crash recovery, and external-change detection are implemented.
 
 ## Versioning
 

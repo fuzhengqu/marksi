@@ -2,6 +2,11 @@
 
 Status values: `todo`, `wip`, `done`, `deferred`, `not-applicable`.
 
+This is a living feature inventory, not a schedule. Milestone scope, ordering,
+and exit criteria are defined in [`docs/roadmap.md`](roadmap.md). A feature is
+not `done` until its implementation and required tests are complete and the
+full verification gate passes.
+
 This is a living checklist. It is intentionally broader than the current MVP so
 that design decisions do not paint us into a corner.
 
@@ -155,6 +160,7 @@ is also supported. Fit modes such as contain/cover remain future work.
 | Shortcut editor | todo | M6 |
 | Advanced JSON settings | todo | M6 |
 | Chinese default / English language switch | done | M5 |
+| Version display and one-step bump | done | M5 |
 | i18n framework (en, zh-Hans, zh-Hant first) | wip | M6 |
 | RTL and accessibility pass | todo | M7 |
 | No telemetry / no account | done | M0 |
@@ -170,8 +176,10 @@ is also supported. Fit modes such as contain/cover remain future work.
 | Signed releases / checksums | todo | M6 |
 | Auto-update | todo | M6 |
 | Third-party license notices | wip | M0 |
-| CI (Windows + Linux) | todo | M0 |
-| E2E and golden Markdown tests | todo | M2 |
+| Publication audit CI (Linux) | done | M0 |
+| Full build/test CI (Windows + Linux) | todo | M0 |
+| E2E tests | done | M0 |
+| Golden Markdown tests | todo | M2 |
 
 ## Explicit non-goals
 

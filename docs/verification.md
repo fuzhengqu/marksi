@@ -112,7 +112,8 @@ Some operating-system dialogs cannot be driven reliably through CDP alone:
 native open/save/folder/image pickers, print/PDF dialogs, drag-and-drop from the
 OS shell, external browser launches, and the final Quit action. Their underlying
 file and image logic is covered by Rust tests and by dev-hook/E2E flows where
-possible. The save-name E2E replaces the native dialog boundary and verifies the
+possible. GitHub Actions currently runs the publication audit only; the full
+Windows/Linux build-and-test CI matrix remains open under M0. The save-name E2E replaces the native dialog boundary and verifies the
 default filename plus the real write; the exact native dialog text remains a
 manual release check. Before a release build, the native-dialog checklist must still be
 exercised on Windows and Linux.
