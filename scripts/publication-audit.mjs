@@ -111,7 +111,11 @@ function scanFile(path) {
 
 const findings = [];
 const tracked = git(["ls-files", "-z"]).toString("utf8").split("\0").filter(Boolean);
-const commits = git(["rev-list", "--all"]).toString("utf8").trim().split("\n").filter(Boolean);
+const commits = git(["rev-list", "--branches", "--tags"])
+  .toString("utf8")
+  .trim()
+  .split("\n")
+  .filter(Boolean);
 
 for (const path of tracked) {
   const lower = path.toLowerCase();
@@ -207,7 +211,12 @@ for (const commit of commits) {
   }
 }
 
-const messages = git(["log", "--all", "--format=%H%x00%B%x00"]).toString("utf8");
+const messages = git([
+  "log",
+  "--branches",
+  "--tags",
+  "--format=%H%x00%B%x00",
+]).toString("utf8");
 const messageParts = messages.split("\0");
 for (let index = 0; index + 1 < messageParts.length; index += 2) {
   const hash = messageParts[index].trim();
