@@ -234,6 +234,11 @@ ease-out; honor `prefers-reduced-motion`.
 - Export HTML writes a standalone file through the native save dialog. Print /
   PDF switches to reading view, injects the same `@page` rules, waits for
   Mermaid rendering, and opens the system print dialog.
+- Image (PNG)... in the File menu switches to reading view, waits for images,
+  fonts, and Mermaid, then captures the full rendered document using the current
+  theme. Canvas size is bounded; very long documents are rejected rather than
+  silently producing an unreadable or blank image. The native save dialog uses a
+  `.png` filter.
 - Preferences can store a custom export executable and one argument per line.
   When configured, the dialog shows a Custom export action. It saves the HTML
   first, expands `{input}`, `{document}`, and `{title}` per argument, then runs

@@ -9,6 +9,7 @@ pub fn run() {
             commands::document::read_document,
             commands::document::write_document,
             commands::document::write_export,
+            commands::document::write_export_binary,
             commands::document::list_directory,
             commands::document::app_version,
             commands::export::run_export_command,

@@ -20,6 +20,7 @@ icons, translations, or branding are included.
 | KaTeX | MIT |
 | Mermaid | MIT |
 | DOMPurify | MPL-2.0 OR Apache-2.0 |
+| html-to-image | MIT |
 | highlight.js | BSD-3-Clause |
 | encoding_rs | Apache-2.0 OR MIT |
 | chardetng | Apache-2.0 OR MIT |

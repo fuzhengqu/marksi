@@ -60,6 +60,7 @@ interface MenuOverlayProps {
   onSave: () => void;
   onSaveAs: () => void;
   onExport: () => void;
+  onExportImage: () => void;
   onPrint: () => void;
   onCopy: (format: CopyFormat) => void;
   onToggleView: () => void;
@@ -81,6 +82,7 @@ export function MenuOverlay({
   onSave,
   onSaveAs,
   onExport,
+  onExportImage,
   onPrint,
   onCopy,
   onToggleView,
@@ -269,6 +271,11 @@ export function MenuOverlay({
                 icon={<FileDown size={16} strokeWidth={1.8} />}
                 label={t("Export…")}
                 onClick={() => run(onExport)}
+              />
+              <MenuItem
+                icon={<ImageIcon size={16} strokeWidth={1.8} />}
+                label={t("Image (PNG)…")}
+                onClick={() => run(onExportImage)}
               />
               <MenuItem
                 icon={<Printer size={16} strokeWidth={1.8} />}

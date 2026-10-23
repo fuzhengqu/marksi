@@ -301,6 +301,17 @@ export async function saveDocument(
   });
 }
 
+async function chooseExportPath(
+  defaultPath: string,
+  filters: Array<{ name: string; extensions: string[] }>,
+): Promise<string | null> {
+  if (testSaveDialog) {
+    return testSaveDialog({ defaultPath, filters });
+  }
+  const { save } = await import("@tauri-apps/plugin-dialog");
+  return save({ defaultPath, filters });
+}
+
 export async function saveHtmlFile(
   defaultPath: string,
   html: string,
@@ -320,20 +331,58 @@ export async function saveHtmlFile(
     };
   }
 
-  const { save } = await import("@tauri-apps/plugin-dialog");
   const { invoke } = await import("@tauri-apps/api/core");
-  const filters = [
+  const selected = await chooseExportPath(defaultPath, [
     { name: "HTML document", extensions: ["html", "htm"] },
-  ];
-  const selected = testSaveDialog
-    ? await testSaveDialog({ defaultPath, filters })
-    : await save({ defaultPath, filters });
+  ]);
   if (!selected) {
     return null;
   }
   return invoke<FileMeta>("write_export", {
     path: selected,
     content: html,
+  });
+}
+
+function base64Bytes(dataBase64: string): Uint8Array<ArrayBuffer> {
+  const binary = atob(dataBase64);
+  const buffer = new ArrayBuffer(binary.length);
+  const bytes = new Uint8Array(buffer);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+export async function savePngFile(
+  defaultPath: string,
+  dataBase64: string,
+): Promise<FileMeta | null> {
+  if (!isTauri()) {
+    const blob = new Blob([base64Bytes(dataBase64)], { type: "image/png" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName(defaultPath) || "document.png";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    return {
+      path: anchor.download,
+      size: blob.size,
+      modifiedMs: Date.now(),
+    };
+  }
+
+  const { invoke } = await import("@tauri-apps/api/core");
+  const selected = await chooseExportPath(defaultPath, [
+    { name: "PNG image", extensions: ["png"] },
+  ]);
+  if (!selected) {
+    return null;
+  }
+  return invoke<FileMeta>("write_export_binary", {
+    path: selected,
+    dataBase64,
   });
 }
 

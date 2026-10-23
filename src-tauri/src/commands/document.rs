@@ -3,9 +3,12 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use chardetng::EncodingDetector;
 use encoding_rs::{Encoding, UTF_8};
 use serde::Serialize;
+
+const MAX_BINARY_EXPORT_BYTES: usize = 128 * 1024 * 1024;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -103,6 +106,37 @@ pub fn write_export(path: String, content: String) -> Result<FileMeta, String> {
     let target = resolve_write_target(Path::new(&path))?;
     write_atomic(&target, content.as_bytes())?;
 
+    let metadata = fs::metadata(&target)
+        .map_err(|error| format!("Cannot inspect {} after export: {error}", target.display()))?;
+
+    Ok(FileMeta {
+        path: target.to_string_lossy().into_owned(),
+        size: metadata.len(),
+        modified_ms: modified_ms(&metadata),
+    })
+}
+
+/// Writes a base64-decoded export payload (for example a PNG) using the same
+/// atomic replacement strategy as document saves.
+#[tauri::command]
+pub fn write_export_binary(path: String, data_base64: String) -> Result<FileMeta, String> {
+    let max_encoded_length = MAX_BINARY_EXPORT_BYTES.div_ceil(3) * 4;
+    if data_base64.len() > max_encoded_length {
+        return Err("Export data is larger than 128 MB.".to_string());
+    }
+
+    let bytes = STANDARD
+        .decode(data_base64.as_bytes())
+        .map_err(|_| "Export data is not valid base64.".to_string())?;
+    if bytes.is_empty() {
+        return Err("Export data is empty.".to_string());
+    }
+    if bytes.len() > MAX_BINARY_EXPORT_BYTES {
+        return Err("Export data is larger than 128 MB.".to_string());
+    }
+
+    let target = resolve_write_target(Path::new(&path))?;
+    write_atomic(&target, &bytes)?;
     let metadata = fs::metadata(&target)
         .map_err(|error| format!("Cannot inspect {} after export: {error}", target.display()))?;
 
@@ -466,6 +500,37 @@ mod tests {
             .filter(|entry| entry.file_name().to_string_lossy().starts_with(".marksi-"))
             .count();
         assert_eq!(leftovers, 0);
+    }
+
+    #[test]
+    fn writes_binary_export_atomically() {
+        let directory = tempfile::tempdir().expect("tempdir");
+        let path = directory.path().join("note.png");
+        let path_string = path.to_string_lossy().into_owned();
+        let bytes = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+        let meta =
+            write_export_binary(path_string, STANDARD.encode(bytes)).expect("write binary export");
+
+        assert!(meta.size > 0);
+        assert_eq!(fs::read(&path).expect("read export"), bytes);
+        let leftovers = fs::read_dir(directory.path())
+            .expect("directory")
+            .filter_map(Result::ok)
+            .filter(|entry| entry.file_name().to_string_lossy().starts_with(".marksi-"))
+            .count();
+        assert_eq!(leftovers, 0);
+    }
+
+    #[test]
+    fn rejects_invalid_binary_export() {
+        let error = write_export_binary("note.png".to_string(), "not base64!!".to_string())
+            .expect_err("invalid base64");
+        assert!(error.contains("base64"));
+
+        let error = write_export_binary("note.png".to_string(), STANDARD.encode([]))
+            .expect_err("empty export");
+        assert!(error.contains("empty"));
     }
 
     #[test]

@@ -337,6 +337,7 @@ async function main() {
       };
     })()`);
     assert(state.labels.includes("导出…"), "export dialog entry missing", state);
+    assert(state.labels.includes("图片 (PNG)…"), "image export entry missing", state);
     assert(state.labels.includes("偏好设置…"), "preferences missing", state);
     assert(state.last === "退出 MarkSI", "quit should be last", state);
     assert(!state.footer, "menu footer must be gone", state);
@@ -353,7 +354,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.06"), "About should show version 0.06", state);
+    assert(state.version?.includes("0.07"), "About should show version 0.07", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -891,6 +892,112 @@ async function main() {
       })()`).catch(() => {});
       await rm(exportPath, { force: true });
       await rm(markerPath, { force: true });
+      await resetBase();
+    }
+  });
+
+  await test("image export writes a PNG of the reading view", async () => {
+    await resetBase();
+    const imageDoc = resolve(fixtureDir, "image-export.md");
+    const pngPath = resolve(fixtureDir, "export-image.png");
+    const source = "# Image export\n\n![icon](icon.png)\n\nA paragraph.";
+    try {
+      await writeFile(imageDoc, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(imageDoc)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(imageDoc),
+        10_000,
+      );
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        window.__MARKSI_IMAGE_CAPTURE__ = null;
+        platform.setSaveDialogForTests(async (options) => {
+          window.__MARKSI_IMAGE_CAPTURE__ = options;
+          return ${JSON.stringify(pngPath)};
+        });
+      })()`);
+      await evaluate("window.__MARKSI_DEV__.exportImage()");
+      let lastImageState = null;
+      for (let attempt = 0; attempt < 150; attempt += 1) {
+        lastImageState = await evaluate(`({
+          toast: document.querySelector(".toast")?.textContent?.trim() ?? null,
+          capture: window.__MARKSI_IMAGE_CAPTURE__,
+          viewMode: window.__MARKSI_DEV__.getState().viewMode,
+          body: Boolean(document.querySelector(".markdown-body")),
+          path: window.__MARKSI_DEV__.getState().doc.path
+        })`);
+        if (lastImageState.toast?.includes("已导出")) {
+          break;
+        }
+        if (lastImageState.toast) {
+          break;
+        }
+        await sleep(200);
+      }
+      assert(
+        lastImageState?.toast?.includes("已导出"),
+        "image export did not finish",
+        lastImageState,
+      );
+
+      const png = await readFile(pngPath);
+      const signature = "89504e470d0a1a0a";
+      assert(
+        png.subarray(0, 8).toString("hex") === signature,
+        "exported file is not a PNG",
+      );
+      const width = png.readUInt32BE(16);
+      const height = png.readUInt32BE(20);
+      assert(width >= 500, "PNG width is too small", { width, height });
+      assert(height >= 200, "PNG height is too small", { width, height });
+      assert(png.length > 1000, "PNG payload is too small", png.length);
+
+      const pixels = await evaluate(`(async () => {
+        const image = new Image();
+        image.src = "data:image/png;base64,${png.toString("base64")}";
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+        const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        const colors = new Set();
+        for (let index = 0; index < data.length; index += 4 * 97) {
+          colors.add(data[index] + "," + data[index + 1] + "," + data[index + 2]);
+        }
+        return { colors: colors.size, width: image.naturalWidth, height: image.naturalHeight };
+      })()`);
+      assert(
+        pixels.colors > 5,
+        "exported PNG appears to be a blank canvas",
+        pixels,
+      );
+
+      const state = await evaluate(`({
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        viewMode: window.__MARKSI_DEV__.getState().viewMode,
+        capture: window.__MARKSI_IMAGE_CAPTURE__
+      })`);
+      assert(state.content === source, "image export must not rewrite the source", state);
+      assert(state.viewMode === "reading", "image export should use the reading view", state);
+      assert(
+        state.capture?.defaultPath?.endsWith(".png") &&
+          state.capture?.filters?.[0]?.extensions?.includes("png"),
+        "PNG save dialog options are wrong",
+        state.capture,
+      );
+    } finally {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setSaveDialogForTests(null);
+        delete window.__MARKSI_IMAGE_CAPTURE__;
+      })()`).catch(() => {});
+      await rm(pngPath, { force: true });
+      await rm(imageDoc, { force: true });
       await resetBase();
     }
   });

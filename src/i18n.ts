@@ -121,6 +121,13 @@ const ZH: Record<string, string> = {
   "HTML document…": "HTML 文档…",
   "Print / Save as PDF": "打印 / 另存为 PDF",
   "Export…": "导出…",
+  "Image (PNG)…": "图片 (PNG)…",
+  "The document is too long to export as a single image.":
+    "文档太长，无法导出为单张图片。",
+  "The reading view is not ready yet.": "阅读视图尚未准备好。",
+  "The document could not be rendered as an image.":
+    "无法将文档渲染为图片。",
+  "Cannot read the image data.": "无法读取图片数据。",
   "Export document": "导出文档",
   "Choose a profile, metadata, and page setup.":
     "选择配置档、元数据和页面设置。",

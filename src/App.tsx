@@ -50,6 +50,7 @@ import {
   saveDocument,
   saveHtmlFile,
   saveImageData,
+  savePngFile,
 } from "./lib/platform";
 import { useAppStore } from "./store/useAppStore";
 import type {
@@ -454,6 +455,42 @@ export default function App() {
     },
     [exportHtmlFile],
   );
+
+  const handleExportImage = useCallback(async (): Promise<boolean> => {
+    const state = useAppStore.getState();
+    if (!state.doc.content.trim()) {
+      state.showToast(tNow("There is nothing to export yet."), "info");
+      return false;
+    }
+    try {
+      if (state.viewMode !== "reading") {
+        state.setViewMode("reading");
+      }
+      const { blobToBase64, captureReadingView, imageExportPath } =
+        await import("./lib/exportImage");
+      const capture = await captureReadingView();
+      const data = await blobToBase64(capture.blob);
+      const meta = await savePngFile(
+        imageExportPath(state.doc.path, state.doc.name),
+        data,
+      );
+      if (!meta) {
+        return false;
+      }
+      useAppStore
+        .getState()
+        .showToast(
+          tNow("Exported {name}", { name: fileName(meta.path) }),
+          "success",
+        );
+      return true;
+    } catch (error) {
+      useAppStore
+        .getState()
+        .showToast(tNow(errorMessage(error)), "error");
+      return false;
+    }
+  }, []);
 
   const handleOpenExport = useCallback(() => {
     setExportOpen(true);
@@ -1260,6 +1297,7 @@ export default function App() {
       insertImagePath: handleInsertImagePath,
       pasteImage: handlePasteImage,
       exportHtml: handleExportHtml,
+      exportImage: handleExportImage,
       customExport: handleCustomExport,
       openExport: handleOpenExport,
       closeExport: () => setExportOpen(false),
@@ -1284,6 +1322,7 @@ export default function App() {
     handleInsertImagePath,
     handlePasteImage,
     handleExportHtml,
+    handleExportImage,
     handleCustomExport,
     handleOpenExport,
     handleCopyDocument,
@@ -1362,6 +1401,7 @@ export default function App() {
         onSave={handleSave}
         onSaveAs={handleSaveAs}
         onExport={handleOpenExport}
+        onExportImage={() => void handleExportImage()}
         onPrint={handlePrint}
         onCopy={handleCopyDocument}
         onToggleView={handleToggleView}

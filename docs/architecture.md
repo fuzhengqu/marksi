@@ -189,6 +189,15 @@ timeout. A non-zero exit code is returned to the UI as an error. The user
 configures the program and arguments in Preferences; no command is bundled or
 run implicitly.
 
+Image export lives in `src/lib/exportImage.ts`. It waits for local images,
+fonts, and Mermaid state, measures the reading view, chooses a pixel ratio under
+both the 16,000-pixel dimension limit and the 80-million-pixel area limit, and
+uses `html-to-image` to serialize the rendered element to a PNG blob. Documents
+that would fall below a 0.25 scale are rejected. Remote images are already
+placeholders, so capture does not depend on network access. The PNG is sent to
+Rust as base64 and written with the same atomic replacement strategy as other
+exports; binary exports are capped at 128 MB.
+
 ## Interface localization
 
 `src/i18n.ts` owns the English source labels, the Simplified Chinese
@@ -312,6 +321,8 @@ success toasts.
   is covered by unit tests.
 - `src/lib/customExport.ts` owns argument-line parsing, placeholder expansion,
   and export-folder lookup; it is covered by unit tests.
+- `src/lib/exportImage.ts` owns PNG naming, capture-scale limits, readiness
+  waits, and reading-view capture; pure helpers are covered by unit tests.
 - `src/lib/saveName.ts` owns first-heading extraction and filename
   sanitization for new-document save dialogs; it is covered by unit tests.
 - `src/lib/drafts.ts` owns recovery-draft serialization and validation.
@@ -342,12 +353,15 @@ success toasts.
   settings reject absolute and parent-traversal paths.
 - Custom export commands are user-configured executables launched without a
   shell, with bounded arguments and a timeout. No command is bundled.
+- PNG exports are decoded from base64 and capped at 128 MB before an atomic
+  write.
 - No activation, account, or telemetry subsystem exists.
 
 ## Current surface (M4/M5)
 
 Document commands: `read_document`, `write_document`, `write_export`,
-`list_directory`, `app_version`, and `run_export_command`. Workspace commands:
+`write_export_binary`, `list_directory`, `app_version`, and
+`run_export_command`. Workspace commands:
 `list_workspace_files`, `search_workspace`, and `file_modified_ms`. Image
 commands: `import_image_asset`, `save_image_data`, and `read_image_data_url`.
 

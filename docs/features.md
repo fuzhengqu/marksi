@@ -145,7 +145,7 @@ the image context menu and are preserved in HTML export and print.
 | Print | done | M2 |
 | Export HTML | done | M2 |
 | Export PDF | done | M2 |
-| Export image | todo | M5 |
+| Export image | done | M5 |
 | Copy as Markdown / HTML / plain text | done | M4 |
 | Pandoc import/export | todo | M5 |
 | Export profiles | done | M5 |
@@ -168,6 +168,13 @@ line in Preferences; after the HTML file is written, MarkSI expands `{input}`,
 export folder, and reports a non-zero exit code. Commands are limited to 64
 arguments, 8 KiB per argument, and a 60-second timeout. The executable is never
 bundled and nothing runs unless the user chooses the custom export action.
+
+Image export captures the full reading view as a PNG using the current theme.
+It waits for local images, fonts, and Mermaid rendering before capture, then
+limits the canvas by dimension and total pixels so the browser can allocate it.
+Documents below the minimum readable scale are rejected with a clear message
+instead of producing an unreadable or blank file. Remote images remain
+placeholders, so capture never depends on a network request.
 
 ## Appearance and settings
 
