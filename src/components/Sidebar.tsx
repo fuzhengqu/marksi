@@ -3,7 +3,6 @@ import {
   ChevronDown,
   ChevronRight,
   File,
-  FilePlus2,
   FileText,
   Folder,
   FolderOpen,
@@ -35,6 +34,7 @@ interface SidebarProps {
   onOpenFileDialog: () => void;
   onOpenFolder: () => void;
   onNewFile: () => void;
+  onQuickOpen: () => void;
   onRefreshWorkspace: () => void;
 }
 
@@ -50,6 +50,7 @@ export function Sidebar({
   onOpenFileDialog,
   onOpenFolder,
   onNewFile,
+  onQuickOpen,
   onRefreshWorkspace,
 }: SidebarProps) {
   const t = useT();
@@ -88,9 +89,11 @@ export function Sidebar({
       <div className="sidebar-content">
         {sidebarTab === "files" ? (
           <FilesPanel
+            onNewFile={onNewFile}
             onOpenFile={onOpenFile}
             onOpenFileDialog={onOpenFileDialog}
             onOpenFolder={onOpenFolder}
+            onQuickOpen={onQuickOpen}
             onRefreshWorkspace={onRefreshWorkspace}
             onShowToast={showToast}
             recent={recent}
@@ -140,24 +143,6 @@ export function Sidebar({
         ) : null}
       </div>
 
-      <div className="sidebar-footer">
-        <button
-          className="sidebar-action"
-          onClick={onOpenFileDialog}
-          title={t("Open file")}
-        >
-          <FileText size={15} strokeWidth={1.8} />
-          <span>{t("Open file")}</span>
-        </button>
-        <button
-          className="sidebar-action"
-          onClick={onNewFile}
-          title={t("New document")}
-        >
-          <FilePlus2 size={16} strokeWidth={1.8} />
-          <span>{t("New document")}</span>
-        </button>
-      </div>
     </aside>
   );
 }
@@ -165,9 +150,11 @@ export function Sidebar({
 interface FilesPanelProps {
   recent: Array<{ path: string; name: string }>;
   workspace: { path: string; entries: FileEntry[]; loading: boolean } | null;
+  onNewFile: () => void;
   onOpenFile: (path: string) => void;
   onOpenFileDialog: () => void;
   onOpenFolder: () => void;
+  onQuickOpen: () => void;
   onRefreshWorkspace: () => void;
   onShowToast: (message: string, tone?: "info" | "success" | "error") => void;
 }
@@ -175,9 +162,11 @@ interface FilesPanelProps {
 function FilesPanel({
   recent,
   workspace,
+  onNewFile,
   onOpenFile,
   onOpenFileDialog,
   onOpenFolder,
+  onQuickOpen,
   onRefreshWorkspace,
   onShowToast,
 }: FilesPanelProps) {
@@ -224,17 +213,19 @@ function FilesPanel({
         )
       ) : (
         <div className="workspace-empty">
-          <div className="empty-panel compact">
-            <FolderOpen size={24} strokeWidth={1.3} />
-            <p>{t("Open a folder to keep your Markdown files close.")}</p>
-            <div className="workspace-empty-actions">
-              <button className="button button-quiet" onClick={onOpenFileDialog}>
-                {t("Open file")}
-              </button>
-              <button className="button button-quiet" onClick={onOpenFolder}>
-                {t("Open folder")}
-              </button>
-            </div>
+          <div className="workspace-empty-actions">
+            <button className="button button-quiet" onClick={onOpenFileDialog}>
+              {t("Open file")}
+            </button>
+            <button className="button button-quiet" onClick={onOpenFolder}>
+              {t("Open folder")}
+            </button>
+            <button className="button button-quiet" onClick={onQuickOpen}>
+              {t("Quick open")}
+            </button>
+            <button className="button button-quiet" onClick={onNewFile}>
+              {t("New document")}
+            </button>
           </div>
 
           <div className="panel-subheading">{t("Recent files")}</div>

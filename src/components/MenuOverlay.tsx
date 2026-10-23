@@ -40,14 +40,13 @@ import { ZOOM_MAX, ZOOM_MIN } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { CopyFormat } from "../types";
 
-type MenuSection = "file" | "format" | "view" | "copy" | "export" | "help";
+type MenuSection = "file" | "edit" | "format" | "view" | "help";
 
 const menuSections: Array<{ id: MenuSection; label: string }> = [
   { id: "file", label: "File" },
+  { id: "edit", label: "Edit" },
   { id: "format", label: "Format" },
   { id: "view", label: "View" },
-  { id: "copy", label: "Copy" },
-  { id: "export", label: "Export" },
   { id: "help", label: "Help" },
 ];
 
@@ -103,7 +102,8 @@ export function MenuOverlay({
   const toggleSidebar = useAppStore((state) => state.toggleSidebar);
   const updateSettings = useAppStore((state) => state.updateSettings);
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [section, setSection] = useState<MenuSection>("file");
+  const [activeSection, setActiveSection] = useState<MenuSection | null>(null);
+  const [dropdownLeft, setDropdownLeft] = useState(8);
 
   useEffect(() => {
     if (!open) {
@@ -114,9 +114,27 @@ export function MenuOverlay({
         setOpen(false);
       }
     };
-    setSection("file");
+    const onMouseDown = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      if (
+        target.closest(".menu-button") ||
+        target.closest(".menu-bar") ||
+        target.closest(".menu-dropdown")
+      ) {
+        return;
+      }
+      setOpen(false);
+    };
+    setActiveSection(null);
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("mousedown", onMouseDown, true);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("mousedown", onMouseDown, true);
+    };
   }, [open, setOpen]);
 
   if (!open) {
@@ -133,24 +151,42 @@ export function MenuOverlay({
   return (
     <>
       <div className="menu-scrim" onMouseDown={() => setOpen(false)} aria-hidden="true" />
-      <div className="menu-panel" role="dialog" aria-label={t("Menu")}>
-        <div className="menu-tabs" role="tablist" aria-label={t("Menu")}>
-          {menuSections.map((item) => (
+      <div className="menu-bar" role="menubar" aria-label={t("Menu")}>
+        {menuSections.map((item) => {
+          const active = activeSection === item.id;
+          return (
             <button
               key={item.id}
               type="button"
-              role="tab"
-              aria-selected={section === item.id}
-              className={`menu-tab ${section === item.id ? "is-active" : ""}`}
-              onClick={() => setSection(item.id)}
+              role="menuitem"
+              aria-haspopup="true"
+              aria-expanded={active}
+              className={`menu-bar-item ${active ? "is-active" : ""}`}
+              onClick={(event) => {
+                const box = event.currentTarget.getBoundingClientRect();
+                setDropdownLeft(
+                  Math.max(8, Math.min(box.left, window.innerWidth - 268)),
+                );
+                setActiveSection(active ? null : item.id);
+              }}
             >
               {t(item.label)}
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        <div className="menu-content">
-          {section === "file" ? (
+      {activeSection ? (
+        <div
+          className="menu-dropdown"
+          role="menu"
+          aria-label={t(
+            menuSections.find((item) => item.id === activeSection)?.label ??
+              "Menu",
+          )}
+          style={{ left: dropdownLeft }}
+        >
+          {activeSection === "file" ? (
             <>
               <MenuItem
                 icon={<FilePlus2 size={16} strokeWidth={1.8} />}
@@ -202,10 +238,28 @@ export function MenuOverlay({
                 shortcut="Ctrl ⇧ S"
                 onClick={() => run(onSaveAs)}
               />
+              <div className="menu-separator" />
+              <MenuItem
+                icon={<FileCode2 size={16} strokeWidth={1.8} />}
+                label={t("HTML document…")}
+                onClick={() => run(onExportHtml)}
+              />
+              <MenuItem
+                icon={<Printer size={16} strokeWidth={1.8} />}
+                label={t("Print / Save as PDF")}
+                onClick={() => run(onPrint)}
+              />
+              <div className="menu-separator" />
+              <MenuItem
+                icon={<Settings size={16} strokeWidth={1.8} />}
+                label={t("Preferences…")}
+                shortcut="Ctrl ,"
+                onClick={() => run(onOpenSettings)}
+              />
             </>
           ) : null}
 
-          {section === "format" ? (
+          {activeSection === "format" ? (
             <>
               <MenuItem
                 icon={<Bold size={16} strokeWidth={1.8} />}
@@ -252,7 +306,7 @@ export function MenuOverlay({
             </>
           ) : null}
 
-          {section === "view" ? (
+          {activeSection === "view" ? (
             <>
               <MenuItem
                 icon={
@@ -357,7 +411,7 @@ export function MenuOverlay({
             </>
           ) : null}
 
-          {section === "copy" ? (
+          {activeSection === "edit" ? (
             <>
               <MenuItem
                 icon={<Copy size={16} strokeWidth={1.8} />}
@@ -380,29 +434,8 @@ export function MenuOverlay({
             </>
           ) : null}
 
-          {section === "export" ? (
+          {activeSection === "help" ? (
             <>
-              <MenuItem
-                icon={<FileCode2 size={16} strokeWidth={1.8} />}
-                label={t("HTML document…")}
-                onClick={() => run(onExportHtml)}
-              />
-              <MenuItem
-                icon={<Printer size={16} strokeWidth={1.8} />}
-                label={t("Print / Save as PDF")}
-                onClick={() => run(onPrint)}
-              />
-            </>
-          ) : null}
-
-          {section === "help" ? (
-            <>
-              <MenuItem
-                icon={<Settings size={16} strokeWidth={1.8} />}
-                label={t("Preferences…")}
-                shortcut="Ctrl ,"
-                onClick={() => run(onOpenSettings)}
-              />
               <MenuItem
                 icon={<Info size={16} strokeWidth={1.8} />}
                 label={t("About MarkSI")}
@@ -413,14 +446,14 @@ export function MenuOverlay({
               />
             </>
           ) : null}
-        </div>
 
-        <div className="menu-footer">
-          <span className="menu-footer-mark">M</span>
-          <span>{t("MarkSI · MIT licensed")}</span>
-          <Check size={13} strokeWidth={1.8} />
+          <div className="menu-footer">
+            <span className="menu-footer-mark">M</span>
+            <span>{t("MarkSI · MIT licensed")}</span>
+            <Check size={13} strokeWidth={1.8} />
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </>

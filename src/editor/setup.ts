@@ -21,7 +21,6 @@ import {
   EditorView,
   highlightSpecialChars,
   keymap,
-  placeholder,
   rectangularSelection,
 } from "@codemirror/view";
 import { EDITOR_PASTE_IMAGE_EVENT } from "./bridge";
@@ -64,7 +63,6 @@ export function createEditorExtensions(callbacks: EditorCallbacks): Extension[] 
     }),
     syntaxHighlighting(markdownHighlightStyle),
     markEditorTheme,
-    placeholder("Start writing. Markdown is all you need."),
     keymap.of([
       ...formattingKeymap(),
       ...defaultKeymap,

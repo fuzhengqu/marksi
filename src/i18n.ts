@@ -92,6 +92,7 @@ const ZH: Record<string, string> = {
   "{count} chars": "{count} 字符",
   "Ln {line}, Col {column}": "第 {line} 行，第 {column} 列",
   File: "文件",
+  Edit: "编辑",
   Format: "格式",
   View: "视图",
   Copy: "复制",

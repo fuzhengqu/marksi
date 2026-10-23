@@ -91,16 +91,19 @@ ease-out; honor `prefers-reduced-motion`.
   HTML / plain text.
 - `Ctrl+=` / `Ctrl+-` / `Ctrl+0`: zoom the interface in, out, or reset to
   100%.
-- Hamburger opens a compact tabbed menu (File, Format, View, Copy, Export,
-  Help); Escape closes it. Tabs keep the panel short instead of one long list.
-- Sidebar tabs are keyboard reachable and preserve state. The footer exposes
-  Open file and New document; the duplicate Open folder footer action is gone.
-  An empty workspace offers both Open file and Open folder.
-- New document clears the editor, focuses it, and shows a confirmation toast,
-  so the action is visible even when the current document is already empty.
+- Hamburger reveals an IDEA-style menu bar immediately to its right: File,
+  Edit, Format, View, Help. The category row is the only thing shown on first
+  click; clicking a category opens its dropdown. Escape or an outside click
+  closes the row. Export and Preferences are File items; Edit contains the copy
+  actions.
+- Sidebar tabs are keyboard reachable and preserve state. An empty workspace
+  shows four actions above Recent files: Open file, Open folder, Quick open,
+  and New document. There is no footer action row.
+- New document clears the editor, hides the welcome surface, focuses the blank
+  editor, and shows a confirmation toast so the transition is unambiguous.
 - Unsaved changes are always visible via a dot next to the title.
-- The welcome surface appears only for an empty untitled document; typing
-  dismisses it.
+- The welcome surface appears only for the initial empty untitled document;
+  typing, opening a file, or choosing New document dismisses it.
 - Preferences apply immediately and are persisted locally. Reset restores the
   documented defaults.
 - Recovery is always user-confirmed: MarkSI never silently overwrites an
@@ -177,7 +180,7 @@ ease-out; honor `prefers-reduced-motion`.
 
 ## Copy actions
 
-- View > Copy copies the whole document, not just the current selection.
+- Edit > Copy copies the whole document, not just the current selection.
 - Copy as Markdown writes the canonical source with platform-native line
   endings. Copy as plain text keeps headings, paragraphs, lists, tables, task
   state, blockquotes, code, alerts, and rendered math while omitting editor and

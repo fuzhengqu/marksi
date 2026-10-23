@@ -72,7 +72,10 @@ export function TitleBar() {
   }
 
   return (
-    <header className="titlebar" data-tauri-drag-region="deep">
+    <header
+      className={`titlebar ${menuOpen ? "is-menu-open" : ""}`}
+      data-tauri-drag-region="deep"
+    >
       <div className="titlebar-left">
         <button
           className={`icon-button menu-button ${menuOpen ? "is-active" : ""}`}

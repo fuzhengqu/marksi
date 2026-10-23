@@ -137,7 +137,7 @@ M4 also adds writing modes and document copy actions:
 - Read-only mode blocks edits, formatting, and image insertion while keeping
   selection, search, copy, export, and print available. The status bar shows a
   read-only badge.
-- Copy the entire document from the Copy menu or keyboard as Markdown, rich
+- Copy the entire document from the Edit menu or keyboard as Markdown, rich
   HTML, or plain text. Markdown preserves the source apart from platform
   newline normalization; HTML is derived from the sanitized renderer with
   MathML; plain text keeps headings, paragraphs, lists, tables, task state, and
@@ -166,13 +166,13 @@ M4 also adds typing assistance and interface zoom:
 
 The interface and writing flow also include:
 
-- A compact categorized menu. File, Format, View, Copy, Export, and Help live
-  in a short tab strip instead of one long scrolling menu.
-- Sidebar actions for opening a file and creating a new document. The duplicate
-  bottom “Open folder” action is gone; the empty workspace offers both Open file
-  and Open folder.
-- New-document actions clear the editor, focus it, and show a confirmation
-  toast so the action is visible even from an already empty document.
+- An IDEA-style menu bar. The hamburger reveals File, Edit, Format, View, and
+  Help immediately to its right; clicking a category opens only that category’s
+  dropdown. Export and Preferences live under File.
+- The empty workspace exposes Open file, Open folder, Quick open, and New
+  document above Recent files. The bottom action row is removed entirely.
+- New-document actions clear the editor, dismiss the welcome surface, focus the
+  blank editor, and show a confirmation toast so the transition is unambiguous.
 - A Chinese-first interface with an English option, and a live-preview editing
   mode that keeps Markdown source canonical.
 

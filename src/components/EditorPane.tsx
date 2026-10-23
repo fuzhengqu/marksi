@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Compartment, EditorState } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { EditorView, placeholder } from "@codemirror/view";
 import { openSearchPanel } from "@codemirror/search";
 import {
   EDITOR_COMMAND_EVENT,
@@ -99,6 +99,7 @@ export function EditorPane({
   const [typingCompartment] = useState(() => new Compartment());
   const [livePreviewCompartment] = useState(() => new Compartment());
   const [phrasesCompartment] = useState(() => new Compartment());
+  const [placeholderCompartment] = useState(() => new Compartment());
   const callbacksRef = useRef({
     onChange: useAppStore.getState().setContent,
     onCursor: useAppStore.getState().setCursor,
@@ -180,6 +181,13 @@ export function EditorPane({
         phrasesCompartment.of(
           EditorState.phrases.of(searchPhrases(languageRef.current)),
         ),
+        placeholderCompartment.of(
+          placeholder(
+            languageRef.current === "zh-CN"
+              ? "开始写作。Markdown 足矣。"
+              : "Start writing. Markdown is all you need.",
+          ),
+        ),
       ],
     });
 
@@ -198,6 +206,7 @@ export function EditorPane({
     focusModeCompartment,
     livePreviewCompartment,
     phrasesCompartment,
+    placeholderCompartment,
     spellcheckCompartment,
     typewriterModeCompartment,
     typingCompartment,
@@ -278,12 +287,20 @@ export function EditorPane({
     if (!view) {
       return;
     }
-    view.dispatch({
-      effects: phrasesCompartment.reconfigure(
+    const effects = [
+      phrasesCompartment.reconfigure(
         EditorState.phrases.of(searchPhrases(language)),
       ),
-    });
-  }, [language, phrasesCompartment]);
+      placeholderCompartment.reconfigure(
+        placeholder(
+          language === "zh-CN"
+            ? "开始写作。Markdown 足矣。"
+            : "Start writing. Markdown is all you need.",
+        ),
+      ),
+    ];
+    view.dispatch({ effects });
+  }, [language, phrasesCompartment, placeholderCompartment]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -411,6 +428,13 @@ export function EditorPane({
             phrasesCompartment.of(
               EditorState.phrases.of(searchPhrases(languageRef.current)),
             ),
+            placeholderCompartment.of(
+              placeholder(
+                languageRef.current === "zh-CN"
+                  ? "开始写作。Markdown 足矣。"
+                  : "Start writing. Markdown is all you need.",
+              ),
+            ),
           ],
         }),
       );
@@ -422,6 +446,7 @@ export function EditorPane({
     focusModeCompartment,
     livePreviewCompartment,
     phrasesCompartment,
+    placeholderCompartment,
     spellcheckCompartment,
     typewriterModeCompartment,
     typingCompartment,

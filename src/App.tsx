@@ -85,7 +85,16 @@ export default function App() {
   const workspacePath = useAppStore((state) => state.workspace?.path ?? null);
   const [draftToRecover, setDraftToRecover] =
     useState<DocumentDraft | null>(() => loadDraft());
+  const [showWelcome, setShowWelcome] = useState(
+    () => !useAppStore.getState().doc.path && !useAppStore.getState().doc.content,
+  );
   const savingRef = useRef(false);
+
+  useEffect(() => {
+    if (doc.path || doc.content.trim()) {
+      setShowWelcome(false);
+    }
+  }, [doc.content, doc.path]);
 
   useEffect(() => {
     document.documentElement.lang = settings.language;
@@ -172,6 +181,7 @@ export default function App() {
     if (!(await confirmDiscard())) {
       return;
     }
+    setShowWelcome(false);
     useAppStore.getState().newDocument();
     useAppStore.getState().showToast(tNow("New blank document created."), "success");
     window.requestAnimationFrame(() => {
@@ -1139,6 +1149,7 @@ export default function App() {
             onOpenFileDialog={() => void handleOpen()}
             onOpenFolder={() => void handleOpenFolder()}
             onNewFile={handleNew}
+            onQuickOpen={() => useAppStore.getState().setQuickOpen(true)}
             onRefreshWorkspace={() => void handleRefreshWorkspace()}
           />
         ) : null}
@@ -1180,7 +1191,7 @@ export default function App() {
               />
             </Suspense>
           ) : null}
-          {isEmpty ? (
+          {isEmpty && showWelcome ? (
             <Welcome
               recent={recent}
               onNew={handleNew}
