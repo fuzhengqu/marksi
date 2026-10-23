@@ -177,6 +177,11 @@ ease-out; honor `prefers-reduced-motion`.
 - Clicking a rendered image opens a full-window lightbox over a dimmed scrim.
   The toolbar provides zoom out, zoom in, reset, and close. `+`, `-`, `0`, and
   `Esc` work from the keyboard. Zoom is bounded to 50%-400%.
+- Right-click a loaded local image for a compact action menu: View image, Copy
+  image path, Open image, and Reveal in folder. The menu stays inside the
+  viewport, follows the shared menu-item visual language, and dismisses on
+  Escape, outside click, scroll, or resize. Placeholders and remote images do
+  not open it.
 - The lightbox is a viewing surface only; it never edits the Markdown source or
   copies an asset.
 

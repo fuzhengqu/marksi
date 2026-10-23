@@ -330,4 +330,20 @@ export async function openExternal(url: string): Promise<void> {
   await openUrl(url);
 }
 
+export async function openLocalPath(path: string): Promise<void> {
+  if (!isTauri()) {
+    throw new Error("Local files are available in the desktop app.");
+  }
+  const { openPath } = await import("@tauri-apps/plugin-opener");
+  await openPath(path);
+}
+
+export async function revealLocalPath(path: string): Promise<void> {
+  if (!isTauri()) {
+    throw new Error("Local files are available in the desktop app.");
+  }
+  const { revealItemInDir } = await import("@tauri-apps/plugin-opener");
+  await revealItemInDir(path);
+}
+
 export { fileName };

@@ -88,6 +88,13 @@ exported HTML keeps their original URL. Missing local assets also degrade to
 placeholders. The preview lightbox is a frontend-only zoom surface and does not
 modify the document.
 
+Loaded local images also carry their resolved path. The preview context menu
+uses that path to copy it, open the image with the system default application,
+or reveal it in the file manager through the opener plugin. The capability set
+allows `opener:allow-open-path` in addition to the default opener permissions;
+data-URL images do not expose file actions. This menu is presentation-only and
+never rewrites the Markdown source.
+
 ## Extended Markdown
 
 `src/lib/markdown.ts` owns the single markdown-it pipeline. Footnote, highlight,

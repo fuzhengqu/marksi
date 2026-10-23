@@ -107,7 +107,7 @@ sanitization boundary and is not planned unless that safety requirement changes.
 | Remote image placeholders in preview | done | M4 |
 | Missing-image placeholders | done | M4 |
 | Image lightbox and zoom | done | M4 |
-| Image context menu | todo | M5 |
+| Image context menu | done | M5 |
 | Image resize / dimensions | todo | M5 |
 | Remote image cache | todo | M5 |
 | Root URL / uploader path mode | todo | M5 |

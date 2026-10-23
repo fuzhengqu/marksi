@@ -171,6 +171,17 @@ M5 begins with Mermaid diagrams:
   edge counts. Its SVG output is sanitized with a dedicated SVG profile before
   insertion; scripts and foreign objects are rejected.
 
+M5 also adds image context actions:
+
+- Right-click a loaded local image to view it at full size, copy its absolute
+  path, open it in the default application, or reveal it in the system file
+  manager.
+- The menu positions itself inside the window, closes on outside click,
+  Escape, scroll, or resize, and never opens over placeholders or remote
+  images.
+- Local image actions use the resolved asset path; pasted data-URL images keep
+  the lightbox action only.
+
 Raw HTML remains escaped and inert, unsafe URLs are rejected, and remote images
 are never fetched by the preview renderer. Math rendering disables KaTeX's
 trust and HTML-extension features. Mermaid runs with strict security, no HTML

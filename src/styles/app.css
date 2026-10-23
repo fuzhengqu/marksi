@@ -1356,6 +1356,25 @@
   font-weight: 700;
 }
 
+.image-context-menu {
+  position: fixed;
+  z-index: 94;
+  width: 228px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+}
+
+.image-context-menu .menu-item {
+  min-height: 30px;
+}
+
+.image-context-menu .menu-separator {
+  margin: 5px 8px;
+}
+
 .image-lightbox {
   position: fixed;
   inset: 0;
