@@ -43,8 +43,9 @@ source mode and live preview operate on the same text.
 
 ## Local persistence
 
-Settings, theme, recent files, and sidebar state are kept in WebView
-`localStorage` through the Zustand store's `persist` middleware. Persisted
+Settings (including writing-mode preferences), theme, recent files, and sidebar
+state are kept in WebView `localStorage` through the Zustand store's `persist`
+middleware. Persisted
 settings are merged with current defaults so older profiles gain new fields
 without losing saved preferences. The recovery draft is a separate,
 version-tolerant record under `marksi-recovery-draft`. It is written 700 ms
@@ -112,6 +113,47 @@ depend on local font files. Both output modes pass through DOMPurify with the
 HTML and MathML profiles enabled. Link reference definitions are handled by
 markdown-it itself.
 
+## Editor view modes
+
+Writing modes are frontend-only and never change the document.
+`src/editor/viewModes.ts` provides two CodeMirror extensions:
+
+- Focus mode builds line decorations for the visible viewport and marks every
+  line outside the blank-line-delimited block around the selection. A line
+  class dims those lines, while the active block keeps full contrast.
+- Typewriter mode listens for selection and document changes, then scrolls the
+  active line toward the vertical center using `coordsAtPos`. The scroll is
+  applied directly instead of dispatching a transaction, avoiding update loops,
+  and composition input is left alone.
+
+`EditorPane` installs each extension through a `Compartment`, so toggling a
+preference reconfigures the live editor without replacing the document or undo
+history. Read-only mode uses `EditorView.editable.of(false)` plus application
+guards around formatting and image insertion. Search, selection, copy, export,
+and print remain available. The three mode flags live in `AppSettings` and are
+persisted with the rest of the preferences.
+
+## Document copy
+
+Copy actions operate on the entire document. `src/lib/clipboardText.ts` writes
+plain text through `navigator.clipboard.writeText`, with a hidden-textarea and
+`execCommand("copy")` fallback for restricted WebViews.
+
+`src/lib/clipboard.ts` builds the rendered and text representations. It runs the
+sanitized Markdown pipeline twice: once with MathML for rich HTML, and once with
+KaTeX HTML for plain text. The text pass skips the hidden KaTeX MathML tree to
+avoid duplicated formula text, then extracts block structure from the parsed
+DOM, including headings, lists, tables, task state, code, and alerts. Clipboard
+HTML is therefore the same sanitized HTML surface as export, not a second
+renderer.
+
+Rich writes use a `ClipboardItem` carrying both `text/html` and `text/plain`. If
+the WebView rejects the write because the document is not focused or lacks
+support, MarkSI falls back to a hidden contenteditable selection and
+`execCommand("copy")`; the final fallback copies the HTML source as text. App
+handlers own empty-document checks, menu wiring, keyboard shortcuts, and
+success toasts.
+
 ## Frontend boundaries
 
 - `src/lib/platform.ts` is the only place that calls Tauri APIs for file IO.
@@ -123,8 +165,13 @@ markdown-it itself.
 - `src/lib/frontMatter.ts` owns front-matter extraction and metadata parsing; it
   is covered by unit tests.
 - `src/lib/drafts.ts` owns recovery-draft serialization and validation.
+- `src/lib/clipboardText.ts` owns plain-text clipboard writes and the legacy
+  fallback.
+- `src/lib/clipboard.ts` owns sanitized HTML/plain-text document
+  representations and rich clipboard writes.
 - `src/store/useAppStore.ts` owns document and shell state.
-- `src/editor/` contains editor setup and Markdown analysis helpers.
+- `src/editor/` contains editor setup, view modes, and Markdown analysis
+  helpers.
 - Components never call Rust file commands directly.
 
 ## Rust boundaries
@@ -154,8 +201,10 @@ lightbox, and draft recovery modal are all React components driven by the same
 store.
 
 The editor remains source-first. Preview, formatting, export, search, and
-workspace navigation are layered on top of the same CodeMirror state. The
-document text is never round-tripped through rendered HTML.
+workspace navigation are layered on top of the same CodeMirror state. Focus,
+typewriter, and read-only modes reconfigure the live editor, while document copy
+actions derive their output from the same sanitized renderer as preview and
+export. The document text is never round-tripped through rendered HTML.
 
 ## Future modules
 

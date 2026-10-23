@@ -41,6 +41,7 @@ import {
 import { useAppStore } from "./store/useAppStore";
 import type {
   AppSettings,
+  CopyFormat,
   DocumentDraft,
   FileMeta,
   ImageAsset,
@@ -102,6 +103,18 @@ export default function App() {
     } catch {
       return window.confirm("You have unsaved changes. Discard them?");
     }
+  }, []);
+
+  const ensureEditable = useCallback((): boolean => {
+    const state = useAppStore.getState();
+    if (!state.settings.readOnlyMode) {
+      return true;
+    }
+    state.showToast(
+      "Read-only mode is on. Turn it off from the View menu to edit.",
+      "info",
+    );
+    return false;
   }, []);
 
   const handleNew = useCallback(async () => {
@@ -288,17 +301,69 @@ export default function App() {
     }
   }, []);
 
+  const handleCopyDocument = useCallback(async (format: CopyFormat) => {
+    const state = useAppStore.getState();
+    const content = state.doc.content;
+    if (!content.trim()) {
+      state.showToast("There is nothing to copy yet.", "info");
+      return;
+    }
+
+    try {
+      if (format === "markdown") {
+        const { copyText } = await import("./lib/clipboardText");
+        await copyText(content);
+        useAppStore
+          .getState()
+          .showToast("Copied document as Markdown.", "success");
+        return;
+      }
+
+      const { buildClipboardDocument, copyRichHtml } = await import(
+        "./lib/clipboard"
+      );
+      const documentToCopy = buildClipboardDocument(content);
+
+      if (format === "html") {
+        const mode = await copyRichHtml(documentToCopy);
+        useAppStore
+          .getState()
+          .showToast(
+            mode === "rich"
+              ? "Copied document as rich HTML."
+              : "Copied HTML source.",
+            "success",
+          );
+        return;
+      }
+
+      const { copyText } = await import("./lib/clipboardText");
+      await copyText(documentToCopy.text);
+      useAppStore
+        .getState()
+        .showToast("Copied document as plain text.", "success");
+    } catch (error) {
+      useAppStore.getState().showToast(errorMessage(error), "error");
+    }
+  }, []);
+
   const handleToggleView = useCallback(() => {
     useAppStore.getState().toggleViewMode();
   }, []);
 
-  const handleFormat = useCallback((command: EditorCommand) => {
-    const state = useAppStore.getState();
-    if (state.viewMode !== "source") {
-      state.setViewMode("source");
-    }
-    window.requestAnimationFrame(() => dispatchEditorCommand(command));
-  }, []);
+  const handleFormat = useCallback(
+    (command: EditorCommand) => {
+      if (!ensureEditable()) {
+        return;
+      }
+      const state = useAppStore.getState();
+      if (state.viewMode !== "source") {
+        state.setViewMode("source");
+      }
+      window.requestAnimationFrame(() => dispatchEditorCommand(command));
+    },
+    [ensureEditable],
+  );
 
   const ensureImageTarget = useCallback(async (): Promise<{
     path: string;
@@ -327,20 +392,29 @@ export default function App() {
     };
   }, [saveCurrent]);
 
-  const insertImageAsset = useCallback((asset: ImageAsset) => {
-    const state = useAppStore.getState();
-    const markdown = buildImageMarkdown(
-      altTextFromFileName(asset.name),
-      asset.relativePath,
-    );
-    if (state.viewMode !== "source") {
-      state.setViewMode("source");
-    }
-    window.requestAnimationFrame(() => dispatchEditorInsert(markdown, true));
-    state.showToast(`Inserted image ${asset.name}`, "success");
-  }, []);
+  const insertImageAsset = useCallback(
+    (asset: ImageAsset) => {
+      if (!ensureEditable()) {
+        return;
+      }
+      const state = useAppStore.getState();
+      const markdown = buildImageMarkdown(
+        altTextFromFileName(asset.name),
+        asset.relativePath,
+      );
+      if (state.viewMode !== "source") {
+        state.setViewMode("source");
+      }
+      window.requestAnimationFrame(() => dispatchEditorInsert(markdown, true));
+      state.showToast(`Inserted image ${asset.name}`, "success");
+    },
+    [ensureEditable],
+  );
 
   const handleInsertImage = useCallback(async () => {
+    if (!ensureEditable()) {
+      return;
+    }
     if (!isTauri()) {
       useAppStore
         .getState()
@@ -365,10 +439,13 @@ export default function App() {
     } catch (error) {
       useAppStore.getState().showToast(errorMessage(error), "error");
     }
-  }, [ensureImageTarget, insertImageAsset]);
+  }, [ensureEditable, ensureImageTarget, insertImageAsset]);
 
   const handleInsertImagePath = useCallback(
     async (sourcePath: string) => {
+      if (!ensureEditable()) {
+        return;
+      }
       if (!isTauri()) {
         useAppStore
           .getState()
@@ -390,11 +467,14 @@ export default function App() {
         useAppStore.getState().showToast(errorMessage(error), "error");
       }
     },
-    [ensureImageTarget, insertImageAsset],
+    [ensureEditable, ensureImageTarget, insertImageAsset],
   );
 
   const handlePasteImage = useCallback(
     async (file: File) => {
+      if (!ensureEditable()) {
+        return;
+      }
       if (!isTauri()) {
         useAppStore
           .getState()
@@ -418,7 +498,7 @@ export default function App() {
         useAppStore.getState().showToast(errorMessage(error), "error");
       }
     },
-    [ensureImageTarget, insertImageAsset],
+    [ensureEditable, ensureImageTarget, insertImageAsset],
   );
 
   const handlePrint = useCallback(() => {
@@ -710,6 +790,32 @@ export default function App() {
       }
       const key = event.key.toLowerCase();
 
+      if (event.altKey && !event.shiftKey) {
+        if (key === "f" || key === "t" || key === "r") {
+          event.preventDefault();
+          event.stopPropagation();
+          const state = useAppStore.getState();
+          if (key === "f") {
+            state.updateSettings({ focusMode: !state.settings.focusMode });
+          } else if (key === "t") {
+            state.updateSettings({
+              typewriterMode: !state.settings.typewriterMode,
+            });
+          } else {
+            state.updateSettings({ readOnlyMode: !state.settings.readOnlyMode });
+          }
+          return;
+        }
+        if (key === "c" || key === "h" || key === "p") {
+          event.preventDefault();
+          event.stopPropagation();
+          void handleCopyDocument(
+            key === "c" ? "markdown" : key === "h" ? "html" : "text",
+          );
+          return;
+        }
+      }
+
       if (key === "p" && !event.shiftKey) {
         event.preventDefault();
         const state = useAppStore.getState();
@@ -791,6 +897,7 @@ export default function App() {
     window.addEventListener("keydown", handler, true);
     return () => window.removeEventListener("keydown", handler, true);
   }, [
+    handleCopyDocument,
     handleInsertImage,
     handleNew,
     handleOpen,
@@ -867,6 +974,7 @@ export default function App() {
       insertImagePath: handleInsertImagePath,
       pasteImage: handlePasteImage,
       exportHtml: handleExportHtml,
+      copyDocument: handleCopyDocument,
       print: handlePrint,
       openQuickOpen: () => useAppStore.getState().setQuickOpen(true),
       openSettings: () => useAppStore.getState().setSettingsOpen(true),
@@ -887,6 +995,7 @@ export default function App() {
     handleInsertImagePath,
     handlePasteImage,
     handleExportHtml,
+    handleCopyDocument,
     handlePrint,
   ]);
 
@@ -910,7 +1019,9 @@ export default function App() {
             documentKey={doc.path ?? "untitled"}
             gotoLine={gotoLine}
             active={viewMode === "source"}
-            readOnly={viewMode === "preview"}
+            readOnly={viewMode === "preview" || settings.readOnlyMode}
+            focusMode={settings.focusMode}
+            typewriterMode={settings.typewriterMode}
             spellcheck={settings.spellcheck}
           />
           {viewMode === "preview" ? (
@@ -955,6 +1066,7 @@ export default function App() {
         onSaveAs={handleSaveAs}
         onExportHtml={handleExportHtml}
         onPrint={handlePrint}
+        onCopy={handleCopyDocument}
         onToggleView={handleToggleView}
         onFormat={handleFormat}
         onInsertImage={handleInsertImage}

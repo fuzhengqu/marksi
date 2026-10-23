@@ -8,6 +8,8 @@ export type Theme = "light" | "dark";
 
 export type ViewMode = "source" | "preview";
 
+export type CopyFormat = "markdown" | "html" | "text";
+
 export type ToastTone = "info" | "success" | "error";
 
 export interface DocumentPayload {
@@ -96,6 +98,9 @@ export interface AppSettings {
   autoSave: boolean;
   autoSaveDelayMs: number;
   imageAssetFolder: string;
+  focusMode: boolean;
+  typewriterMode: boolean;
+  readOnlyMode: boolean;
 }
 
 export interface DocumentDraft {

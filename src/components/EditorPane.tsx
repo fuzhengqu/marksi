@@ -13,6 +13,11 @@ import {
   createEditorExtensions,
   editorContentAttributes,
 } from "../editor/setup";
+import {
+  centerSelection,
+  focusMode,
+  typewriterMode,
+} from "../editor/viewModes";
 import { useAppStore } from "../store/useAppStore";
 
 interface EditorPaneProps {
@@ -21,6 +26,8 @@ interface EditorPaneProps {
   gotoLine: number | null;
   active: boolean;
   readOnly: boolean;
+  focusMode: boolean;
+  typewriterMode: boolean;
   spellcheck: boolean;
 }
 
@@ -34,20 +41,41 @@ function focusSearchField(view: EditorView, replace: boolean): void {
   });
 }
 
+function editableExtensions(readOnly: boolean) {
+  const extensions = [
+    EditorView.editable.of(!readOnly),
+    EditorState.readOnly.of(readOnly),
+  ];
+  if (readOnly) {
+    extensions.push(
+      EditorState.transactionFilter.of((transaction) =>
+        transaction.docChanged ? [] : transaction,
+      ),
+    );
+  }
+  return extensions;
+}
+
 export function EditorPane({
   content,
   documentKey,
   gotoLine,
   active,
   readOnly,
+  focusMode: focusModeEnabled,
+  typewriterMode: typewriterModeEnabled,
   spellcheck,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const contentRef = useRef(content);
   const readOnlyRef = useRef(readOnly);
+  const focusModeRef = useRef(focusModeEnabled);
+  const typewriterModeRef = useRef(typewriterModeEnabled);
   const spellcheckRef = useRef(spellcheck);
   const [editableCompartment] = useState(() => new Compartment());
+  const [focusModeCompartment] = useState(() => new Compartment());
+  const [typewriterModeCompartment] = useState(() => new Compartment());
   const [spellcheckCompartment] = useState(() => new Compartment());
   const callbacksRef = useRef({
     onChange: useAppStore.getState().setContent,
@@ -61,6 +89,14 @@ export function EditorPane({
   useEffect(() => {
     readOnlyRef.current = readOnly;
   }, [readOnly]);
+
+  useEffect(() => {
+    focusModeRef.current = focusModeEnabled;
+  }, [focusModeEnabled]);
+
+  useEffect(() => {
+    typewriterModeRef.current = typewriterModeEnabled;
+  }, [typewriterModeEnabled]);
 
   useEffect(() => {
     spellcheckRef.current = spellcheck;
@@ -85,7 +121,13 @@ export function EditorPane({
           onChange: (value) => callbacksRef.current.onChange(value),
           onCursor: (position) => callbacksRef.current.onCursor(position),
         }),
-        editableCompartment.of(EditorView.editable.of(!readOnlyRef.current)),
+        editableCompartment.of(editableExtensions(readOnlyRef.current)),
+        focusModeCompartment.of(
+          focusModeRef.current ? focusMode() : [],
+        ),
+        typewriterModeCompartment.of(
+          typewriterModeRef.current ? typewriterMode() : [],
+        ),
         spellcheckCompartment.of(
           editorContentAttributes(spellcheckRef.current),
         ),
@@ -102,7 +144,12 @@ export function EditorPane({
       viewRef.current = null;
       view.destroy();
     };
-  }, [editableCompartment, spellcheckCompartment]);
+  }, [
+    editableCompartment,
+    focusModeCompartment,
+    spellcheckCompartment,
+    typewriterModeCompartment,
+  ]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -111,13 +158,44 @@ export function EditorPane({
     }
     view.dispatch({
       effects: editableCompartment.reconfigure(
-        EditorView.editable.of(!readOnly),
+        editableExtensions(readOnly),
       ),
     });
     if (readOnly && view.hasFocus) {
       view.contentDOM.blur();
     }
   }, [editableCompartment, readOnly]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) {
+      return;
+    }
+    view.dispatch({
+      effects: focusModeCompartment.reconfigure(
+        focusModeEnabled ? focusMode() : [],
+      ),
+    });
+  }, [focusModeCompartment, focusModeEnabled]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) {
+      return;
+    }
+    view.dispatch({
+      effects: typewriterModeCompartment.reconfigure(
+        typewriterModeEnabled ? typewriterMode() : [],
+      ),
+    });
+    if (typewriterModeEnabled && active) {
+      requestAnimationFrame(() => {
+        if (viewRef.current === view && view.dom.isConnected) {
+          centerSelection(view);
+        }
+      });
+    }
+  }, [active, typewriterModeCompartment, typewriterModeEnabled]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -142,7 +220,7 @@ export function EditorPane({
     };
     const onSearch = (event: Event) => {
       const view = viewRef.current;
-      if (!view || readOnlyRef.current) {
+      if (!view) {
         return;
       }
       focusSearchField(view, Boolean((event as CustomEvent<boolean>).detail));
@@ -150,7 +228,7 @@ export function EditorPane({
     const onInsert = (event: Event) => {
       const view = viewRef.current;
       const request = (event as CustomEvent<EditorInsertRequest>).detail;
-      if (!view || !request?.text) {
+      if (!view || readOnlyRef.current || !request?.text) {
         return;
       }
 
@@ -216,7 +294,13 @@ export function EditorPane({
               onCursor: (position) => callbacksRef.current.onCursor(position),
             }),
             editableCompartment.of(
-              EditorView.editable.of(!readOnlyRef.current),
+              editableExtensions(readOnlyRef.current),
+            ),
+            focusModeCompartment.of(
+              focusModeRef.current ? focusMode() : [],
+            ),
+            typewriterModeCompartment.of(
+              typewriterModeRef.current ? typewriterMode() : [],
             ),
             spellcheckCompartment.of(
               editorContentAttributes(spellcheckRef.current),
@@ -226,7 +310,13 @@ export function EditorPane({
       );
     }
     contentRef.current = content;
-  }, [content, editableCompartment, spellcheckCompartment]);
+  }, [
+    content,
+    editableCompartment,
+    focusModeCompartment,
+    spellcheckCompartment,
+    typewriterModeCompartment,
+  ]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -234,6 +324,13 @@ export function EditorPane({
       return;
     }
     view.focus();
+    if (typewriterModeRef.current) {
+      requestAnimationFrame(() => {
+        if (viewRef.current === view && view.dom.isConnected) {
+          centerSelection(view);
+        }
+      });
+    }
   }, [documentKey, active]);
 
   useEffect(() => {
@@ -253,7 +350,7 @@ export function EditorPane({
 
   return (
     <div
-      className="editor-area"
+      className={`editor-area ${readOnly ? "is-read-only" : ""}`}
       aria-hidden={!active}
       inert={!active ? true : undefined}
     >

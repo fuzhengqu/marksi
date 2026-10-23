@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Eye, PenLine } from "lucide-react";
+import { Eye, Lock, PenLine } from "lucide-react";
 import { getTextStats } from "../editor/analyze";
 import { useAppStore } from "../store/useAppStore";
 
@@ -7,6 +7,7 @@ export function StatusBar() {
   const doc = useAppStore((state) => state.doc);
   const cursor = useAppStore((state) => state.cursor);
   const viewMode = useAppStore((state) => state.viewMode);
+  const readOnlyMode = useAppStore((state) => state.settings.readOnlyMode);
   const toggleViewMode = useAppStore((state) => state.toggleViewMode);
   const stats = useMemo(() => getTextStats(doc.content), [doc.content]);
 
@@ -15,6 +16,12 @@ export function StatusBar() {
       <div className="status-left">
         <span className="status-mode">Markdown</span>
         <span className="status-divider" aria-hidden="true" />
+        {readOnlyMode ? (
+          <span className="status-readonly" title="Read-only mode (Ctrl Alt R)">
+            <Lock size={10} strokeWidth={2} />
+            Read only
+          </span>
+        ) : null}
         <span title="Document encoding">
           {doc.encoding}
           {doc.hasBom ? " BOM" : ""}

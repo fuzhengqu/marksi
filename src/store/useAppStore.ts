@@ -95,6 +95,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoSave: false,
   autoSaveDelayMs: 1_500,
   imageAssetFolder: "assets",
+  focusMode: false,
+  typewriterMode: false,
+  readOnlyMode: false,
 };
 
 const emptyDocument: DocumentState = {

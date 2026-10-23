@@ -60,9 +60,9 @@ that design decisions do not paint us into a corner.
 | Find and replace | done | M1/M2 |
 | Outline panel | done | M1 |
 | Word / character / line count | done | M1 |
-| Focus mode | todo | M4 |
-| Typewriter mode | todo | M4 |
-| Read-only mode | todo | M4 |
+| Focus mode | done | M4 |
+| Typewriter mode | done | M4 |
+| Read-only mode | done | M4 |
 | Auto pair brackets and Markdown markers | todo | M4 |
 | Smart punctuation | todo | M4 |
 | Spellcheck | done | M3 |
@@ -121,7 +121,7 @@ sanitization boundary and is not planned unless that safety requirement changes.
 | Export HTML | done | M2 |
 | Export PDF | done | M2 |
 | Export image | todo | M5 |
-| Copy as Markdown / HTML / plain text | todo | M4 |
+| Copy as Markdown / HTML / plain text | done | M4 |
 | Pandoc import/export | todo | M5 |
 | Export profiles | todo | M5 |
 | Custom export command | todo | M5 |

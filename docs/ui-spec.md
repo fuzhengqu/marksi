@@ -77,6 +77,10 @@ ease-out; honor `prefers-reduced-motion`.
 - `Ctrl+/`: toggle source and rendered preview.
 - `Ctrl+B` / `Ctrl+I` / `Ctrl+K`: bold / italic / link.
 - `Ctrl+Shift+I`: insert a local image.
+- `Ctrl+Alt+F` / `Ctrl+Alt+T` / `Ctrl+Alt+R`: focus / typewriter /
+  read-only mode.
+- `Ctrl+Alt+C` / `Ctrl+Alt+H` / `Ctrl+Alt+P`: copy the document as Markdown /
+  HTML / plain text.
 - Hamburger opens an overlay menu; Escape closes it.
 - Sidebar tabs are keyboard reachable and preserve state.
 - Unsaved changes are always visible via a dot next to the title.
@@ -89,6 +93,37 @@ ease-out; honor `prefers-reduced-motion`.
 - A clean document reloads when its file changes externally; a dirty document
   keeps local edits and raises a conflict toast.
 - Toast messages are transient, non-blocking, and never contain document text.
+
+## Writing modes
+
+- Focus mode dims every line outside the current blank-line-delimited block.
+  The active block stays at full contrast, including when it is a heading,
+  list, quote, or code fence.
+- Typewriter mode keeps the active line near the vertical center of the editor
+  after cursor movement and typing. It does not add artificial whitespace or
+  alter the document.
+- Focus and typewriter affect the source editor only. They can be combined and
+  are available from View, Preferences > Writing, and the keyboard.
+- Read-only mode disables text input, formatting commands, and every image
+  insertion path. Selection, find/replace, copy, export, and print remain
+  available. The View items and Preferences show the current state, formatting
+  items are disabled, and the status bar displays a Read only badge.
+- Writing modes are persisted with the other preferences and restore on the
+  next launch.
+
+## Copy actions
+
+- View > Copy copies the whole document, not just the current selection.
+- Copy as Markdown writes the canonical source with platform-native line
+  endings. Copy as plain text keeps headings, paragraphs, lists, tables, task
+  state, blockquotes, code, alerts, and rendered math while omitting editor and
+  preview labels such as footnote backreferences.
+- Copy as HTML writes rich HTML derived from the same sanitized renderer used by
+  preview and export, including MathML and document-relative image paths. If
+  the WebView cannot write rich clipboard data, MarkSI falls back to selecting
+  a hidden rendered copy and finally to copying the HTML source.
+- Each action confirms success with a transient toast. Clipboard HTML never
+  introduces raw HTML or remote asset fetches beyond the normal renderer.
 
 ## Images
 

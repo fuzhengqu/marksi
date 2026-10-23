@@ -1,5 +1,13 @@
 import { useEffect } from "react";
-import { Image as ImageIcon, RotateCcw, Save, Settings, Type, X } from "lucide-react";
+import {
+  Focus,
+  Image as ImageIcon,
+  RotateCcw,
+  Save,
+  Settings,
+  Type,
+  X,
+} from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import type { AppSettings, Theme } from "../types";
 
@@ -165,6 +173,51 @@ export function SettingsDialog() {
                 onChange={(value) => update("spellcheck", value)}
               />
             </div>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-heading">
+              <Focus size={15} strokeWidth={1.8} />
+              <span>Writing</span>
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>Focus mode</span>
+                <small>Dim everything except the current paragraph.</small>
+              </div>
+              <Toggle
+                label="Focus mode"
+                checked={settings.focusMode}
+                onChange={(value) => update("focusMode", value)}
+              />
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>Typewriter mode</span>
+                <small>Keep the line you are writing vertically centered.</small>
+              </div>
+              <Toggle
+                label="Typewriter mode"
+                checked={settings.typewriterMode}
+                onChange={(value) => update("typewriterMode", value)}
+              />
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>Read-only mode</span>
+                <small>Read, search, copy, and export without editing.</small>
+              </div>
+              <Toggle
+                label="Read-only mode"
+                checked={settings.readOnlyMode}
+                onChange={(value) => update("readOnlyMode", value)}
+              />
+            </div>
+            <p className="settings-note">
+              These modes also live in the View menu. Focus, typewriter, and
+              read-only use <code>Ctrl Alt F</code>, <code>Ctrl Alt T</code>, and{" "}
+              <code>Ctrl Alt R</code>.
+            </p>
           </section>
 
           <section className="settings-section">

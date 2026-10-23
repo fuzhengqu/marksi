@@ -10,9 +10,10 @@ status bar.
 > Status: MVP (M4). The desktop shell, source editor, file open/save,
 > encoding-aware IO, workspace browser, outline, search, themes, rendered
 > preview, extended Markdown, local image assets, formatting commands,
-> find/replace, HTML/PDF export, preferences, quick open, workspace full-text
-> search, autosave, crash recovery, and external-change detection are
-> implemented. See `docs/feature-parity.md` for the roadmap.
+> find/replace, HTML/PDF export, writing modes, document copy actions,
+> preferences, quick open, workspace full-text search, autosave, crash recovery,
+> and external-change detection are implemented. See
+> `docs/feature-parity.md` for the roadmap.
 
 ## Principles
 
@@ -118,10 +119,28 @@ M4 also adds extended Markdown:
 - Link reference definitions such as `[label]: https://example.com` work across
   the document.
 
+M4 also adds writing modes and document copy actions:
+
+- Focus mode dims everything except the current paragraph, and typewriter mode
+  keeps the active line vertically centered while writing. Both are available
+  from the View menu and Preferences.
+- Read-only mode blocks edits, formatting, and image insertion while keeping
+  selection, search, copy, export, and print available. The status bar shows a
+  read-only badge.
+- Copy the entire document from the Copy menu or keyboard as Markdown, rich
+  HTML, or plain text. Markdown preserves the source apart from platform
+  newline normalization; HTML is derived from the sanitized renderer with
+  MathML; plain text keeps headings, paragraphs, lists, tables, task state, and
+  code.
+- Writing-mode preferences persist locally. Shortcuts: `Ctrl+Alt+F` focus,
+  `Ctrl+Alt+T` typewriter, `Ctrl+Alt+R` read-only, `Ctrl+Alt+C` Markdown,
+  `Ctrl+Alt+H` HTML, and `Ctrl+Alt+P` plain text.
+
 Raw HTML remains escaped and inert, unsafe URLs are rejected, and remote images
 are never fetched by the preview renderer. Math rendering disables KaTeX's
-trust and HTML-extension features. Draft recovery stores its snapshot in
-WebView `localStorage` and never transmits document content.
+trust and HTML-extension features. Clipboard HTML is produced by the same
+sanitized rendering pipeline. Draft recovery stores its snapshot in WebView
+`localStorage` and never transmits document content.
 
 ## Development
 

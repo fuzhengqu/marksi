@@ -1,17 +1,23 @@
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  AlignVerticalJustifyCenter,
   Bold,
   Check,
+  ClipboardType,
   Code2,
+  Copy,
   Eye,
   FileCode2,
   FilePlus2,
+  FileText,
+  Focus,
   FolderOpen,
   FolderX,
   Image as ImageIcon,
   Info,
   Italic,
   Link2,
+  Lock,
   Moon,
   PanelLeft,
   PenLine,
@@ -27,6 +33,7 @@ import {
 import type { EditorCommand } from "../editor/format";
 import { getAppVersion } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
+import type { CopyFormat } from "../types";
 
 interface MenuOverlayProps {
   onNew: () => void;
@@ -36,6 +43,7 @@ interface MenuOverlayProps {
   onSaveAs: () => void;
   onExportHtml: () => void;
   onPrint: () => void;
+  onCopy: (format: CopyFormat) => void;
   onToggleView: () => void;
   onFormat: (command: EditorCommand) => void;
   onInsertImage: () => void;
@@ -53,6 +61,7 @@ export function MenuOverlay({
   onSaveAs,
   onExportHtml,
   onPrint,
+  onCopy,
   onToggleView,
   onFormat,
   onInsertImage,
@@ -66,8 +75,10 @@ export function MenuOverlay({
   const theme = useAppStore((state) => state.theme);
   const viewMode = useAppStore((state) => state.viewMode);
   const workspace = useAppStore((state) => state.workspace);
+  const settings = useAppStore((state) => state.settings);
   const toggleTheme = useAppStore((state) => state.toggleTheme);
   const toggleSidebar = useAppStore((state) => state.toggleSidebar);
+  const updateSettings = useAppStore((state) => state.updateSettings);
   const [aboutOpen, setAboutOpen] = useState(false);
 
   useEffect(() => {
@@ -155,36 +166,42 @@ export function MenuOverlay({
           icon={<Bold size={16} strokeWidth={1.8} />}
           label="Bold"
           shortcut="Ctrl B"
+          disabled={settings.readOnlyMode}
           onClick={() => run(() => onFormat("bold"))}
         />
         <MenuItem
           icon={<Italic size={16} strokeWidth={1.8} />}
           label="Italic"
           shortcut="Ctrl I"
+          disabled={settings.readOnlyMode}
           onClick={() => run(() => onFormat("italic"))}
         />
         <MenuItem
           icon={<Strikethrough size={16} strokeWidth={1.8} />}
           label="Strikethrough"
           shortcut="Ctrl ⇧ X"
+          disabled={settings.readOnlyMode}
           onClick={() => run(() => onFormat("strikethrough"))}
         />
         <MenuItem
           icon={<Code2 size={16} strokeWidth={1.8} />}
           label="Inline code"
           shortcut="Ctrl `"
+          disabled={settings.readOnlyMode}
           onClick={() => run(() => onFormat("inline-code"))}
         />
         <MenuItem
           icon={<Link2 size={16} strokeWidth={1.8} />}
           label="Link"
           shortcut="Ctrl K"
+          disabled={settings.readOnlyMode}
           onClick={() => run(() => onFormat("link"))}
         />
         <MenuItem
           icon={<ImageIcon size={16} strokeWidth={1.8} />}
           label="Image…"
           shortcut="Ctrl ⇧ I"
+          disabled={settings.readOnlyMode}
           onClick={() => run(onInsertImage)}
         />
 
@@ -217,6 +234,55 @@ export function MenuOverlay({
           }
           label={theme === "light" ? "Dark appearance" : "Light appearance"}
           onClick={() => run(toggleTheme)}
+        />
+        <MenuItem
+          icon={<Focus size={16} strokeWidth={1.8} />}
+          label="Focus mode"
+          shortcut="Ctrl Alt F"
+          checked={settings.focusMode}
+          onClick={() =>
+            run(() => updateSettings({ focusMode: !settings.focusMode }))
+          }
+        />
+        <MenuItem
+          icon={<AlignVerticalJustifyCenter size={16} strokeWidth={1.8} />}
+          label="Typewriter mode"
+          shortcut="Ctrl Alt T"
+          checked={settings.typewriterMode}
+          onClick={() =>
+            run(() =>
+              updateSettings({ typewriterMode: !settings.typewriterMode }),
+            )
+          }
+        />
+        <MenuItem
+          icon={<Lock size={16} strokeWidth={1.8} />}
+          label="Read-only mode"
+          shortcut="Ctrl Alt R"
+          checked={settings.readOnlyMode}
+          onClick={() =>
+            run(() => updateSettings({ readOnlyMode: !settings.readOnlyMode }))
+          }
+        />
+
+        <div className="menu-section-label">Copy</div>
+        <MenuItem
+          icon={<Copy size={16} strokeWidth={1.8} />}
+          label="Copy as Markdown"
+          shortcut="Ctrl Alt C"
+          onClick={() => run(() => onCopy("markdown"))}
+        />
+        <MenuItem
+          icon={<ClipboardType size={16} strokeWidth={1.8} />}
+          label="Copy as HTML"
+          shortcut="Ctrl Alt H"
+          onClick={() => run(() => onCopy("html"))}
+        />
+        <MenuItem
+          icon={<FileText size={16} strokeWidth={1.8} />}
+          label="Copy as plain text"
+          shortcut="Ctrl Alt P"
+          onClick={() => run(() => onCopy("text"))}
         />
 
         <div className="menu-section-label">Export</div>
@@ -263,15 +329,34 @@ interface MenuItemProps {
   label: string;
   shortcut?: string;
   badge?: string;
+  checked?: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }
 
-function MenuItem({ icon, label, shortcut, badge, onClick }: MenuItemProps) {
+function MenuItem({
+  icon,
+  label,
+  shortcut,
+  badge,
+  checked,
+  disabled,
+  onClick,
+}: MenuItemProps) {
   return (
-    <button className="menu-item" role="menuitem" onClick={onClick}>
+    <button
+      className={`menu-item ${checked ? "is-checked" : ""}`}
+      role={checked === undefined ? "menuitem" : "menuitemcheckbox"}
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={onClick}
+    >
       <span className="menu-item-icon">{icon}</span>
       <span className="menu-item-label">{label}</span>
       {badge ? <span className="menu-badge">{badge}</span> : null}
+      {checked ? (
+        <Check className="menu-item-check" size={13} strokeWidth={2} />
+      ) : null}
       {shortcut ? <span className="menu-shortcut">{shortcut}</span> : null}
     </button>
   );
