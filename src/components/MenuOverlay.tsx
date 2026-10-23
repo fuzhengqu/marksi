@@ -18,6 +18,7 @@ import {
   Italic,
   Link2,
   Lock,
+  LogOut,
   Moon,
   PanelLeft,
   PenLine,
@@ -35,7 +36,7 @@ import {
 } from "lucide-react";
 import type { EditorCommand } from "../editor/format";
 import { useT } from "../i18n";
-import { getAppVersion } from "../lib/platform";
+import { closeApplication, getAppVersion } from "../lib/platform";
 import { ZOOM_MAX, ZOOM_MIN } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { CopyFormat } from "../types";
@@ -265,6 +266,12 @@ export function MenuOverlay({
                 label={t("Preferences…")}
                 shortcut="Ctrl ,"
                 onClick={() => run(onOpenSettings)}
+              />
+              <div className="menu-separator" />
+              <MenuItem
+                icon={<LogOut size={16} strokeWidth={1.8} />}
+                label={t("Quit MarkSI")}
+                onClick={() => run(() => void closeApplication())}
               />
             </>
           ) : null}
@@ -575,9 +582,6 @@ function AboutDialog({ open, onClose }: AboutDialogProps) {
           <span>{t("No account")}</span>
           <span>{t("No telemetry")}</span>
         </div>
-        <button className="button button-primary about-button" onClick={onClose}>
-          {t("Close")}
-        </button>
       </div>
     </div>
   );

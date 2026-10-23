@@ -240,7 +240,7 @@ export default function App() {
         useAppStore.getState().setLoadedDocument(payload);
         if (line != null) {
           useAppStore.getState().requestGotoLine(line);
-          useAppStore.getState().setViewMode("source");
+          useAppStore.getState().setViewMode("preview");
         }
       } catch (error) {
         state.showToast(errorMessage(error), "error");
@@ -635,7 +635,7 @@ export default function App() {
         const state = useAppStore.getState();
         state.setLoadedDocument(payload);
         state.setContent(pending.content);
-        state.setViewMode("source");
+        state.setViewMode("preview");
         state.showToast(
           tNow("Draft recovered. Review it, then save."),
           "success",

@@ -140,7 +140,7 @@ export const useAppStore = create<AppStore>()(
       sidebarTab: "files",
       sidebarOpen: true,
       theme: "light",
-      viewMode: "source",
+      viewMode: "preview",
       menuOpen: false,
       cursor: { line: 1, column: 1 },
       toast: null,
@@ -160,7 +160,7 @@ export const useAppStore = create<AppStore>()(
                 : "Untitled.md",
           },
           cursor: { line: 1, column: 1 },
-          viewMode: "source",
+          viewMode: "preview",
           menuOpen: false,
         })),
 
@@ -247,7 +247,7 @@ export const useAppStore = create<AppStore>()(
             modifiedMs: draft.modifiedMs,
           },
           cursor: { line: 1, column: 1 },
-          viewMode: "source",
+          viewMode: "preview",
           menuOpen: false,
         }),
 

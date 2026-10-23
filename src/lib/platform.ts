@@ -346,4 +346,13 @@ export async function revealLocalPath(path: string): Promise<void> {
   await revealItemInDir(path);
 }
 
+export async function closeApplication(): Promise<void> {
+  if (!isTauri()) {
+    window.close();
+    return;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  await getCurrentWindow().close();
+}
+
 export { fileName };

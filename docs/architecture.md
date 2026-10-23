@@ -162,7 +162,8 @@ guards around formatting and image insertion. Search, selection, copy, export,
 and print remain available. The three mode flags live in `AppSettings` and are
 persisted with the rest of the preferences.
 
-`ViewMode` now has `source`, `preview`, and `reading`. `preview` is an editable
+`ViewMode` now has `source`, `preview`, and `reading`, with `preview` as the
+default for opened and new documents. `preview` is an editable
 live preview backed by the same CodeMirror state; `src/editor/livePreview.ts`
 adds a view plugin that hides Markdown punctuation on inactive lines while
 leaving the active line fully editable. Markers and URLs are collected from the

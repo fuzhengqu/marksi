@@ -96,9 +96,9 @@ ease-out; honor `prefers-reduced-motion`.
   while the bar is open. The category row is the only thing shown on first
   click; clicking a category opens its dropdown, and moving across categories
   switches the dropdown while it is open. Clicking blank space closes the bar
-  and restores the hamburger. Escape also closes it. Export and Preferences are
-  File items; Edit contains the copy actions. The menu has no per-dropdown
-  footer.
+  and restores the hamburger. Escape also closes it. Export, Preferences, and
+  Quit MarkSI are File items; Edit contains the copy actions. The menu has no
+  per-dropdown footer. About uses only its top-right close button.
 - Sidebar tabs are keyboard reachable and preserve state. An empty workspace
   shows four actions above Recent files: Open file, Open folder, Quick open,
   and New document. There is no footer action row.
@@ -117,6 +117,7 @@ ease-out; honor `prefers-reduced-motion`.
 
 ## View modes
 
+- Opened documents and new blank documents start in live preview.
 - Source mode always shows the canonical Markdown source.
 - Live preview keeps the same CodeMirror editing surface. Formatting
   punctuation (`#`, emphasis marks, link destinations, and inline-code ticks)

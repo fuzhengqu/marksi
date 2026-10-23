@@ -130,6 +130,7 @@ const ZH: Record<string, string> = {
   "HTML document…": "HTML 文档…",
   "Print / Save as PDF": "打印 / 另存为 PDF",
   "Preferences…": "偏好设置…",
+  "Quit MarkSI": "退出 MarkSI",
   "About MarkSI": "关于 MarkSI",
   "MarkSI · MIT licensed": "MarkSI · MIT 许可",
   Preferences: "偏好设置",

@@ -54,10 +54,11 @@ M1 established the desktop foundation:
 
 M2 adds the reading and formatting workflow:
 
-- Source, editable live-preview, and reading modes. `Ctrl+/` or the status bar
-  toggles source and live preview; View > Reading view opens the fully rendered,
-  read-only surface. Switching modes keeps the CodeMirror document and undo
-  history in place.
+- Source, editable live-preview, and reading modes. Opened documents and new
+  blank documents start in editable live preview; `Ctrl+/` or the status bar
+  toggles source and live preview, and View > Reading view opens the fully
+  rendered, read-only surface. Switching modes keeps the CodeMirror document
+  and undo history in place.
 - The live preview keeps the CodeMirror document editable while hiding
   formatting punctuation on inactive lines. The active line shows its Markdown
   source, and images/links/emphasis remain based on the same canonical text.
@@ -170,8 +171,8 @@ The interface and writing flow also include:
   Help in its own space: File takes over the hamburger position and the other
   labels follow to the right. Clicking a category opens that dropdown; moving
   across the bar switches categories while a dropdown is open. Clicking blank
-  space closes the bar and restores the hamburger. Export and Preferences live
-  under File.
+  space closes the bar and restores the hamburger. Export, Preferences, and
+  Quit live under File.
 - The empty workspace exposes Open file, Open folder, Quick open, and New
   document above Recent files. The bottom action row is removed entirely.
 - New-document actions clear the editor, dismiss the welcome surface, focus the
