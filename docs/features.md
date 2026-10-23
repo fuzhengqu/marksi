@@ -98,19 +98,20 @@ that design decisions do not paint us into a corner.
 | Link reference definitions | done | M4 |
 | Strict mode toggle (headings and nested lists) | done | M5 |
 | Lax list indentation (nested markers) | done | M5 |
-| Lax list continuation/quote indentation | todo | M5 |
+| Lax list continuation/quote indentation | done | M5 |
 
 Raw HTML preview remains deferred by design. MarkSI keeps raw HTML escaped and
 inert in both preview and export; enabling it would weaken the current
 sanitization boundary and is not planned unless that safety requirement changes.
 
-Strict mode controls ATX heading spacing and nested list marker indentation.
-MarkSI defaults to strict mode; disabling it makes compact headings such as
-`###Title` render as headings and pads under-indented nested list markers to
-their parent content indent. The v1 lax-list pass covers nested `-`, `+`, `*`,
-`1.`, and `1)` markers, including after blank lines. It deliberately leaves
-lazy continuation paragraphs, quote-block lists, tab-indented markers, and
-fully lax continuation blocks to the future continuation/quote item above.
+Strict mode controls ATX heading spacing and lax list indentation. MarkSI
+defaults to strict mode; disabling it makes compact headings such as
+`###Title` render as headings and pads under-indented nested list markers and
+continuation text to their parent content indent. It covers nested `-`, `+`,
+`*`, `1.`, and `1)` markers, continuations before and after blank lines, CRLF,
+and lists inside single- or multi-level blockquotes. Fenced and indented code
+remain literal. Tab-indented list lines are preserved as written rather than
+expanded. The canonical Markdown source is never rewritten.
 
 ## Images
 

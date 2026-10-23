@@ -143,6 +143,12 @@ metadata and folded indented values; HTML export can use `title`, `author`,
 `date`, `description`, `keywords`, and `tags` for document metadata, subject to
 the export dialog's front matter options.
 
+Strict mode is applied to a rendering-only copy before markdown-it runs. It
+can normalize compact ATX headings, under-indented nested list markers,
+continuation lines, and lists inside blockquotes. The normalizer tracks fences,
+math blocks, indented code, headings, thematic breaks, and front matter so those
+constructs stay literal. It never edits the editor buffer or save path.
+
 Math runs through KaTeX with trust and HTML extensions disabled. Preview renders
 KaTeX HTML with the bundled KaTeX CSS and fonts. HTML export instead renders
 MathML, wrapped in a centered display block, so a standalone export does not
@@ -337,6 +343,8 @@ success toasts.
   editor transactions; it is covered by unit tests.
 - `src/lib/frontMatter.ts` owns front-matter extraction and metadata parsing; it
   is covered by unit tests.
+- `src/lib/strictMarkdown.ts` owns rendering-only lax heading, list-marker,
+  continuation, and quoted-list normalization; it is covered by unit tests.
 - `src/lib/customExport.ts` owns argument-line parsing, placeholder expansion,
   and export-folder lookup; it is covered by unit tests.
 - `src/lib/exportImage.ts` owns PNG naming, capture-scale limits, readiness

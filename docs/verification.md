@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.09` product version.
+- About dialog close behavior and display of the `0.10` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -84,7 +84,9 @@ The E2E suite currently covers:
 - Live-preview editing, hidden inactive markers, and source retention.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions.
-- Strict mode on/off behavior for compact ATX headings and lax nested list marker indentation, including the Preferences toggle.
+- Strict mode on/off behavior for compact ATX headings, lax nested list marker
+  indentation, under-indented continuation paragraphs, and quoted lists,
+  including the Preferences toggle.
 - Chinese settings, language switch to English and back.
 - Export dialog profile switching, front matter toggles, page setup, and the
   real HTML write. The test replaces only the native save-dialog boundary and
@@ -120,8 +122,9 @@ The E2E suite currently covers:
   skipped release steps during the publication audit.
 
 Vitest covers formatting, smart typing, emoji catalogs, i18n, version display
-formatting, zoom math, strict-heading and lax-list normalization, front-matter
-parsing, save-name extraction/sanitization, image helpers, image-source scanning
+formatting, zoom math, strict-heading and lax-list normalization (including
+continuations, quotes, code safety, and CRLF), front-matter parsing, save-name
+extraction/sanitization, image helpers, image-source scanning
 and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change

@@ -365,7 +365,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.09"), "About should show version 0.09", state);
+    assert(state.version?.includes("0.10"), "About should show version 0.10", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -646,6 +646,53 @@ async function main() {
     assert(lax.topItems === 1, "lax mode should nest the child item", lax);
     assert(lax.nestedText.includes("子项"), "nested item text is missing", lax);
     assert(lax.code.includes("1. 代码不是列表"), "lax mode changed the code fence", lax);
+    assert(lax.content === source, "rendering must not rewrite the source", lax);
+    await resetBase();
+  });
+
+  await test("lax mode keeps list continuations and quoted lists", async () => {
+    await resetBase();
+    const source = [
+      "1. 父项",
+      "",
+      "  续行",
+      "",
+      "> 10. 引用父项",
+      ">   1. 引用子项",
+    ].join("\n");
+    await evaluate(
+      `window.__MARKSI_DEV__.setContent(${JSON.stringify(source)})`,
+    );
+    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+    await waitFor('document.querySelector(".markdown-body > ol")');
+    const strict = await evaluate(`({
+      itemText: document.querySelector(".markdown-body > ol > li")?.textContent ?? "",
+      outsideText: document.querySelector(".markdown-body > p")?.textContent ?? "",
+      quoteTop: document.querySelectorAll(".markdown-body blockquote > ol > li").length,
+      quoteNested: document.querySelectorAll(".markdown-body blockquote > ol > li > ol > li").length
+    })`);
+    assert(!strict.itemText.includes("续行"), "strict mode should leave the continuation outside", strict);
+    assert(strict.outsideText.includes("续行"), "strict mode should render the continuation as a paragraph", strict);
+    assert(strict.quoteTop === 2, "strict mode should keep quoted items flat", strict);
+    assert(strict.quoteNested === 0, "strict mode should not nest quoted items", strict);
+
+    await evaluate(
+      'window.__MARKSI_DEV__.setSettings({ strictMode: false })',
+    );
+    await waitFor(
+      'document.querySelectorAll(".markdown-body blockquote > ol > li > ol > li").length === 1',
+    );
+    const lax = await evaluate(`({
+      itemText: document.querySelector(".markdown-body > ol > li")?.textContent ?? "",
+      outsideText: document.querySelector(".markdown-body > p")?.textContent ?? "",
+      quoteTop: document.querySelectorAll(".markdown-body blockquote > ol > li").length,
+      quoteNested: document.querySelectorAll(".markdown-body blockquote > ol > li > ol > li").length,
+      content: window.__MARKSI_DEV__.getState().doc.content
+    })`);
+    assert(lax.itemText.includes("续行"), "lax mode should keep the continuation in the item", lax);
+    assert(!lax.outsideText.includes("续行"), "lax mode should not leave the continuation outside", lax);
+    assert(lax.quoteTop === 1, "lax mode should nest the quoted child", lax);
+    assert(lax.quoteNested === 1, "quoted child marker is missing", lax);
     assert(lax.content === source, "rendering must not rewrite the source", lax);
     await resetBase();
   });

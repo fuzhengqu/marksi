@@ -88,14 +88,40 @@ function parseListMarker(
   };
 }
 
+interface QuoteLine {
+  base: string;
+  prefix: string;
+  content: string;
+}
+
+function parseQuoteLine(line: string): QuoteLine | null {
+  const match = /^( {0,3}>)([ \t]?)(.*)$/.exec(line);
+  if (!match) {
+    return null;
+  }
+  return {
+    base: match[1],
+    prefix: match[1] + match[2],
+    content: match[3],
+  };
+}
+
 /**
- * Normalizes under-indented child list markers when strict mode is disabled.
- * Only list-marker lines are padded; text, fences, code, quotes, and front
- * matter are preserved. The source line count never changes.
+ * Normalizes under-indented child list markers and continuation text when
+ * strict mode is disabled. Fenced code, indented code, front matter, and
+ * blockquotes outside list content are preserved. Quote blocks are normalized
+ * recursively. The source line count never changes.
  */
 export function normalizeLaxLists(source: string): string {
   const frontMatter = extractFrontMatter(source);
   const body = frontMatter ? source.slice(frontMatter.block.length) : source;
+  const normalizedBody = normalizeLaxListBody(body);
+  return frontMatter
+    ? `${frontMatter.block}${normalizedBody}`
+    : normalizedBody;
+}
+
+function normalizeLaxListBody(body: string): string {
   const lines = body.split("\n");
   const stack: LaxListItem[] = [];
   let fence: { character: string; length: number; indent: number } | null =
@@ -143,10 +169,46 @@ export function normalizeLaxLists(source: string): string {
     const leading = /^[ \t]*/.exec(line)?.[0] ?? "";
     const indent = leading.length;
 
-    if (/^ {0,3}>/.test(line)) {
-      if (!stack.length || indent < contentLimit) {
-        stack.length = 0;
+    const quote = parseQuoteLine(line);
+    if (quote) {
+      // A quote indented to the current item's content belongs to the item;
+      // leave it alone rather than breaking the list context.
+      if (stack.length && indent >= contentLimit) {
+        blank = false;
+        paragraphOpen = false;
+        continue;
       }
+
+      let end = index;
+      const innerLines: string[] = [];
+      const prefixes: string[] = [];
+      while (end < lines.length) {
+        const candidateRaw = lines[end];
+        const candidateEnding = candidateRaw.endsWith("\r") ? "\r" : "";
+        const candidate = candidateEnding
+          ? candidateRaw.slice(0, -1)
+          : candidateRaw;
+        const info = parseQuoteLine(candidate);
+        if (!info || info.base !== quote.base) {
+          break;
+        }
+        innerLines.push(`${info.content}${candidateEnding}`);
+        prefixes.push(info.prefix);
+        end += 1;
+      }
+
+      const normalizedInner = normalizeLaxListBody(
+        innerLines.join("\n"),
+      ).split("\n");
+      for (let offset = 0; offset < normalizedInner.length; offset += 1) {
+        const raw = normalizedInner[offset] ?? "";
+        const ending = raw.endsWith("\r") ? "\r" : "";
+        const content = ending ? raw.slice(0, -1) : raw;
+        lines[index + offset] =
+          `${prefixes[offset] ?? quote.prefix}${content}${ending}`;
+      }
+      index = end - 1;
+      stack.length = 0;
       blank = false;
       paragraphOpen = false;
       continue;
@@ -200,8 +262,16 @@ export function normalizeLaxLists(source: string): string {
 
     const marker = parseListMarker(line);
     if (!marker) {
-      if (blank && stack.length && indent < contentLimit) {
+      if (stack.length && blank && indent === 0) {
         stack.length = 0;
+      } else if (
+        stack.length &&
+        indent > 0 &&
+        indent < contentLimit
+      ) {
+        // Keep under-indented continuation text inside the current item.
+        lines[index] =
+          " ".repeat(contentLimit - indent) + original;
       }
       blank = false;
       paragraphOpen = true;
@@ -258,10 +328,7 @@ export function normalizeLaxLists(source: string): string {
     paragraphOpen = marker.hasContent;
   }
 
-  const normalizedBody = lines.join("\n");
-  return frontMatter
-    ? `${frontMatter.block}${normalizedBody}`
-    : normalizedBody;
+  return lines.join("\n");
 }
 
 /** Applies all strict-mode normalizations to a rendering-only copy. */

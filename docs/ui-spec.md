@@ -166,10 +166,14 @@ ease-out; honor `prefers-reduced-motion`.
 - Strict mode is on by default and requires whitespace after ATX heading
   markers (`### Title`). It can be disabled in Preferences > Markdown.
 - With strict mode off, compact headings such as `###Title` render as headings
-  in reading view, export, copy, and the outline. The canonical Markdown source
-  is never rewritten.
+  in reading view, export, copy, and the outline. Under-indented nested list
+  markers and continuation text are padded to the parent content indent, and
+  list markers inside blockquotes are normalized recursively.
+- Lax normalization covers continuation paragraphs before and after blank
+  lines, CRLF input, and single- or multi-level blockquotes. Tab-indented list
+  lines are left as written.
 - Fenced code, front matter, and indented code keep their literal markers in
-  both modes.
+  both modes. The canonical Markdown source is never rewritten.
 
 ## Typing assistance
 
