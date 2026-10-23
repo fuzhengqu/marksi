@@ -13,6 +13,9 @@ licenses remain in effect.
 | CodeMirror 6 packages | MIT |
 | Lezer packages | MIT |
 | Lucide icons | ISC |
+| markdown-it | MIT |
+| DOMPurify | MPL-2.0 OR Apache-2.0 |
+| highlight.js | BSD-3-Clause |
 | encoding_rs | Apache-2.0 OR MIT |
 | chardetng | Apache-2.0 OR MIT |
 | serde | Apache-2.0 OR MIT |
@@ -28,6 +31,9 @@ licenses remain in effect.
 | TypeScript | Apache-2.0 |
 | Vitest | MIT |
 | Tauri CLI | Apache-2.0 OR MIT |
+
+DOMPurify is dual-licensed under MPL-2.0 or Apache-2.0. MarkSI relies on the
+Apache-2.0 option.
 
 The complete dependency tree and exact license texts are available from the
 package manifests, `node_modules`, and the Cargo registry used for a given build.

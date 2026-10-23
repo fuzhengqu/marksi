@@ -84,43 +84,27 @@ pub fn write_document(
         has_bom,
     )?;
 
-    let parent = target
-        .parent()
-        .ok_or_else(|| format!("{} has no parent directory", target.display()))?;
-    if !parent.is_dir() {
-        return Err(format!("{} is not a directory", parent.display()));
-    }
-
-    // Write to a sibling temporary file, sync it, then replace the target. This
-    // keeps a failed write from truncating an existing document.
-    let mut temp = tempfile::Builder::new()
-        .prefix(".marksi-")
-        .suffix(".tmp")
-        .tempfile_in(parent)
-        .map_err(|error| format!("Cannot create a temporary file: {error}"))?;
-    temp.as_file_mut()
-        .write_all(&encoded)
-        .map_err(|error| format!("Cannot write temporary file: {error}"))?;
-    temp.as_file()
-        .sync_all()
-        .map_err(|error| format!("Cannot flush temporary file: {error}"))?;
-
-    if let Ok(metadata) = fs::metadata(&target) {
-        let _ = fs::set_permissions(temp.path(), metadata.permissions());
-    }
-
-    let temp_path = temp
-        .into_temp_path()
-        .keep()
-        .map_err(|error| format!("Cannot prepare temporary file: {error}"))?;
-
-    if let Err(error) = replace_file(&temp_path, &target) {
-        let _ = fs::remove_file(&temp_path);
-        return Err(format!("Cannot save {}: {error}", target.display()));
-    }
+    write_atomic(&target, &encoded)?;
 
     let metadata = fs::metadata(&target)
         .map_err(|error| format!("Cannot inspect {} after save: {error}", target.display()))?;
+
+    Ok(FileMeta {
+        path: target.to_string_lossy().into_owned(),
+        size: metadata.len(),
+        modified_ms: modified_ms(&metadata),
+    })
+}
+
+/// Write a UTF-8 export file using the same atomic replacement strategy as
+/// document saves. The caller chooses the path through the native save dialog.
+#[tauri::command]
+pub fn write_export(path: String, content: String) -> Result<FileMeta, String> {
+    let target = resolve_write_target(Path::new(&path))?;
+    write_atomic(&target, content.as_bytes())?;
+
+    let metadata = fs::metadata(&target)
+        .map_err(|error| format!("Cannot inspect {} after export: {error}", target.display()))?;
 
     Ok(FileMeta {
         path: target.to_string_lossy().into_owned(),
@@ -256,6 +240,45 @@ fn normalize_line_endings(content: &str) -> (String, String) {
     let lf = content.matches('\n').count().saturating_sub(crlf);
     let line_ending = if crlf > 0 && crlf >= lf { "CRLF" } else { "LF" };
     (normalize_newlines(content), line_ending.to_string())
+}
+
+fn write_atomic(target: &Path, bytes: &[u8]) -> Result<(), String> {
+    let parent = target
+        .parent()
+        .ok_or_else(|| format!("{} has no parent directory", target.display()))?;
+    if !parent.is_dir() {
+        return Err(format!("{} is not a directory", parent.display()));
+    }
+
+    // Write to a sibling temporary file, sync it, then replace the target. This
+    // keeps a failed write from truncating an existing document.
+    let mut temp = tempfile::Builder::new()
+        .prefix(".marksi-")
+        .suffix(".tmp")
+        .tempfile_in(parent)
+        .map_err(|error| format!("Cannot create a temporary file: {error}"))?;
+    temp.as_file_mut()
+        .write_all(bytes)
+        .map_err(|error| format!("Cannot write temporary file: {error}"))?;
+    temp.as_file()
+        .sync_all()
+        .map_err(|error| format!("Cannot flush temporary file: {error}"))?;
+
+    if let Ok(metadata) = fs::metadata(target) {
+        let _ = fs::set_permissions(temp.path(), metadata.permissions());
+    }
+
+    let temp_path = temp
+        .into_temp_path()
+        .keep()
+        .map_err(|error| format!("Cannot prepare temporary file: {error}"))?;
+
+    if let Err(error) = replace_file(&temp_path, target) {
+        let _ = fs::remove_file(&temp_path);
+        return Err(format!("Cannot save {}: {error}", target.display()));
+    }
+
+    Ok(())
 }
 
 fn resolve_write_target(path: &Path) -> Result<PathBuf, String> {
@@ -415,6 +438,27 @@ mod tests {
         .expect("second write");
 
         assert_eq!(fs::read_to_string(&path).expect("read"), "second");
+        let leftovers = fs::read_dir(directory.path())
+            .expect("directory")
+            .filter_map(Result::ok)
+            .filter(|entry| entry.file_name().to_string_lossy().starts_with(".marksi-"))
+            .count();
+        assert_eq!(leftovers, 0);
+    }
+
+    #[test]
+    fn writes_export_text_atomically() {
+        let directory = tempfile::tempdir().expect("tempdir");
+        let path = directory.path().join("note.html");
+        let path_string = path.to_string_lossy().into_owned();
+
+        let meta = write_export(path_string, "<h1>Hello</h1>\n".to_string()).expect("write export");
+
+        assert!(meta.size > 0);
+        assert_eq!(
+            fs::read_to_string(&path).expect("read export"),
+            "<h1>Hello</h1>\n"
+        );
         let leftovers = fs::read_dir(directory.path())
             .expect("directory")
             .filter_map(Result::ok)

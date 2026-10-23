@@ -11,6 +11,7 @@ import type {
   Theme,
   ToastMessage,
   ToastTone,
+  ViewMode,
 } from "../types";
 import { fileName } from "../lib/platform";
 
@@ -40,6 +41,7 @@ interface AppStore {
   sidebarTab: SidebarTab;
   sidebarOpen: boolean;
   theme: Theme;
+  viewMode: ViewMode;
   menuOpen: boolean;
   cursor: CursorPosition;
   toast: ToastMessage | null;
@@ -55,6 +57,8 @@ interface AppStore {
   toggleSidebar: () => void;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+  setViewMode: (mode: ViewMode) => void;
+  toggleViewMode: () => void;
   setMenuOpen: (open: boolean) => void;
   setCursor: (cursor: CursorPosition) => void;
   requestGotoLine: (line: number) => void;
@@ -103,6 +107,7 @@ export const useAppStore = create<AppStore>()(
       sidebarTab: "files",
       sidebarOpen: true,
       theme: "light",
+      viewMode: "source",
       menuOpen: false,
       cursor: { line: 1, column: 1 },
       toast: null,
@@ -112,6 +117,7 @@ export const useAppStore = create<AppStore>()(
         set({
           doc: { ...emptyDocument },
           cursor: { line: 1, column: 1 },
+          viewMode: "source",
           menuOpen: false,
         }),
 
@@ -183,6 +189,11 @@ export const useAppStore = create<AppStore>()(
       setTheme: (theme) => set({ theme }),
       toggleTheme: () =>
         set((state) => ({ theme: state.theme === "light" ? "dark" : "light" })),
+      setViewMode: (viewMode) => set({ viewMode }),
+      toggleViewMode: () =>
+        set((state) => ({
+          viewMode: state.viewMode === "source" ? "preview" : "source",
+        })),
       setMenuOpen: (menuOpen) => set({ menuOpen }),
       setCursor: (cursor) => set({ cursor }),
       requestGotoLine: (line) => set({ gotoLine: line }),

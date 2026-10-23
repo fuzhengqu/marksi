@@ -1,18 +1,27 @@
 import { useEffect, useState, type ReactNode } from "react";
 import {
+  Bold,
   Check,
+  Code2,
+  Eye,
   FileCode2,
   FilePlus2,
   FolderOpen,
   FolderX,
   Info,
+  Italic,
+  Link2,
   Moon,
   PanelLeft,
+  PenLine,
+  Printer,
   Save,
   SaveAll,
+  Strikethrough,
   Sun,
   X,
 } from "lucide-react";
+import type { EditorCommand } from "../editor/format";
 import { getAppVersion } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
 
@@ -23,6 +32,9 @@ interface MenuOverlayProps {
   onSave: () => void;
   onSaveAs: () => void;
   onExportHtml: () => void;
+  onPrint: () => void;
+  onToggleView: () => void;
+  onFormat: (command: EditorCommand) => void;
   onCloseWorkspace: () => void;
 }
 
@@ -33,11 +45,15 @@ export function MenuOverlay({
   onSave,
   onSaveAs,
   onExportHtml,
+  onPrint,
+  onToggleView,
+  onFormat,
   onCloseWorkspace,
 }: MenuOverlayProps) {
   const open = useAppStore((state) => state.menuOpen);
   const setOpen = useAppStore((state) => state.setMenuOpen);
   const theme = useAppStore((state) => state.theme);
+  const viewMode = useAppStore((state) => state.viewMode);
   const workspace = useAppStore((state) => state.workspace);
   const toggleTheme = useAppStore((state) => state.toggleTheme);
   const toggleSidebar = useAppStore((state) => state.toggleSidebar);
@@ -111,7 +127,51 @@ export function MenuOverlay({
           onClick={() => run(onSaveAs)}
         />
 
+        <div className="menu-section-label">Format</div>
+        <MenuItem
+          icon={<Bold size={16} strokeWidth={1.8} />}
+          label="Bold"
+          shortcut="Ctrl B"
+          onClick={() => run(() => onFormat("bold"))}
+        />
+        <MenuItem
+          icon={<Italic size={16} strokeWidth={1.8} />}
+          label="Italic"
+          shortcut="Ctrl I"
+          onClick={() => run(() => onFormat("italic"))}
+        />
+        <MenuItem
+          icon={<Strikethrough size={16} strokeWidth={1.8} />}
+          label="Strikethrough"
+          shortcut="Ctrl ⇧ X"
+          onClick={() => run(() => onFormat("strikethrough"))}
+        />
+        <MenuItem
+          icon={<Code2 size={16} strokeWidth={1.8} />}
+          label="Inline code"
+          shortcut="Ctrl `"
+          onClick={() => run(() => onFormat("inline-code"))}
+        />
+        <MenuItem
+          icon={<Link2 size={16} strokeWidth={1.8} />}
+          label="Link"
+          shortcut="Ctrl K"
+          onClick={() => run(() => onFormat("link"))}
+        />
+
         <div className="menu-section-label">View</div>
+        <MenuItem
+          icon={
+            viewMode === "preview" ? (
+              <PenLine size={16} strokeWidth={1.8} />
+            ) : (
+              <Eye size={16} strokeWidth={1.8} />
+            )
+          }
+          label={viewMode === "preview" ? "Source mode" : "Preview mode"}
+          shortcut="Ctrl /"
+          onClick={() => run(onToggleView)}
+        />
         <MenuItem
           icon={<PanelLeft size={16} strokeWidth={1.8} />}
           label="Toggle sidebar"
@@ -133,9 +193,13 @@ export function MenuOverlay({
         <div className="menu-section-label">Export</div>
         <MenuItem
           icon={<FileCode2 size={16} strokeWidth={1.8} />}
-          label="HTML document"
-          badge="Soon"
+          label="HTML document…"
           onClick={() => run(onExportHtml)}
+        />
+        <MenuItem
+          icon={<Printer size={16} strokeWidth={1.8} />}
+          label="Print / Save as PDF"
+          onClick={() => run(onPrint)}
         />
 
         <div className="menu-separator" />

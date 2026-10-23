@@ -8,6 +8,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::document::read_document,
             commands::document::write_document,
+            commands::document::write_export,
             commands::document::list_directory,
             commands::document::app_version,
         ])

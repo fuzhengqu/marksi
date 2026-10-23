@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { lazy, Suspense, useCallback, useEffect } from "react";
 import { EditorPane } from "./components/EditorPane";
 import { MenuOverlay } from "./components/MenuOverlay";
 import { Sidebar } from "./components/Sidebar";
@@ -6,6 +6,8 @@ import { StatusBar } from "./components/StatusBar";
 import { TitleBar } from "./components/TitleBar";
 import { Toast } from "./components/Toast";
 import { Welcome } from "./components/Welcome";
+import { dispatchEditorCommand, dispatchEditorSearch } from "./editor/bridge";
+import type { EditorCommand } from "./editor/format";
 import {
   fileName,
   isTauri,
@@ -14,8 +16,15 @@ import {
   openFolder,
   readDocument,
   saveDocument,
+  saveHtmlFile,
 } from "./lib/platform";
 import { useAppStore } from "./store/useAppStore";
+
+const PreviewPane = lazy(() =>
+  import("./components/PreviewPane").then((module) => ({
+    default: module.PreviewPane,
+  })),
+);
 
 function errorMessage(error: unknown): string {
   if (typeof error === "string") {
@@ -32,6 +41,7 @@ export default function App() {
   const recent = useAppStore((state) => state.recent);
   const sidebarOpen = useAppStore((state) => state.sidebarOpen);
   const theme = useAppStore((state) => state.theme);
+  const viewMode = useAppStore((state) => state.viewMode);
   const gotoLine = useAppStore((state) => state.gotoLine);
 
   const confirmDiscard = useCallback(async () => {
@@ -183,10 +193,64 @@ export default function App() {
     void saveCurrent(true);
   }, [saveCurrent]);
 
-  const handleExportHtml = useCallback(() => {
-    useAppStore
-      .getState()
-      .showToast("HTML export arrives with the rendering pipeline in M2.", "info");
+  const handleExportHtml = useCallback(async () => {
+    const state = useAppStore.getState();
+    if (!state.doc.content.trim()) {
+      state.showToast("There is nothing to export yet.", "info");
+      return;
+    }
+    try {
+      const { buildStandaloneHtml, htmlExportPath } = await import(
+        "./lib/exportHtml"
+      );
+      const title = state.doc.name.replace(/\.[^.\\/]+$/, "") || "Untitled";
+      const meta = await saveHtmlFile(
+        htmlExportPath(state.doc.path, state.doc.name),
+        buildStandaloneHtml({ title, content: state.doc.content }),
+      );
+      if (meta) {
+        useAppStore
+          .getState()
+          .showToast(`Exported ${fileName(meta.path)}`, "success");
+      }
+    } catch (error) {
+      useAppStore.getState().showToast(errorMessage(error), "error");
+    }
+  }, []);
+
+  const handleToggleView = useCallback(() => {
+    useAppStore.getState().toggleViewMode();
+  }, []);
+
+  const handleFormat = useCallback((command: EditorCommand) => {
+    const state = useAppStore.getState();
+    if (state.viewMode !== "source") {
+      state.setViewMode("source");
+    }
+    window.requestAnimationFrame(() => dispatchEditorCommand(command));
+  }, []);
+
+  const handlePrint = useCallback(() => {
+    const state = useAppStore.getState();
+    if (!state.doc.content.trim()) {
+      state.showToast("There is nothing to print yet.", "info");
+      return;
+    }
+    if (state.viewMode !== "preview") {
+      state.setViewMode("preview");
+    }
+    const started = Date.now();
+    const printWhenReady = () => {
+      if (
+        document.querySelector(".markdown-body") ||
+        Date.now() - started > 2500
+      ) {
+        window.print();
+      } else {
+        window.setTimeout(printWhenReady, 60);
+      }
+    };
+    window.setTimeout(printWhenReady, 40);
   }, []);
 
   useEffect(() => {
@@ -260,6 +324,16 @@ export default function App() {
         return;
       }
       const key = event.key.toLowerCase();
+
+      if (event.code === "Slash" && !event.shiftKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!event.repeat) {
+          useAppStore.getState().toggleViewMode();
+        }
+        return;
+      }
+
       if (key === "s") {
         event.preventDefault();
         void saveCurrent(event.shiftKey);
@@ -277,15 +351,24 @@ export default function App() {
         event.preventDefault();
         useAppStore.getState().toggleSidebar();
       } else if (key === "f" && !event.shiftKey) {
-        const editor = document.querySelector<HTMLElement>(".cm-content");
-        if (!editor || !editor.contains(document.activeElement)) {
-          event.preventDefault();
-          editor?.focus();
+        if (useAppStore.getState().viewMode !== "source") {
+          return;
         }
+        event.preventDefault();
+        event.stopPropagation();
+        dispatchEditorSearch(false);
+      } else if (key === "h" && !event.shiftKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        const state = useAppStore.getState();
+        if (state.viewMode !== "source") {
+          state.setViewMode("source");
+        }
+        window.requestAnimationFrame(() => dispatchEditorSearch(true));
       }
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener("keydown", handler, true);
+    return () => window.removeEventListener("keydown", handler, true);
   }, [handleNew, handleOpen, handleOpenFolder, saveCurrent]);
 
   useEffect(() => {
@@ -345,8 +428,26 @@ export default function App() {
       setContent: (content: string) => useAppStore.getState().setContent(content),
       getState: () => useAppStore.getState(),
       gotoLine: (line: number) => useAppStore.getState().requestGotoLine(line),
+      toggleView: handleToggleView,
+      setViewMode: (mode: "source" | "preview") =>
+        useAppStore.getState().setViewMode(mode),
+      format: handleFormat,
+      exportHtml: handleExportHtml,
+      print: handlePrint,
     };
-  }, [handleNew, handleOpen, handleOpenFolder, handleOpenPath, handleSave, handleSaveAs, handleCloseWorkspace]);
+  }, [
+    handleNew,
+    handleOpen,
+    handleOpenFolder,
+    handleOpenPath,
+    handleSave,
+    handleSaveAs,
+    handleCloseWorkspace,
+    handleToggleView,
+    handleFormat,
+    handleExportHtml,
+    handlePrint,
+  ]);
 
   return (
     <div className={`app-shell ${sidebarOpen ? "has-sidebar" : ""}`}>
@@ -361,12 +462,25 @@ export default function App() {
           />
         ) : null}
 
-        <main className="document-area">
+        <main className={`document-area ${viewMode === "preview" ? "is-preview" : ""}`}>
           <EditorPane
             content={doc.content}
             documentKey={doc.path ?? "untitled"}
             gotoLine={gotoLine}
+            active={viewMode === "source"}
+            readOnly={viewMode === "preview"}
           />
+          {viewMode === "preview" ? (
+            <Suspense
+              fallback={
+                <div className="preview-surface preview-loading" role="status">
+                  Rendering preview…
+                </div>
+              }
+            >
+              <PreviewPane content={doc.content} gotoLine={gotoLine} />
+            </Suspense>
+          ) : null}
           {isEmpty ? (
             <Welcome
               recent={recent}
@@ -392,6 +506,9 @@ export default function App() {
         onSave={handleSave}
         onSaveAs={handleSaveAs}
         onExportHtml={handleExportHtml}
+        onPrint={handlePrint}
+        onToggleView={handleToggleView}
+        onFormat={handleFormat}
         onCloseWorkspace={handleCloseWorkspace}
       />
       <Toast />

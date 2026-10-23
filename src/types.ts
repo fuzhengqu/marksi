@@ -4,6 +4,8 @@ export type SidebarTab = "files" | "outline" | "search";
 
 export type Theme = "light" | "dark";
 
+export type ViewMode = "source" | "preview";
+
 export type ToastTone = "info" | "success" | "error";
 
 export interface DocumentPayload {

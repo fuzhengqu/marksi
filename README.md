@@ -7,10 +7,10 @@ designed around a calm, single-document writing surface: a slim title bar, a
 collapsible file/outline/search sidebar, a centered source editor, and a quiet
 status bar.
 
-> Status: early MVP (M1). The desktop shell, source editor, file open/save,
-> encoding-aware IO, workspace browser, outline, search, and light/dark themes are
-> implemented. Live preview, formatting shortcuts, find/replace UI, and export
-> follow in M2. See `docs/feature-parity.md` for the roadmap.
+> Status: MVP (M2). The desktop shell, source editor, file open/save,
+> encoding-aware IO, workspace browser, outline, search, themes, rendered
+> preview, formatting commands, find/replace, and HTML/PDF export are
+> implemented. See `docs/feature-parity.md` for the roadmap.
 
 ## Principles
 
@@ -28,9 +28,13 @@ status bar.
 - [Tauri 2](https://tauri.app/) — Rust application shell
 - [React 19](https://react.dev/) + TypeScript + Vite
 - [CodeMirror 6](https://codemirror.net/) — editor foundation
+- [markdown-it](https://github.com/markdown-it/markdown-it) + [DOMPurify](https://github.com/cure53/DOMPurify) — sanitized Markdown rendering
+- [highlight.js](https://highlightjs.org/) — curated code highlighting
 - Rust core for file IO, encoding detection, and platform integration
 
-## What works in M1
+## What works
+
+M1 established the desktop foundation:
 
 - Native open, save, save-as, open-folder, and recent-file flows.
 - UTF-8, UTF-16, and legacy encoding detection with BOM and CRLF/LF preservation.
@@ -41,6 +45,24 @@ status bar.
 - Original light and dark themes, custom title bar, window controls, and close
   protection for unsaved changes.
 - Browser preview fallback for UI work (native file system features require Tauri).
+
+M2 adds the reading and formatting workflow:
+
+- Source and rendered preview modes, toggled with `Ctrl+/` or the status bar.
+  Switching modes keeps the CodeMirror document and undo history in place.
+- Sanitized CommonMark/GFM rendering with tables, task lists, strikethrough,
+  autolinks, heading anchors, and lazy-loaded syntax highlighting for common
+  languages.
+- Formatting for bold, italic, strikethrough, inline code, links, and heading
+  levels through shortcuts and the application menu.
+- Source find/replace with `Ctrl+F` and `Ctrl+H`.
+- Standalone HTML export using the same sanitized renderer, plus print and
+  save-as-PDF through the system print dialog.
+- Automatic layout and print styles for light, dark, and narrow windows.
+
+Preview images render as labelled placeholders until local asset handling lands
+in M4. Raw HTML is escaped and inert, unsafe URLs are rejected, and remote images
+are never loaded implicitly.
 
 ## Development
 
@@ -80,6 +102,7 @@ npm run tauri:build
 npm run typecheck
 npm test
 npm run build
+cargo fmt --check --manifest-path src-tauri/Cargo.toml
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 

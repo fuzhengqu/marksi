@@ -30,6 +30,7 @@ import {
   rectangularSelection,
 } from "@codemirror/view";
 import { markdownHighlightStyle, markEditorTheme } from "./theme";
+import { formattingKeymap } from "./format";
 
 export interface EditorCallbacks {
   onChange: (content: string) => void;
@@ -67,6 +68,7 @@ export function createEditorExtensions(callbacks: EditorCallbacks): Extension[] 
     markEditorTheme,
     placeholder("Start writing. Markdown is all you need."),
     keymap.of([
+      ...formattingKeymap(),
       ...closeBracketsKeymap,
       ...defaultKeymap,
       ...searchKeymap,

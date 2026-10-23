@@ -159,6 +159,40 @@ export async function saveDocument(
   });
 }
 
+export async function saveHtmlFile(
+  defaultPath: string,
+  html: string,
+): Promise<FileMeta | null> {
+  if (!isTauri()) {
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName(defaultPath) || "document.html";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    return {
+      path: anchor.download,
+      size: blob.size,
+      modifiedMs: Date.now(),
+    };
+  }
+
+  const { save } = await import("@tauri-apps/plugin-dialog");
+  const { invoke } = await import("@tauri-apps/api/core");
+  const selected = await save({
+    defaultPath,
+    filters: [{ name: "HTML document", extensions: ["html", "htm"] }],
+  });
+  if (!selected) {
+    return null;
+  }
+  return invoke<FileMeta>("write_export", {
+    path: selected,
+    content: html,
+  });
+}
+
 export async function getAppVersion(): Promise<string> {
   if (!isTauri()) {
     return "0.1.0";

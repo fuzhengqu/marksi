@@ -53,11 +53,11 @@ that design decisions do not paint us into a corner.
 |---|---|---|
 | Markdown source editor | done | M1 |
 | Syntax highlighting | done | M1 |
-| Live preview / hybrid rendering | todo | M2 |
-| Source mode toggle | todo | M2 |
-| Formatting shortcuts | todo | M2 |
+| Live preview / hybrid rendering | wip | M2 |
+| Source mode toggle | done | M2 |
+| Formatting shortcuts | done | M2 |
 | Undo / redo | done | M1 |
-| Find and replace | wip | M1/M2 |
+| Find and replace | done | M1/M2 |
 | Outline panel | done | M1 |
 | Word / character / line count | done | M1 |
 | Focus mode | todo | M4 |
@@ -75,15 +75,15 @@ that design decisions do not paint us into a corner.
 | Feature | Status | Milestone |
 |---|---|---|
 | CommonMark + GFM | wip | M2 |
-| Tables | todo | M4 |
-| Task lists | todo | M2 |
-| Strikethrough | wip | M2 |
+| Tables | done | M2 |
+| Task lists | done | M2 |
+| Strikethrough | done | M2 |
 | Footnotes | todo | M4 |
 | TOC | todo | M4 |
 | YAML front matter | todo | M4 |
 | Inline/block math | todo | M4 |
 | Mermaid diagrams | todo | M4 |
-| Code fences with language highlight | wip | M2 |
+| Code fences with language highlight | done | M2 |
 | GitHub alerts | todo | M4 |
 | Highlight / sub / sup | todo | M4 |
 | Raw HTML preview (sanitized) | todo | M4 |
@@ -107,9 +107,9 @@ that design decisions do not paint us into a corner.
 
 | Feature | Status | Milestone |
 |---|---|---|
-| Print | todo | M2 |
-| Export HTML | todo | M2 |
-| Export PDF | todo | M2 |
+| Print | done | M2 |
+| Export HTML | done | M2 |
+| Export PDF | done | M2 |
 | Export image | todo | M5 |
 | Copy as Markdown / HTML / plain text | todo | M4 |
 | Pandoc import/export | todo | M5 |
@@ -143,7 +143,7 @@ that design decisions do not paint us into a corner.
 | Flatpak packaging | todo | M7 |
 | Signed releases / checksums | todo | M6 |
 | Auto-update | todo | M6 |
-| Third-party license notices | todo | M0 |
+| Third-party license notices | wip | M0 |
 | CI (Windows + Linux) | todo | M0 |
 | E2E and golden Markdown tests | todo | M2 |
 
