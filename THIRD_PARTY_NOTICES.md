@@ -1,7 +1,8 @@
 # Third-party notices
 
 MarkSI is MIT licensed. It depends on the following open-source projects; their
-licenses remain in effect.
+licenses remain in effect. No proprietary third-party source code, themes,
+icons, translations, or branding are included.
 
 ## Application dependencies
 
@@ -15,6 +16,9 @@ licenses remain in effect.
 | Lucide icons | ISC |
 | markdown-it | MIT |
 | markdown-it-attrs | MIT |
+| @mdit Markdown plugins | MIT |
+| KaTeX | MIT |
+| Mermaid | MIT |
 | DOMPurify | MPL-2.0 OR Apache-2.0 |
 | highlight.js | BSD-3-Clause |
 | encoding_rs | Apache-2.0 OR MIT |
