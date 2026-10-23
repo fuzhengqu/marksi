@@ -52,9 +52,13 @@ its visual assets. The palette, iconography, spacing, and motion are original.
 
 Typography:
 
-- UI: `Segoe UI Variable`, `Segoe UI`, system-ui, sans-serif.
+- UI: `Segoe UI Variable`, `Segoe UI`, Microsoft YaHei UI, Noto Sans CJK SC,
+  PingFang SC, system-ui, sans-serif.
 - Editor: same family, 16px by default, line-height 1.7. The preference range
   is 14–22px.
+- Interface language: Chinese (`zh-CN`) by default, English available. The
+  preference applies immediately to menus, dialogs, sidebar, status bar, and
+  editor search.
 - Writing column: 860px by default. The preference range is 680–1100px.
 - Interface zoom: 100% by default. The preference range is 80%–160% in 10%
   steps and scales the whole application surface.
@@ -76,7 +80,9 @@ ease-out; honor `prefers-reduced-motion`.
 - `Ctrl+Shift+F`: focus workspace search.
 - `Ctrl+,`: open preferences.
 - `Ctrl+Shift+B`: toggle the sidebar.
-- `Ctrl+/`: toggle source and rendered preview.
+- `Ctrl+/`: toggle source and editable live preview.
+- View > Reading view opens the fully rendered, read-only surface. The status
+  bar returns to source from reading mode.
 - `Ctrl+B` / `Ctrl+I` / `Ctrl+K`: bold / italic / link.
 - `Ctrl+Shift+I`: insert a local image.
 - `Ctrl+Alt+F` / `Ctrl+Alt+T` / `Ctrl+Alt+R`: focus / typewriter /
@@ -85,8 +91,13 @@ ease-out; honor `prefers-reduced-motion`.
   HTML / plain text.
 - `Ctrl+=` / `Ctrl+-` / `Ctrl+0`: zoom the interface in, out, or reset to
   100%.
-- Hamburger opens an overlay menu; Escape closes it.
-- Sidebar tabs are keyboard reachable and preserve state.
+- Hamburger opens a compact tabbed menu (File, Format, View, Copy, Export,
+  Help); Escape closes it. Tabs keep the panel short instead of one long list.
+- Sidebar tabs are keyboard reachable and preserve state. The footer exposes
+  Open file and New document; the duplicate Open folder footer action is gone.
+  An empty workspace offers both Open file and Open folder.
+- New document clears the editor, focuses it, and shows a confirmation toast,
+  so the action is visible even when the current document is already empty.
 - Unsaved changes are always visible via a dot next to the title.
 - The welcome surface appears only for an empty untitled document; typing
   dismisses it.
@@ -97,6 +108,21 @@ ease-out; honor `prefers-reduced-motion`.
 - A clean document reloads when its file changes externally; a dirty document
   keeps local edits and raises a conflict toast.
 - Toast messages are transient, non-blocking, and never contain document text.
+
+## View modes
+
+- Source mode always shows the canonical Markdown source.
+- Live preview keeps the same CodeMirror editing surface. Formatting
+  punctuation (`#`, emphasis marks, link destinations, and inline-code ticks)
+  is hidden on inactive lines; the active line reveals its source markers.
+  Editing, selections, undo history, find/replace, and save operate on the
+  original Markdown text.
+- Reading view renders the full sanitized document with images, tables, code
+  fences, Mermaid diagrams, and math. It is read-only; the status bar returns
+  to source, and the View menu can open it from any mode.
+- Live preview is intentionally text-first: rendering complex blocks inline is
+  an ongoing M5/M6 polish area, while the reading view remains the complete
+  rendered representation.
 
 ## Writing modes
 

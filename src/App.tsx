@@ -17,6 +17,7 @@ import {
 } from "./editor/bridge";
 import type { EditorCommand } from "./editor/format";
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
+import { tNow, useT } from "./i18n";
 import { clampZoom, stepZoom } from "./lib/zoom";
 import {
   altTextFromFileName,
@@ -73,6 +74,7 @@ function samePath(left: string | null, right: string | null): boolean {
 }
 
 export default function App() {
+  const t = useT();
   const doc = useAppStore((state) => state.doc);
   const recent = useAppStore((state) => state.recent);
   const sidebarOpen = useAppStore((state) => state.sidebarOpen);
@@ -84,6 +86,19 @@ export default function App() {
   const [draftToRecover, setDraftToRecover] =
     useState<DocumentDraft | null>(() => loadDraft());
   const savingRef = useRef(false);
+
+  useEffect(() => {
+    document.documentElement.lang = settings.language;
+    const state = useAppStore.getState();
+    if (state.doc.path || state.doc.dirty || state.doc.content) {
+      return;
+    }
+    const name =
+      settings.language === "zh-CN" ? "未命名.md" : "Untitled.md";
+    if (state.doc.name !== name) {
+      useAppStore.setState({ doc: { ...state.doc, name } });
+    }
+  }, [settings.language]);
 
   useEffect(() => {
     const zoom = clampZoom(settings.zoomLevel);
@@ -126,18 +141,18 @@ export default function App() {
       return true;
     }
     if (!isTauri()) {
-      return window.confirm("You have unsaved changes. Discard them?");
+      return window.confirm(tNow("You have unsaved changes. Discard them?"));
     }
     try {
       const { ask } = await import("@tauri-apps/plugin-dialog");
-      return await ask("You have unsaved changes. Discard them?", {
-        title: "Unsaved changes",
+      return await ask(tNow("You have unsaved changes. Discard them?"), {
+        title: tNow("Unsaved changes"),
         kind: "warning",
-        okLabel: "Discard changes",
-        cancelLabel: "Keep editing",
+        okLabel: tNow("Discard changes"),
+        cancelLabel: tNow("Keep editing"),
       });
     } catch {
-      return window.confirm("You have unsaved changes. Discard them?");
+      return window.confirm(tNow("You have unsaved changes. Discard them?"));
     }
   }, []);
 
@@ -147,7 +162,7 @@ export default function App() {
       return true;
     }
     state.showToast(
-      "Read-only mode is on. Turn it off from the View menu to edit.",
+      tNow("Read-only mode is on. Turn it off from the View menu to edit."),
       "info",
     );
     return false;
@@ -158,6 +173,10 @@ export default function App() {
       return;
     }
     useAppStore.getState().newDocument();
+    useAppStore.getState().showToast(tNow("New blank document created."), "success");
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(".cm-content")?.focus();
+    });
   }, [confirmDiscard]);
 
   const handleOpen = useCallback(async () => {
@@ -226,7 +245,10 @@ export default function App() {
     if (!isTauri()) {
       useAppStore
         .getState()
-        .showToast("Folder workspaces are available in the desktop app.", "info");
+        .showToast(
+          tNow("Folder workspaces are available in the desktop app."),
+          "info",
+        );
       return;
     }
     try {
@@ -290,7 +312,10 @@ export default function App() {
           if (!pathChanged) {
             latest.markSaved(meta, content);
             if (!silent) {
-              latest.showToast(`Saved ${fileName(meta.path)}`, "success");
+              latest.showToast(
+                tNow("Saved {name}", { name: fileName(meta.path) }),
+                "success",
+              );
             }
           }
         }
@@ -315,17 +340,19 @@ export default function App() {
   const handleExportHtml = useCallback(async () => {
     const state = useAppStore.getState();
     if (!state.doc.content.trim()) {
-      state.showToast("There is nothing to export yet.", "info");
+      state.showToast(tNow("There is nothing to export yet."), "info");
       return;
     }
     try {
       const { buildStandaloneHtml, htmlExportPath } = await import(
         "./lib/exportHtml"
       );
-      const title = state.doc.name.replace(/\.[^.\\/]+$/, "") || "Untitled";
+      const title =
+        state.doc.name.replace(/\.[^.\\/]+$/, "") || tNow("Untitled");
       const html = await buildStandaloneHtml({
         title,
         content: state.doc.content,
+        language: state.settings.language,
       });
       const meta = await saveHtmlFile(
         htmlExportPath(state.doc.path, state.doc.name),
@@ -334,7 +361,10 @@ export default function App() {
       if (meta) {
         useAppStore
           .getState()
-          .showToast(`Exported ${fileName(meta.path)}`, "success");
+          .showToast(
+            tNow("Exported {name}", { name: fileName(meta.path) }),
+            "success",
+          );
       }
     } catch (error) {
       useAppStore.getState().showToast(errorMessage(error), "error");
@@ -345,7 +375,7 @@ export default function App() {
     const state = useAppStore.getState();
     const content = state.doc.content;
     if (!content.trim()) {
-      state.showToast("There is nothing to copy yet.", "info");
+      state.showToast(tNow("There is nothing to copy yet."), "info");
       return;
     }
 
@@ -355,7 +385,7 @@ export default function App() {
         await copyText(content);
         useAppStore
           .getState()
-          .showToast("Copied document as Markdown.", "success");
+          .showToast(tNow("Copied document as Markdown."), "success");
         return;
       }
 
@@ -373,8 +403,8 @@ export default function App() {
           .getState()
           .showToast(
             mode === "rich"
-              ? "Copied document as rich HTML."
-              : "Copied HTML source.",
+              ? tNow("Copied document as rich HTML.")
+              : tNow("Copied HTML source."),
             "success",
           );
         return;
@@ -384,14 +414,15 @@ export default function App() {
       await copyText(documentToCopy.text);
       useAppStore
         .getState()
-        .showToast("Copied document as plain text.", "success");
+        .showToast(tNow("Copied document as plain text."), "success");
     } catch (error) {
       useAppStore.getState().showToast(errorMessage(error), "error");
     }
   }, []);
 
   const handleToggleView = useCallback(() => {
-    useAppStore.getState().toggleViewMode();
+    const state = useAppStore.getState();
+    state.setViewMode(state.viewMode === "source" ? "preview" : "source");
   }, []);
 
   const handleFormat = useCallback(
@@ -400,8 +431,8 @@ export default function App() {
         return;
       }
       const state = useAppStore.getState();
-      if (state.viewMode !== "source") {
-        state.setViewMode("source");
+      if (state.viewMode === "reading") {
+        state.setViewMode("preview");
       }
       window.requestAnimationFrame(() => dispatchEditorCommand(command));
     },
@@ -419,7 +450,7 @@ export default function App() {
         useAppStore
           .getState()
           .showToast(
-            "Save the document before inserting a local image.",
+            tNow("Save the document before inserting a local image."),
             "info",
           );
         return null;
@@ -445,11 +476,14 @@ export default function App() {
         altTextFromFileName(asset.name),
         asset.relativePath,
       );
-      if (state.viewMode !== "source") {
-        state.setViewMode("source");
+      if (state.viewMode === "reading") {
+        state.setViewMode("preview");
       }
       window.requestAnimationFrame(() => dispatchEditorInsert(markdown, true));
-      state.showToast(`Inserted image ${asset.name}`, "success");
+      state.showToast(
+        tNow("Inserted image {name}", { name: asset.name }),
+        "success",
+      );
     },
     [ensureEditable],
   );
@@ -461,7 +495,10 @@ export default function App() {
     if (!isTauri()) {
       useAppStore
         .getState()
-        .showToast("Local images are available in the desktop app.", "info");
+        .showToast(
+          tNow("Local images are available in the desktop app."),
+          "info",
+        );
       return;
     }
     const target = await ensureImageTarget();
@@ -492,7 +529,10 @@ export default function App() {
       if (!isTauri()) {
         useAppStore
           .getState()
-          .showToast("Local images are available in the desktop app.", "info");
+          .showToast(
+            tNow("Local images are available in the desktop app."),
+            "info",
+          );
         return;
       }
       const target = await ensureImageTarget();
@@ -521,7 +561,10 @@ export default function App() {
       if (!isTauri()) {
         useAppStore
           .getState()
-          .showToast("Pasted images are available in the desktop app.", "info");
+          .showToast(
+            tNow("Pasted images are available in the desktop app."),
+            "info",
+          );
         return;
       }
       const target = await ensureImageTarget();
@@ -547,11 +590,11 @@ export default function App() {
   const handlePrint = useCallback(() => {
     const state = useAppStore.getState();
     if (!state.doc.content.trim()) {
-      state.showToast("There is nothing to print yet.", "info");
+      state.showToast(tNow("There is nothing to print yet."), "info");
       return;
     }
-    if (state.viewMode !== "preview") {
-      state.setViewMode("preview");
+    if (state.viewMode !== "reading") {
+      state.setViewMode("reading");
     }
     const started = Date.now();
     const printWhenReady = () => {
@@ -583,7 +626,10 @@ export default function App() {
         state.setLoadedDocument(payload);
         state.setContent(pending.content);
         state.setViewMode("source");
-        state.showToast("Draft recovered. Review it, then save.", "success");
+        state.showToast(
+          tNow("Draft recovered. Review it, then save."),
+          "success",
+        );
         return;
       } catch {
         // The file may have moved; keep the recovered text as a local document.
@@ -593,7 +639,10 @@ export default function App() {
     useAppStore.getState().restoreDraft(pending);
     useAppStore
       .getState()
-      .showToast("Recovered unsaved draft. Save it to a file.", "success");
+      .showToast(
+        tNow("Recovered unsaved draft. Save it to a file."),
+        "success",
+      );
   }
 
   function discardDraft() {
@@ -703,19 +752,24 @@ export default function App() {
           useAppStore
             .getState()
             .showToast(
-              "This file changed on disk. Your unsaved edits are still here.",
+              tNow(
+                "This file changed on disk. Your unsaved edits are still here.",
+              ),
               "info",
             );
           return;
         }
 
         const { ask } = await import("@tauri-apps/plugin-dialog");
-        const reload = await ask("This file changed on disk. Reload it?", {
-          title: "File changed",
-          kind: "info",
-          okLabel: "Reload",
-          cancelLabel: "Keep current",
-        });
+        const reload = await ask(
+          tNow("This file changed on disk. Reload it?"),
+          {
+            title: tNow("File changed"),
+            kind: "info",
+            okLabel: tNow("Reload"),
+            cancelLabel: tNow("Keep current"),
+          },
+        );
         if (cancelled) {
           return;
         }
@@ -727,7 +781,7 @@ export default function App() {
         const latest = useAppStore.getState();
         if (samePath(latest.doc.path, path) && !latest.doc.dirty) {
           latest.setLoadedDocument(payload);
-          latest.showToast("Reloaded changes from disk.", "info");
+          latest.showToast(tNow("Reloaded changes from disk."), "info");
         }
       } catch {
         // A missing or locked file should not interrupt editing.
@@ -790,12 +844,14 @@ export default function App() {
           try {
             const { ask } = await import("@tauri-apps/plugin-dialog");
             const discard = await ask(
-              "You have unsaved changes. Close MarkSI without saving?",
+              tNow(
+                "You have unsaved changes. Close MarkSI without saving?",
+              ),
               {
-                title: "Unsaved changes",
+                title: tNow("Unsaved changes"),
                 kind: "warning",
-                okLabel: "Close without saving",
-                cancelLabel: "Keep editing",
+                okLabel: tNow("Close without saving"),
+                cancelLabel: tNow("Keep editing"),
               },
             );
             if (discard) {
@@ -906,7 +962,10 @@ export default function App() {
           state.setSearchScope("workspace");
         } else {
           state.setSearchScope("document");
-          state.showToast("Open a folder to search across files.", "info");
+          state.showToast(
+            tNow("Open a folder to search across files."),
+            "info",
+          );
         }
         window.setTimeout(() => {
           document.querySelector<HTMLInputElement>(".search-box input")?.focus();
@@ -943,18 +1002,19 @@ export default function App() {
         event.preventDefault();
         useAppStore.getState().toggleSidebar();
       } else if (key === "f" && !event.shiftKey) {
-        if (useAppStore.getState().viewMode !== "source") {
-          return;
+        const state = useAppStore.getState();
+        if (state.viewMode === "reading") {
+          state.setViewMode("preview");
         }
         event.preventDefault();
         event.stopPropagation();
-        dispatchEditorSearch(false);
+        window.requestAnimationFrame(() => dispatchEditorSearch(false));
       } else if (key === "h" && !event.shiftKey) {
         event.preventDefault();
         event.stopPropagation();
         const state = useAppStore.getState();
-        if (state.viewMode !== "source") {
-          state.setViewMode("source");
+        if (state.viewMode === "reading") {
+          state.setViewMode("preview");
         }
         window.requestAnimationFrame(() => dispatchEditorSearch(true));
       }
@@ -1001,7 +1061,10 @@ export default function App() {
           if (!/\.(md|markdown|mdown|mkd|mdwn|mmd|txt)$/i.test(path)) {
             useAppStore
               .getState()
-              .showToast("Drop a Markdown or text file, or a folder.", "info");
+              .showToast(
+                tNow("Drop a Markdown or text file, or a folder."),
+                "info",
+              );
             return;
           }
           void handleOpenPath(path);
@@ -1033,7 +1096,7 @@ export default function App() {
       getState: () => useAppStore.getState(),
       gotoLine: (line: number) => useAppStore.getState().requestGotoLine(line),
       toggleView: handleToggleView,
-      setViewMode: (mode: "source" | "preview") =>
+      setViewMode: (mode: "source" | "preview" | "reading") =>
         useAppStore.getState().setViewMode(mode),
       format: handleFormat,
       insertImage: handleInsertImage,
@@ -1073,27 +1136,34 @@ export default function App() {
           <Sidebar
             onOpenFile={(path) => void handleOpenPath(path)}
             onOpenFileAtLine={(path, line) => void handleOpenPath(path, line)}
+            onOpenFileDialog={() => void handleOpen()}
             onOpenFolder={() => void handleOpenFolder()}
             onNewFile={handleNew}
             onRefreshWorkspace={() => void handleRefreshWorkspace()}
           />
         ) : null}
 
-        <main className={`document-area ${viewMode === "preview" ? "is-preview" : ""}`}>
+        <main
+          className={`document-area ${viewMode === "reading" ? "is-preview" : ""} ${
+            viewMode === "preview" ? "is-live-preview" : ""
+          }`}
+        >
           <EditorPane
             content={doc.content}
             documentKey={doc.path ?? "untitled"}
             gotoLine={gotoLine}
-            active={viewMode === "source"}
-            readOnly={viewMode === "preview" || settings.readOnlyMode}
+            active={viewMode !== "reading"}
+            readOnly={viewMode === "reading" || settings.readOnlyMode}
             focusMode={settings.focusMode}
             typewriterMode={settings.typewriterMode}
             spellcheck={settings.spellcheck}
             autoPair={settings.autoPair}
             smartPunctuation={settings.smartPunctuation}
             emojiAutocomplete={settings.emojiAutocomplete}
+            livePreviewMode={viewMode === "preview"}
+            language={settings.language}
           />
-          {viewMode === "preview" ? (
+          {viewMode === "reading" ? (
             <Suspense
               fallback={
                 <div className="preview-surface preview-loading" role="status">
@@ -1121,7 +1191,7 @@ export default function App() {
           ) : null}
           {doc.loading ? (
             <div className="loading-veil" aria-live="polite">
-              <span>Opening document…</span>
+              <span>{t("Opening document…")}</span>
             </div>
           ) : null}
         </main>
@@ -1152,7 +1222,10 @@ export default function App() {
             state.setSearchScope("workspace");
           } else {
             state.setSearchScope("document");
-            state.showToast("Open a folder to search across files.", "info");
+            state.showToast(
+              tNow("Open a folder to search across files."),
+              "info",
+            );
           }
         }}
         onOpenSettings={() => useAppStore.getState().setSettingsOpen(true)}

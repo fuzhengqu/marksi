@@ -53,7 +53,9 @@ that design decisions do not paint us into a corner.
 |---|---|---|
 | Markdown source editor | done | M1 |
 | Syntax highlighting | done | M1 |
-| Live preview / hybrid rendering | wip | M2 |
+| Live preview / hybrid rendering | wip | M2/M5 |
+| Editable source-based live preview | done | M5 |
+| Reading view (rendered, read-only) | done | M5 |
 | Source mode toggle | done | M2 |
 | Formatting shortcuts | done | M2 |
 | Undo / redo | done | M1 |
@@ -140,7 +142,8 @@ sanitization boundary and is not planned unless that safety requirement changes.
 | Editor text size and column width | done | M3 |
 | Shortcut editor | todo | M6 |
 | Advanced JSON settings | todo | M6 |
-| i18n framework (en, zh-Hans, zh-Hant first) | todo | M6 |
+| Chinese default / English language switch | done | M5 |
+| i18n framework (en, zh-Hans, zh-Hant first) | wip | M6 |
 | RTL and accessibility pass | todo | M7 |
 | No telemetry / no account | done | M0 |
 | No activation / no paid gates | done | M0 |

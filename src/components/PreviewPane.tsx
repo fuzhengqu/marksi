@@ -15,6 +15,7 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
+import { useT } from "../i18n";
 import { directoryName, resolveLocalImagePath } from "../lib/images";
 import { renderMarkdown } from "../lib/markdown";
 import { renderMermaidDiagrams } from "../lib/mermaid";
@@ -113,6 +114,7 @@ export function PreviewPane({
   gotoLine,
   theme,
 }: PreviewPaneProps) {
+  const t = useT();
   const debouncedContent = useDebouncedValue(content, 90);
   const html = useMemo(
     () => renderMarkdown(debouncedContent),
@@ -278,12 +280,17 @@ export function PreviewPane({
     void import("../lib/clipboardText")
       .then(({ copyText }) => copyText(path))
       .then(() => {
-        useAppStore.getState().showToast("Copied image path.", "success");
+        useAppStore.getState().showToast(t("Copied image path."), "success");
       })
       .catch((error) => {
         useAppStore
           .getState()
-          .showToast(`Could not copy image path: ${messageFor(error)}`, "error");
+          .showToast(
+            t("Could not copy image path: {error}", {
+              error: messageFor(error),
+            }),
+            "error",
+          );
       });
   }
 
@@ -292,7 +299,10 @@ export function PreviewPane({
     void openLocalPath(path).catch((error) => {
       useAppStore
         .getState()
-        .showToast(`Could not open image: ${messageFor(error)}`, "error");
+        .showToast(
+          t("Could not open image: {error}", { error: messageFor(error) }),
+          "error",
+        );
     });
   }
 
@@ -301,7 +311,10 @@ export function PreviewPane({
     void revealLocalPath(path).catch((error) => {
       useAppStore
         .getState()
-        .showToast(`Could not reveal image: ${messageFor(error)}`, "error");
+        .showToast(
+          t("Could not reveal image: {error}", { error: messageFor(error) }),
+          "error",
+        );
     });
   }
 
@@ -327,7 +340,7 @@ export function PreviewPane({
       x: Math.max(8, Math.min(event.clientX, window.innerWidth - width - 8)),
       y: Math.max(8, Math.min(event.clientY, window.innerHeight - height - 8)),
       src: image.src,
-      alt: image.alt || "Image",
+      alt: image.alt || t("Image"),
       path,
     });
   }
@@ -348,7 +361,7 @@ export function PreviewPane({
       image.src
     ) {
       event.preventDefault();
-      openLightbox(image.src, image.alt || "Image");
+      openLightbox(image.src, image.alt || t("Image"));
       return;
     }
 
@@ -380,14 +393,20 @@ export function PreviewPane({
       void openExternal(href).catch((error) => {
         useAppStore
           .getState()
-          .showToast(`Could not open link: ${messageFor(error)}`, "error");
+          .showToast(
+            t("Could not open link: {error}", { error: messageFor(error) }),
+            "error",
+          );
       });
       return;
     }
 
     useAppStore
       .getState()
-      .showToast("Local file links will open in a future milestone.", "info");
+      .showToast(
+        t("Local file links will open in a future milestone."),
+        "info",
+      );
   }
 
   return (
@@ -396,7 +415,7 @@ export function PreviewPane({
         className="preview-surface"
         ref={surfaceRef}
         tabIndex={-1}
-        aria-label="Rendered document"
+        aria-label={t("Rendered document")}
         onClick={handleClick}
         onAuxClick={handleClick}
         onContextMenu={handleContextMenu}
@@ -411,7 +430,7 @@ export function PreviewPane({
         <div
           className="image-context-menu"
           role="menu"
-          aria-label="Image actions"
+          aria-label={t("Image actions")}
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onMouseDown={(event) => event.stopPropagation()}
           onContextMenu={(event) => event.preventDefault()}
@@ -428,7 +447,7 @@ export function PreviewPane({
             <span className="menu-item-icon">
               <Eye size={15} strokeWidth={1.8} />
             </span>
-            <span className="menu-item-label">View image</span>
+            <span className="menu-item-label">{t("View image")}</span>
           </button>
           {contextMenu.path &&
           !contextMenu.path.startsWith("data:") ? (
@@ -442,7 +461,7 @@ export function PreviewPane({
                 <span className="menu-item-icon">
                   <Copy size={15} strokeWidth={1.8} />
                 </span>
-                <span className="menu-item-label">Copy image path</span>
+                <span className="menu-item-label">{t("Copy image path")}</span>
               </button>
               <div className="menu-separator" />
               <button
@@ -454,7 +473,7 @@ export function PreviewPane({
                 <span className="menu-item-icon">
                   <ExternalLink size={15} strokeWidth={1.8} />
                 </span>
-                <span className="menu-item-label">Open image</span>
+                <span className="menu-item-label">{t("Open image")}</span>
               </button>
               <button
                 type="button"
@@ -465,7 +484,7 @@ export function PreviewPane({
                 <span className="menu-item-icon">
                   <FolderOpen size={15} strokeWidth={1.8} />
                 </span>
-                <span className="menu-item-label">Reveal in folder</span>
+                <span className="menu-item-label">{t("Reveal in folder")}</span>
               </button>
             </>
           ) : null}
@@ -494,8 +513,8 @@ export function PreviewPane({
                 onClick={() =>
                   setZoom((value) => Math.max(MIN_ZOOM, value - 0.25))
                 }
-                aria-label="Zoom out"
-                title="Zoom out (-)"
+                aria-label={t("Zoom out")}
+                title={t("Zoom out (-)")}
               >
                 <Minus size={16} strokeWidth={1.8} />
               </button>
@@ -508,8 +527,8 @@ export function PreviewPane({
                 onClick={() =>
                   setZoom((value) => Math.min(MAX_ZOOM, value + 0.25))
                 }
-                aria-label="Zoom in"
-                title="Zoom in (+)"
+                aria-label={t("Zoom in")}
+                title={t("Zoom in (+)")}
               >
                 <Plus size={16} strokeWidth={1.8} />
               </button>
@@ -517,8 +536,8 @@ export function PreviewPane({
                 type="button"
                 className="image-lightbox-button"
                 onClick={() => setZoom(1)}
-                aria-label="Reset zoom"
-                title="Reset zoom (0)"
+                aria-label={t("Reset zoom")}
+                title={t("Reset zoom (0)")}
               >
                 <RotateCcw size={15} strokeWidth={1.8} />
               </button>
@@ -526,7 +545,7 @@ export function PreviewPane({
                 type="button"
                 className="image-lightbox-button image-lightbox-close"
                 onClick={() => setLightbox(null)}
-                aria-label="Close image preview"
+                aria-label={t("Close image preview")}
                 title="Close (Esc)"
               >
                 <X size={17} strokeWidth={1.8} />

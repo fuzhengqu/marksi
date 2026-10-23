@@ -13,6 +13,8 @@ import {
   createEditorExtensions,
   editorContentAttributes,
 } from "../editor/setup";
+import { livePreview } from "../editor/livePreview";
+import { searchPhrases } from "../i18n";
 import { smartTyping } from "../editor/smartTyping";
 import {
   centerSelection,
@@ -20,6 +22,7 @@ import {
   typewriterMode,
 } from "../editor/viewModes";
 import { useAppStore } from "../store/useAppStore";
+import type { Language } from "../types";
 
 interface EditorPaneProps {
   content: string;
@@ -33,6 +36,8 @@ interface EditorPaneProps {
   autoPair: boolean;
   smartPunctuation: boolean;
   emojiAutocomplete: boolean;
+  livePreviewMode: boolean;
+  language: Language;
 }
 
 function focusSearchField(view: EditorView, replace: boolean): void {
@@ -72,6 +77,8 @@ export function EditorPane({
   autoPair,
   smartPunctuation,
   emojiAutocomplete,
+  livePreviewMode,
+  language,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -83,11 +90,15 @@ export function EditorPane({
   const autoPairRef = useRef(autoPair);
   const smartPunctuationRef = useRef(smartPunctuation);
   const emojiAutocompleteRef = useRef(emojiAutocomplete);
+  const livePreviewRef = useRef(livePreviewMode);
+  const languageRef = useRef(language);
   const [editableCompartment] = useState(() => new Compartment());
   const [focusModeCompartment] = useState(() => new Compartment());
   const [typewriterModeCompartment] = useState(() => new Compartment());
   const [spellcheckCompartment] = useState(() => new Compartment());
   const [typingCompartment] = useState(() => new Compartment());
+  const [livePreviewCompartment] = useState(() => new Compartment());
+  const [phrasesCompartment] = useState(() => new Compartment());
   const callbacksRef = useRef({
     onChange: useAppStore.getState().setContent,
     onCursor: useAppStore.getState().setCursor,
@@ -117,7 +128,15 @@ export function EditorPane({
     autoPairRef.current = autoPair;
     smartPunctuationRef.current = smartPunctuation;
     emojiAutocompleteRef.current = emojiAutocomplete;
-  }, [autoPair, emojiAutocomplete, smartPunctuation]);
+    livePreviewRef.current = livePreviewMode;
+    languageRef.current = language;
+  }, [
+    autoPair,
+    emojiAutocomplete,
+    language,
+    livePreviewMode,
+    smartPunctuation,
+  ]);
 
   useEffect(() => {
     callbacksRef.current = {
@@ -155,6 +174,12 @@ export function EditorPane({
             emojiAutocomplete: emojiAutocompleteRef.current,
           }),
         ),
+        livePreviewCompartment.of(
+          livePreviewRef.current ? livePreview() : [],
+        ),
+        phrasesCompartment.of(
+          EditorState.phrases.of(searchPhrases(languageRef.current)),
+        ),
       ],
     });
 
@@ -171,6 +196,8 @@ export function EditorPane({
   }, [
     editableCompartment,
     focusModeCompartment,
+    livePreviewCompartment,
+    phrasesCompartment,
     spellcheckCompartment,
     typewriterModeCompartment,
     typingCompartment,
@@ -233,6 +260,30 @@ export function EditorPane({
       ),
     });
   }, [spellcheck, spellcheckCompartment]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) {
+      return;
+    }
+    view.dispatch({
+      effects: livePreviewCompartment.reconfigure(
+        livePreviewMode ? livePreview() : [],
+      ),
+    });
+  }, [livePreviewCompartment, livePreviewMode]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) {
+      return;
+    }
+    view.dispatch({
+      effects: phrasesCompartment.reconfigure(
+        EditorState.phrases.of(searchPhrases(language)),
+      ),
+    });
+  }, [language, phrasesCompartment]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -354,6 +405,12 @@ export function EditorPane({
                 emojiAutocomplete: emojiAutocompleteRef.current,
               }),
             ),
+            livePreviewCompartment.of(
+              livePreviewRef.current ? livePreview() : [],
+            ),
+            phrasesCompartment.of(
+              EditorState.phrases.of(searchPhrases(languageRef.current)),
+            ),
           ],
         }),
       );
@@ -363,6 +420,8 @@ export function EditorPane({
     content,
     editableCompartment,
     focusModeCompartment,
+    livePreviewCompartment,
+    phrasesCompartment,
     spellcheckCompartment,
     typewriterModeCompartment,
     typingCompartment,

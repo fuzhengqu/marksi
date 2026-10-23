@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CornerDownLeft, FileText, Loader2, Search } from "lucide-react";
+import { useT } from "../i18n";
 import { isTauri, listWorkspaceFiles } from "../lib/platform";
 import { rankQuickOpen, type QuickOpenItem } from "../lib/quickOpen";
 import { useAppStore } from "../store/useAppStore";
@@ -9,6 +10,7 @@ interface QuickOpenProps {
 }
 
 export function QuickOpen({ onOpen }: QuickOpenProps) {
+  const t = useT();
   const open = useAppStore((state) => state.quickOpen);
   const recent = useAppStore((state) => state.recent);
   const workspace = useAppStore((state) => state.workspace);
@@ -146,7 +148,7 @@ export function QuickOpen({ onOpen }: QuickOpenProps) {
         className="quick-open"
         role="dialog"
         aria-modal="true"
-        aria-label="Quick open"
+        aria-label={t("Quick open")}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="quick-open-search">
@@ -156,26 +158,34 @@ export function QuickOpen({ onOpen }: QuickOpenProps) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Search files by name or path…"
-            aria-label="Search files"
+            placeholder={t("Search files by name or path…")}
+            aria-label={t("Search files")}
             autoComplete="off"
             spellCheck={false}
           />
           {loading ? (
-            <Loader2 size={15} className="spin" aria-label="Loading files" />
+            <Loader2
+              size={15}
+              className="spin"
+              aria-label={t("Loading files")}
+            />
           ) : (
             <span className="quick-open-count">{results.length}</span>
           )}
         </div>
 
-        <div className="quick-open-results" role="listbox" aria-label="Files">
+        <div
+          className="quick-open-results"
+          role="listbox"
+          aria-label={t("Files")}
+        >
           {results.length === 0 ? (
             <div className="quick-open-empty">
               <FileText size={22} strokeWidth={1.3} />
               <p>
                 {files.length === 0
-                  ? "Open a folder to search your workspace."
-                  : "No matching files."}
+                  ? t("Open a folder to search your workspace.")
+                  : t("No matching files.")}
               </p>
             </div>
           ) : (
@@ -199,7 +209,7 @@ export function QuickOpen({ onOpen }: QuickOpenProps) {
                   </span>
                 </span>
                 {item.recent ? (
-                  <span className="quick-open-badge">recent</span>
+                  <span className="quick-open-badge">{t("recent")}</span>
                 ) : null}
               </button>
             ))
@@ -209,13 +219,13 @@ export function QuickOpen({ onOpen }: QuickOpenProps) {
         <div className="quick-open-footer">
           <span>
             <kbd>↑</kbd>
-            <kbd>↓</kbd> navigate
+            <kbd>↓</kbd> {t("navigate")}
           </span>
           <span>
-            <kbd>Enter</kbd> open
+            <kbd>Enter</kbd> {t("open")}
           </span>
           <span>
-            <CornerDownLeft size={11} strokeWidth={1.8} /> Esc close
+            <CornerDownLeft size={11} strokeWidth={1.8} /> Esc {t("close")}
           </span>
         </div>
       </div>

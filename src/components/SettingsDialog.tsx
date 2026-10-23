@@ -8,9 +8,10 @@ import {
   Type,
   X,
 } from "lucide-react";
+import { useT } from "../i18n";
 import { ZOOM_MAX, ZOOM_MIN, zoomPercent } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
-import type { AppSettings, Theme } from "../types";
+import type { AppSettings, Language, Theme } from "../types";
 
 function Toggle({
   checked,
@@ -36,6 +37,7 @@ function Toggle({
 }
 
 export function SettingsDialog() {
+  const t = useT();
   const open = useAppStore((state) => state.settingsOpen);
   const settings = useAppStore((state) => state.settings);
   const theme = useAppStore((state) => state.theme);
@@ -82,13 +84,13 @@ export function SettingsDialog() {
             <Settings size={17} strokeWidth={1.8} />
           </span>
           <div>
-            <h2 id="settings-title">Preferences</h2>
-            <p>Changes apply immediately and stay on this device.</p>
+            <h2 id="settings-title">{t("Preferences")}</h2>
+            <p>{t("Changes apply immediately and stay on this device.")}</p>
           </div>
           <button
             className="modal-close settings-close"
             onClick={() => setOpen(false)}
-            aria-label="Close preferences"
+            aria-label={t("Close preferences")}
           >
             <X size={16} strokeWidth={1.8} />
           </button>
@@ -98,22 +100,26 @@ export function SettingsDialog() {
           <section className="settings-section">
             <div className="settings-section-heading">
               <Type size={15} strokeWidth={1.8} />
-              <span>Appearance</span>
+              <span>{t("Appearance")}</span>
             </div>
 
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Theme</span>
-                <small>Choose the writing environment.</small>
+                <span>{t("Theme")}</span>
+                <small>{t("Choose the writing environment.")}</small>
               </div>
-              <div className="segmented-control" role="group" aria-label="Theme">
+              <div
+                className="segmented-control"
+                role="group"
+                aria-label={t("Theme")}
+              >
                 {(["light", "dark"] as Theme[]).map((value) => (
                   <button
                     key={value}
                     className={theme === value ? "is-active" : ""}
                     onClick={() => setTheme(value)}
                   >
-                    {value === "light" ? "Light" : "Dark"}
+                    {value === "light" ? t("Light") : t("Dark")}
                   </button>
                 ))}
               </div>
@@ -121,7 +127,29 @@ export function SettingsDialog() {
 
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Editor text size</span>
+                <span>{t("Language")}</span>
+                <small>{t("Interface language")}</small>
+              </div>
+              <div
+                className="segmented-control"
+                role="group"
+                aria-label={t("Language")}
+              >
+                {(["zh-CN", "en"] as Language[]).map((value) => (
+                  <button
+                    key={value}
+                    className={settings.language === value ? "is-active" : ""}
+                    onClick={() => update("language", value)}
+                  >
+                    {value === "zh-CN" ? "中文" : "English"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Editor text size")}</span>
                 <small>{settings.editorFontSize}px</small>
               </div>
               <input
@@ -134,15 +162,15 @@ export function SettingsDialog() {
                 onChange={(event) =>
                   update("editorFontSize", Number(event.target.value))
                 }
-                aria-label="Editor text size"
+                aria-label={t("Editor text size")}
               />
             </div>
 
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Interface zoom</span>
+                <span>{t("Interface zoom")}</span>
                 <small>
-                  {zoomPercent(settings.zoomLevel)}% · Scale the whole window.
+                  {zoomPercent(settings.zoomLevel)}% · {t("Scale the whole window.")}
                 </small>
               </div>
               <input
@@ -155,13 +183,13 @@ export function SettingsDialog() {
                 onChange={(event) =>
                   update("zoomLevel", Number(event.target.value) / 100)
                 }
-                aria-label="Interface zoom"
+                aria-label={t("Interface zoom")}
               />
             </div>
 
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Writing column</span>
+                <span>{t("Writing column")}</span>
                 <small>{settings.contentWidth}px</small>
               </div>
               <input
@@ -174,7 +202,7 @@ export function SettingsDialog() {
                 onChange={(event) =>
                   update("contentWidth", Number(event.target.value))
                 }
-                aria-label="Writing column width"
+                aria-label={t("Writing column width")}
               />
             </div>
           </section>
@@ -182,50 +210,50 @@ export function SettingsDialog() {
           <section className="settings-section">
             <div className="settings-section-heading">
               <Type size={15} strokeWidth={1.8} />
-              <span>Editor</span>
+              <span>{t("Editor")}</span>
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Spell check</span>
-                <small>Use the operating system dictionary while writing.</small>
+                <span>{t("Spell check")}</span>
+                <small>{t("Use the operating system dictionary while writing.")}</small>
               </div>
               <Toggle
-                label="Spell check"
+                label={t("Spell check")}
                 checked={settings.spellcheck}
                 onChange={(value) => update("spellcheck", value)}
               />
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Auto pair</span>
+                <span>{t("Auto pair")}</span>
                 <small>
-                  Close brackets, quotes, and Markdown markers as you type.
+                  {t("Close brackets, quotes, and Markdown markers as you type.")}
                 </small>
               </div>
               <Toggle
-                label="Auto pair brackets and Markdown markers"
+                label={t("Auto pair brackets and Markdown markers")}
                 checked={settings.autoPair}
                 onChange={(value) => update("autoPair", value)}
               />
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Smart punctuation</span>
-                <small>Use curly quotes, dashes, and ellipses in prose.</small>
+                <span>{t("Smart punctuation")}</span>
+                <small>{t("Use curly quotes, dashes, and ellipses in prose.")}</small>
               </div>
               <Toggle
-                label="Smart punctuation"
+                label={t("Smart punctuation")}
                 checked={settings.smartPunctuation}
                 onChange={(value) => update("smartPunctuation", value)}
               />
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Emoji autocomplete</span>
-                <small>Suggest emoji when you type a colon alias.</small>
+                <span>{t("Emoji autocomplete")}</span>
+                <small>{t("Suggest emoji when you type a colon alias.")}</small>
               </div>
               <Toggle
-                label="Emoji autocomplete"
+                label={t("Emoji autocomplete")}
                 checked={settings.emojiAutocomplete}
                 onChange={(value) => update("emojiAutocomplete", value)}
               />
@@ -235,57 +263,61 @@ export function SettingsDialog() {
           <section className="settings-section">
             <div className="settings-section-heading">
               <Focus size={15} strokeWidth={1.8} />
-              <span>Writing</span>
+              <span>{t("Writing")}</span>
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Focus mode</span>
-                <small>Dim everything except the current paragraph.</small>
+                <span>{t("Focus mode")}</span>
+                <small>{t("Dim everything except the current paragraph.")}</small>
               </div>
               <Toggle
-                label="Focus mode"
+                label={t("Focus mode")}
                 checked={settings.focusMode}
                 onChange={(value) => update("focusMode", value)}
               />
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Typewriter mode</span>
-                <small>Keep the line you are writing vertically centered.</small>
+                <span>{t("Typewriter mode")}</span>
+                <small>
+                  {t("Keep the line you are writing vertically centered.")}
+                </small>
               </div>
               <Toggle
-                label="Typewriter mode"
+                label={t("Typewriter mode")}
                 checked={settings.typewriterMode}
                 onChange={(value) => update("typewriterMode", value)}
               />
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Read-only mode</span>
-                <small>Read, search, copy, and export without editing.</small>
+                <span>{t("Read-only mode")}</span>
+                <small>
+                  {t("Read, search, copy, and export without editing.")}
+                </small>
               </div>
               <Toggle
-                label="Read-only mode"
+                label={t("Read-only mode")}
                 checked={settings.readOnlyMode}
                 onChange={(value) => update("readOnlyMode", value)}
               />
             </div>
             <p className="settings-note">
-              These modes also live in the View menu. Focus, typewriter, and
-              read-only use <code>Ctrl Alt F</code>, <code>Ctrl Alt T</code>, and{" "}
-              <code>Ctrl Alt R</code>.
+              {t(
+                "These modes also live in the View menu. Focus, typewriter, and read-only use Ctrl Alt F, Ctrl Alt T, and Ctrl Alt R.",
+              )}
             </p>
           </section>
 
           <section className="settings-section">
             <div className="settings-section-heading">
               <ImageIcon size={15} strokeWidth={1.8} />
-              <span>Images</span>
+              <span>{t("Images")}</span>
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Asset folder</span>
-                <small>Relative to the document folder.</small>
+                <span>{t("Asset folder")}</span>
+                <small>{t("Relative to the document folder.")}</small>
               </div>
               <input
                 className="settings-text"
@@ -296,36 +328,36 @@ export function SettingsDialog() {
                 onChange={(event) =>
                   update("imageAssetFolder", event.target.value)
                 }
-                aria-label="Image asset folder"
+                aria-label={t("Image asset folder")}
               />
             </div>
             <p className="settings-note">
-              Inserted, dropped, and pasted images are copied into this folder.
-              Use a relative path such as <code>assets</code> or{" "}
-              <code>media/images</code>.
+              {t(
+                "Inserted, dropped, and pasted images are copied into this folder. Use a relative path such as assets or media/images.",
+              )}
             </p>
           </section>
 
           <section className="settings-section">
             <div className="settings-section-heading">
               <Save size={15} strokeWidth={1.8} />
-              <span>Files</span>
+              <span>{t("Files")}</span>
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Auto save</span>
-                <small>Save named documents automatically after a pause.</small>
+                <span>{t("Auto save")}</span>
+                <small>{t("Save named documents automatically after a pause.")}</small>
               </div>
               <Toggle
-                label="Auto save"
+                label={t("Auto save")}
                 checked={settings.autoSave}
                 onChange={(value) => update("autoSave", value)}
               />
             </div>
             <div className="settings-row">
               <div className="settings-copy">
-                <span>Auto-save pause</span>
-                <small>How long to wait after the last edit.</small>
+                <span>{t("Auto-save pause")}</span>
+                <small>{t("How long to wait after the last edit.")}</small>
               </div>
               <select
                 className="settings-select"
@@ -334,17 +366,18 @@ export function SettingsDialog() {
                 onChange={(event) =>
                   update("autoSaveDelayMs", Number(event.target.value))
                 }
-                aria-label="Auto-save pause"
+                aria-label={t("Auto-save pause")}
               >
-                <option value={800}>0.8 seconds</option>
-                <option value={1500}>1.5 seconds</option>
-                <option value={3000}>3 seconds</option>
-                <option value={5000}>5 seconds</option>
+                <option value={800}>{t("0.8 seconds")}</option>
+                <option value={1500}>{t("1.5 seconds")}</option>
+                <option value={3000}>{t("3 seconds")}</option>
+                <option value={5000}>{t("5 seconds")}</option>
               </select>
             </div>
             <p className="settings-note">
-              Unsaved drafts are always kept locally for crash recovery. MarkSI
-              never sends document content anywhere.
+              {t(
+                "Unsaved drafts are always kept locally for crash recovery. MarkSI never sends document content anywhere.",
+              )}
             </p>
           </section>
         </div>
@@ -353,16 +386,16 @@ export function SettingsDialog() {
           <button
             className="button button-quiet"
             onClick={resetSettings}
-            title="Restore default preferences"
+            title={t("Restore default preferences")}
           >
             <RotateCcw size={14} strokeWidth={1.8} />
-            Reset
+            {t("Reset")}
           </button>
           <button
             className="button button-primary"
             onClick={() => setOpen(false)}
           >
-            Done
+            {t("Done")}
           </button>
         </footer>
       </div>

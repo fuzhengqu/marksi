@@ -8,10 +8,12 @@ import {
   Sun,
   X,
 } from "lucide-react";
+import { useT } from "../i18n";
 import { isTauri } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
 
 export function TitleBar() {
+  const t = useT();
   const doc = useAppStore((state) => state.doc);
   const theme = useAppStore((state) => state.theme);
   const menuOpen = useAppStore((state) => state.menuOpen);
@@ -74,8 +76,8 @@ export function TitleBar() {
       <div className="titlebar-left">
         <button
           className={`icon-button menu-button ${menuOpen ? "is-active" : ""}`}
-          aria-label="Open menu"
-          title="Menu"
+          aria-label={t("Open menu")}
+          title={t("Menu")}
           onClick={() => setMenuOpen(!menuOpen)}
         >
           <Menu size={17} strokeWidth={1.8} />
@@ -92,14 +94,20 @@ export function TitleBar() {
         <span className="document-title" title={doc.path ?? doc.name}>
           {doc.name}
         </span>
-        {doc.dirty ? <span className="dirty-dot" title="Unsaved changes" /> : null}
+        {doc.dirty ? (
+          <span className="dirty-dot" title={t("Unsaved changes")} />
+        ) : null}
       </div>
 
       <div className="titlebar-right">
         <button
           className="icon-button"
-          aria-label={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
-          title={theme === "light" ? "Dark theme" : "Light theme"}
+          aria-label={
+            theme === "light"
+              ? t("Switch to dark theme")
+              : t("Switch to light theme")
+          }
+          title={theme === "light" ? t("Dark theme") : t("Light theme")}
           onClick={toggleTheme}
         >
           {theme === "light" ? (
@@ -111,13 +119,18 @@ export function TitleBar() {
 
         {native ? (
           <div className="window-controls">
-            <button className="window-button" aria-label="Minimize" title="Minimize" onClick={minimize}>
+            <button
+              className="window-button"
+              aria-label={t("Minimize")}
+              title={t("Minimize")}
+              onClick={minimize}
+            >
               <Minus size={15} strokeWidth={1.8} />
             </button>
             <button
               className="window-button"
-              aria-label={maximized ? "Restore" : "Maximize"}
-              title={maximized ? "Restore" : "Maximize"}
+              aria-label={maximized ? t("Restore") : t("Maximize")}
+              title={maximized ? t("Restore") : t("Maximize")}
               onClick={toggleMaximize}
             >
               {maximized ? (
@@ -128,8 +141,8 @@ export function TitleBar() {
             </button>
             <button
               className="window-button window-close"
-              aria-label="Close"
-              title="Close"
+              aria-label={t("Close")}
+              title={t("Close")}
               onClick={close}
             >
               <X size={16} strokeWidth={1.8} />

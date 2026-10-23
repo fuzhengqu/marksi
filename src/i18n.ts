@@ -1,0 +1,357 @@
+import { useCallback } from "react";
+import { useAppStore } from "./store/useAppStore";
+import type { Language } from "./types";
+
+type Replacements = Record<string, string | number>;
+
+const ZH: Record<string, string> = {
+  "Open menu": "打开菜单",
+  Menu: "菜单",
+  "Unsaved changes": "有未保存的更改",
+  "Switch to dark theme": "切换到深色主题",
+  "Switch to light theme": "切换到浅色主题",
+  "Dark theme": "深色主题",
+  "Light theme": "浅色主题",
+  Minimize: "最小化",
+  Restore: "还原",
+  Maximize: "最大化",
+  Close: "关闭",
+  Files: "文件",
+  Outline: "大纲",
+  Search: "搜索",
+  "Sidebar panels": "侧边栏面板",
+  Workspace: "工作区",
+  "Refresh folder": "刷新文件夹",
+  "Open a folder to keep your Markdown files close.":
+    "打开一个文件夹，集中管理 Markdown 文件。",
+  "Open folder": "打开文件夹",
+  "Open file": "打开文件",
+  "Recent files": "最近文件",
+  "No recent documents yet.": "暂无最近文档。",
+  "Headings appear here as you write.": "开始写作后，标题会显示在这里。",
+  "Untitled heading": "无标题标题",
+  "Line {line}": "第 {line} 行",
+  "File tree": "文件树",
+  "Open a file or folder to get started.": "打开文件或文件夹以开始使用。",
+  "Search in document": "在文档中搜索",
+  "Search in folder": "在文件夹中搜索",
+  "Search document": "搜索文档",
+  "Search folder": "搜索文件夹",
+  "Search this document…": "搜索当前文档…",
+  "Search every supported file…": "搜索所有支持的文档…",
+  "Match case": "区分大小写",
+  "No matches": "没有匹配项",
+  "Search is unavailable while the document is empty.":
+    "文档为空时无法搜索。",
+  "Reading folder…": "正在读取文件夹…",
+  "This folder has no visible files.": "此文件夹中没有可见文件。",
+  "Folder expansion is available in the desktop app.":
+    "文件夹展开功能仅在桌面应用中可用。",
+  "Search scope": "搜索范围",
+  Document: "文档",
+  Folder: "文件夹",
+  "Open a folder to search it": "打开文件夹后可搜索",
+  "Search this folder…": "搜索此文件夹…",
+  "Find in document…": "在文档中查找…",
+  "Search workspace": "搜索工作区",
+  "Searching folder…": "正在搜索文件夹…",
+  "No matches in this folder.": "此文件夹中没有匹配项。",
+  "No matches.": "没有匹配项。",
+  "Search every Markdown and text file in the open folder.":
+    "搜索已打开文件夹中的所有 Markdown 和文本文件。",
+  "Search the current document. Use Ctrl+Shift+F to search the whole folder.":
+    "搜索当前文档。使用 Ctrl+Shift+F 搜索整个文件夹。",
+  "Welcome to MarkSI": "欢迎使用 MarkSI",
+  "Local-first Markdown": "本地优先的 Markdown",
+  "Local-first Markdown studio": "本地优先的 Markdown 工作台",
+  "Write in Markdown. Keep it yours.": "用 Markdown 写作，内容始终属于你。",
+  "Write in the quiet.": "安静地写作。",
+  "MIT licensed · no account · no telemetry":
+    "MIT 许可 · 无需账户 · 无遥测",
+  "MarkSI keeps your Markdown plain, your files local, and the interface out of the way. Start with a blank page or pick up where you left off.":
+    "MarkSI 让 Markdown 保持纯文本、文件保存本地，并让界面保持安静。新建空白页面，或从上次离开的地方继续。",
+  "New document": "新建文档",
+  Recent: "最近",
+  "open": "打开",
+  "new": "新建",
+  "save": "保存",
+  "Read only": "只读",
+  "Read-only mode (Ctrl Alt R)": "只读模式 (Ctrl Alt R)",
+  "Document encoding": "文档编码",
+  "Line endings": "换行符",
+  "decoded with replacements": "解码时存在替换字符",
+  Preview: "预览",
+  "Live preview": "实时预览",
+  Source: "源码",
+  Reading: "阅读",
+  "Preview rendered document (Ctrl /)": "预览渲染后的文档 (Ctrl /)",
+  "Edit Markdown source (Ctrl /)": "编辑 Markdown 源码 (Ctrl /)",
+  "Switch to preview": "切换到预览",
+  "Switch to source": "切换到源码",
+  "{count} words": "{count} 字",
+  "{count} chars": "{count} 字符",
+  "Ln {line}, Col {column}": "第 {line} 行，第 {column} 列",
+  File: "文件",
+  Format: "格式",
+  View: "视图",
+  Copy: "复制",
+  Export: "导出",
+  Help: "帮助",
+  "New document…": "新建文档…",
+  "Open file…": "打开文件…",
+  "Open folder…": "打开文件夹…",
+  "Quick open…": "快速打开…",
+  "Search in folder…": "在文件夹中搜索…",
+  "Close folder": "关闭文件夹",
+  Save: "保存",
+  "Save as…": "另存为…",
+  Bold: "粗体",
+  Italic: "斜体",
+  Strikethrough: "删除线",
+  "Inline code": "行内代码",
+  Link: "链接",
+  "Image…": "图片…",
+  "Preview mode": "实时预览",
+  "Source mode": "源码模式",
+  "Reading view": "阅读视图",
+  "Toggle sidebar": "切换侧边栏",
+  "Dark appearance": "深色外观",
+  "Light appearance": "浅色外观",
+  "Focus mode": "专注模式",
+  "Typewriter mode": "打字机模式",
+  "Read-only mode": "只读模式",
+  "Zoom in": "放大",
+  "Zoom out": "缩小",
+  "Actual size": "实际大小",
+  "Copy as Markdown": "复制为 Markdown",
+  "Copy as HTML": "复制为 HTML",
+  "Copy as plain text": "复制为纯文本",
+  "HTML document…": "HTML 文档…",
+  "Print / Save as PDF": "打印 / 另存为 PDF",
+  "Preferences…": "偏好设置…",
+  "About MarkSI": "关于 MarkSI",
+  "MarkSI · MIT licensed": "MarkSI · MIT 许可",
+  Preferences: "偏好设置",
+  "Changes apply immediately and stay on this device.":
+    "更改会立即生效，并只保存在本机。",
+  Appearance: "外观",
+  Theme: "主题",
+  "Choose the writing environment.": "选择写作环境。",
+  Light: "浅色",
+  Dark: "深色",
+  Language: "语言",
+  "Interface language": "界面语言",
+  "Editor text size": "编辑器字号",
+  "Interface zoom": "界面缩放",
+  "Scale the whole window.": "缩放整个窗口。",
+  "Writing column": "写作栏宽度",
+  Editor: "编辑器",
+  "Spell check": "拼写检查",
+  "Use the operating system dictionary while writing.":
+    "写作时使用操作系统词典。",
+  "Auto pair": "自动配对",
+  "Close brackets, quotes, and Markdown markers as you type.":
+    "输入时自动闭合括号、引号和 Markdown 标记。",
+  "Smart punctuation": "智能标点",
+  "Use curly quotes, dashes, and ellipses in prose.":
+    "在正文中使用弯引号、破折号和省略号。",
+  "Emoji autocomplete": "Emoji 补全",
+  "Suggest emoji when you type a colon alias.":
+    "输入冒号别名时提示 Emoji。",
+  Writing: "写作",
+  "Dim everything except the current paragraph.":
+    "淡化当前段落以外的内容。",
+  "Keep the line you are writing vertically centered.":
+    "让正在编辑的行保持在视野中央。",
+  "Block editing while keeping search, copy, export, and print available.":
+    "禁止编辑，但保留搜索、复制、导出和打印。",
+  Images: "图片",
+  "Asset folder": "资源文件夹",
+  "Relative folder for images inserted from disk, drag/drop, or paste.":
+    "从磁盘插入、拖放或粘贴的图片会保存到此相对文件夹。",
+  "Auto save": "自动保存",
+  "Save named documents after a pause.": "暂停输入后自动保存已命名文档。",
+  "Auto save delay": "自动保存延迟",
+  "Reset": "重置",
+  Done: "完成",
+  "Quick open": "快速打开",
+  "Search files and recent documents…": "搜索文件或最近文档…",
+  "Search files by name or path…": "按名称或路径搜索文件…",
+  "Search files": "搜索文件",
+  "Loading files": "正在加载文件",
+  "Open a folder to search your workspace.": "打开文件夹以搜索工作区。",
+  "No matching files.": "没有匹配的文件。",
+  "Type to search recent files and the open folder.":
+    "输入以搜索最近文件或当前文件夹。",
+  "File name": "文件名",
+  recent: "最近",
+  navigate: "导航",
+  close: "关闭",
+  "Recover draft": "恢复草稿",
+  "Recover unsaved draft?": "恢复未保存的草稿？",
+  "MarkSI found edits that were not written to a file before the last session ended.":
+    "MarkSI 发现上次会话结束前未写入文件的编辑内容。",
+  "The recovered draft is empty.": "恢复的草稿内容为空。",
+  "Stored only on this device.": "仅保存在此设备上。",
+  "Discard draft": "丢弃草稿",
+  "Dismiss notification": "关闭通知",
+  "An unsaved draft from a previous session is available.":
+    "检测到上次会话留下的未保存草稿。",
+  Recover: "恢复",
+  Discard: "丢弃",
+  "Keep editing": "继续编辑",
+  "Discard changes": "丢弃更改",
+  "You have unsaved changes. Discard them?": "有未保存的更改，确定要丢弃吗？",
+  "Untitled": "无标题",
+  "Untitled.md": "未命名.md",
+  "There is nothing to export yet.": "目前没有可导出的内容。",
+  "There is nothing to print yet.": "目前没有可打印的内容。",
+  "There is nothing to copy yet.": "目前没有可复制的内容。",
+  "Copied document as Markdown.": "已复制文档为 Markdown。",
+  "Copied document as rich HTML.": "已复制文档为富文本 HTML。",
+  "Copied HTML source.": "已复制 HTML 源码。",
+  "Copied document as plain text.": "已复制文档为纯文本。",
+  "Copied image path.": "已复制图片路径。",
+  "New blank document created.": "已新建空白文档。",
+  "Opening document…": "正在打开文档…",
+  "Open image": "打开图片",
+  "Copy image path": "复制图片路径",
+  "Reveal in folder": "在文件夹中显示",
+  "View image": "查看图片",
+  "Image actions": "图片操作",
+  Image: "图片",
+  "Rendered document": "渲染文档",
+  "Could not copy image path: {error}": "无法复制图片路径：{error}",
+  "Could not open image: {error}": "无法打开图片：{error}",
+  "Could not reveal image: {error}": "无法在文件夹中显示图片：{error}",
+  "Could not open link: {error}": "无法打开链接：{error}",
+  "Local file links will open in a future milestone.":
+    "本地文件链接将在后续版本中支持。",
+  "Zoom out (-)": "缩小 (-)",
+  "Zoom in (+)": "放大 (+)",
+  "Reset zoom": "重置缩放",
+  "Reset zoom (0)": "重置缩放 (0)",
+  "Close image preview": "关闭图片预览",
+  "Mermaid source": "Mermaid 源码",
+  "Rendering diagram…": "正在渲染图表…",
+  "This folder is empty.": "此文件夹为空。",
+  "Read-only mode is on. Turn it off from the View menu to edit.":
+    "只读模式已开启。请从“视图”菜单关闭后再编辑。",
+  "Saved {name}": "已保存 {name}",
+  "Exported {name}": "已导出 {name}",
+  "Inserted image {name}": "已插入图片 {name}",
+  "Save the document before inserting a local image.":
+    "请先保存文档，再插入本地图片。",
+  "Local images are available in the desktop app.":
+    "本地图片功能仅在桌面应用中可用。",
+  "Pasted images are available in the desktop app.":
+    "粘贴图片功能仅在桌面应用中可用。",
+  "This file changed on disk. Your unsaved edits are still here.":
+    "文件已在磁盘上被修改，你的未保存编辑仍然保留。",
+  "Reloaded changes from disk.": "已从磁盘重新加载更改。",
+  "This file changed on disk. Reload it?": "文件已在磁盘上被修改，是否重新加载？",
+  "File changed": "文件已更改",
+  Reload: "重新加载",
+  "Keep current": "保留当前内容",
+  "You have unsaved changes. Close MarkSI without saving?":
+    "有未保存的更改，确定不保存并关闭 MarkSI 吗？",
+  "Close without saving": "不保存并关闭",
+  "Drop a Markdown or text file, or a folder.":
+    "拖入 Markdown、文本文件或文件夹。",
+  "Local files are available in the desktop app.":
+    "本地文件功能仅在桌面应用中可用。",
+  "Folder workspaces are available in the desktop app.":
+    "文件夹工作区仅在桌面应用中可用。",
+  "Open a folder to search across files.": "打开文件夹后可跨文件搜索。",
+  "Draft recovered. Review it, then save.":
+    "草稿已恢复。请检查后保存。",
+  "Recovered unsaved draft. Save it to a file.":
+    "已恢复未保存的草稿。请保存到文件。",
+  "MarkSI is an independent Markdown studio for Windows and Linux.":
+    "MarkSI 是一款面向 Windows 和 Linux 的独立 Markdown 写作工具。",
+  "Close about dialog": "关闭关于对话框",
+  "Close preferences": "关闭偏好设置",
+  "Auto pair brackets and Markdown markers": "自动配对括号和 Markdown 标记",
+  "Restore default preferences": "恢复默认偏好",
+  "These modes also live in the View menu. Focus, typewriter, and read-only use Ctrl Alt F, Ctrl Alt T, and Ctrl Alt R.":
+    "这些模式也可以从“视图”菜单切换。专注、打字机和只读模式的快捷键分别是 Ctrl Alt F、Ctrl Alt T 和 Ctrl Alt R。",
+  "Relative to the document folder.": "相对于文档所在文件夹。",
+  "Image asset folder": "图片资源文件夹",
+  "Inserted, dropped, and pasted images are copied into this folder. Use a relative path such as assets or media/images.":
+    "插入、拖放和粘贴的图片会复制到此文件夹。请使用相对路径，例如 assets 或 media/images。",
+  "Save named documents automatically after a pause.":
+    "暂停输入后自动保存已命名文档。",
+  "Auto-save pause": "自动保存延迟",
+  "How long to wait after the last edit.": "最后一次编辑后等待的时间。",
+  "0.8 seconds": "0.8 秒",
+  "1.5 seconds": "1.5 秒",
+  "3 seconds": "3 秒",
+  "5 seconds": "5 秒",
+  "Unsaved drafts are always kept locally for crash recovery. MarkSI never sends document content anywhere.":
+    "未保存的草稿始终保存在本机，用于崩溃恢复。MarkSI 不会把文档内容发送到任何地方。",
+  "Read, search, copy, and export without editing.":
+    "可阅读、搜索、复制和导出，但不能编辑。",
+  "Writing column width": "写作栏宽度",
+  "Version {version}": "版本 {version}",
+  "A focused, local-first Markdown studio for Windows and Linux. Your words stay in plain text and on your machine.":
+    "一款专注、本地优先的 Markdown 写作工具，适用于 Windows 和 Linux。文字始终以纯文本保存在你的设备上。",
+  "MIT license": "MIT 许可",
+  "No account": "无需账户",
+  "No telemetry": "无遥测",
+};
+
+const ZH_SEARCH_PHRASES: Record<string, string> = {
+  Find: "查找",
+  Replace: "替换",
+  next: "下一个",
+  previous: "上一个",
+  all: "全部",
+  "match case": "区分大小写",
+  regexp: "正则表达式",
+  "by word": "全词匹配",
+  replace: "替换",
+  "replace all": "全部替换",
+  close: "关闭",
+  "current match": "当前匹配",
+  "on line": "位于第",
+  "replaced $ matches": "已替换 $ 处",
+  "replaced match on line $": "已替换第 $ 行的匹配",
+  "Go to line": "跳转到行",
+  go: "跳转",
+};
+
+export function searchPhrases(language: Language): Record<string, string> {
+  return language === "zh-CN" ? ZH_SEARCH_PHRASES : {};
+}
+
+export function translate(
+  language: Language,
+  text: string,
+  replacements?: Replacements,
+): string {
+  const template = language === "zh-CN" ? ZH[text] ?? text : text;
+  if (!replacements) {
+    return template;
+  }
+  return template.replace(/\{(\w+)\}/g, (_match, key: string) => {
+    const value = replacements[key];
+    return value === undefined ? `{${key}}` : String(value);
+  });
+}
+
+export function useT() {
+  const language = useAppStore((state) => state.settings.language);
+  return useCallback(
+    (text: string, replacements?: Replacements) =>
+      translate(language, text, replacements),
+    [language],
+  );
+}
+
+export function tNow(text: string, replacements?: Replacements): string {
+  return translate(
+    useAppStore.getState().settings.language,
+    text,
+    replacements,
+  );
+}

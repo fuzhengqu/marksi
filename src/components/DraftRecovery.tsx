@@ -1,4 +1,5 @@
 import { History, ShieldCheck } from "lucide-react";
+import { useT } from "../i18n";
 import type { DocumentDraft } from "../types";
 
 interface DraftRecoveryProps {
@@ -7,10 +8,10 @@ interface DraftRecoveryProps {
   onDiscard: () => void;
 }
 
-function preview(draft: DocumentDraft): string {
+function preview(draft: DocumentDraft, emptyText: string): string {
   const text = draft.content.trim();
   if (!text) {
-    return "The recovered draft is empty.";
+    return emptyText;
   }
   return text.length > 420 ? `${text.slice(0, 420)}…` : text;
 }
@@ -20,6 +21,7 @@ export function DraftRecovery({
   onRecover,
   onDiscard,
 }: DraftRecoveryProps) {
+  const t = useT();
   return (
     <div className="modal-scrim draft-scrim">
       <div
@@ -31,10 +33,11 @@ export function DraftRecovery({
         <div className="draft-icon" aria-hidden="true">
           <History size={22} strokeWidth={1.6} />
         </div>
-        <h2 id="draft-title">Recover unsaved draft?</h2>
+        <h2 id="draft-title">{t("Recover unsaved draft?")}</h2>
         <p className="draft-copy">
-          MarkSI found edits that were not written to a file before the last
-          session ended.
+          {t(
+            "MarkSI found edits that were not written to a file before the last session ended.",
+          )}
         </p>
 
         <div className="draft-meta">
@@ -49,19 +52,21 @@ export function DraftRecovery({
           </span>
         </div>
 
-        <pre className="draft-preview">{preview(draft)}</pre>
+        <pre className="draft-preview">
+          {preview(draft, t("The recovered draft is empty."))}
+        </pre>
 
         <div className="draft-privacy">
           <ShieldCheck size={13} strokeWidth={1.8} />
-          <span>Stored only on this device.</span>
+          <span>{t("Stored only on this device.")}</span>
         </div>
 
         <div className="draft-actions">
           <button className="button button-quiet" onClick={onDiscard}>
-            Discard draft
+            {t("Discard draft")}
           </button>
           <button className="button button-primary" onClick={onRecover}>
-            Recover draft
+            {t("Recover draft")}
           </button>
         </div>
       </div>

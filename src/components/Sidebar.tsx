@@ -7,7 +7,6 @@ import {
   FileText,
   Folder,
   FolderOpen,
-  FolderPlus,
   Heading,
   List,
   Loader2,
@@ -15,6 +14,7 @@ import {
   Search,
 } from "lucide-react";
 import { extractOutline } from "../editor/analyze";
+import { useT } from "../i18n";
 import {
   fileName,
   isTauri,
@@ -32,6 +32,7 @@ import type {
 interface SidebarProps {
   onOpenFile: (path: string) => void;
   onOpenFileAtLine: (path: string, line: number) => void;
+  onOpenFileDialog: () => void;
   onOpenFolder: () => void;
   onNewFile: () => void;
   onRefreshWorkspace: () => void;
@@ -46,10 +47,12 @@ const tabs: Array<{ id: SidebarTab; label: string; icon: typeof Folder }> = [
 export function Sidebar({
   onOpenFile,
   onOpenFileAtLine,
+  onOpenFileDialog,
   onOpenFolder,
   onNewFile,
   onRefreshWorkspace,
 }: SidebarProps) {
+  const t = useT();
   const doc = useAppStore((state) => state.doc);
   const recent = useAppStore((state) => state.recent);
   const workspace = useAppStore((state) => state.workspace);
@@ -62,7 +65,11 @@ export function Sidebar({
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-tabs" role="tablist" aria-label="Sidebar panels">
+      <div
+        className="sidebar-tabs"
+        role="tablist"
+        aria-label={t("Sidebar panels")}
+      >
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -70,10 +77,10 @@ export function Sidebar({
             aria-selected={sidebarTab === id}
             className={`sidebar-tab ${sidebarTab === id ? "is-active" : ""}`}
             onClick={() => setSidebarTab(id)}
-            title={label}
+            title={t(label)}
           >
             <Icon size={15} strokeWidth={1.8} />
-            <span>{label}</span>
+            <span>{t(label)}</span>
           </button>
         ))}
       </div>
@@ -82,6 +89,7 @@ export function Sidebar({
         {sidebarTab === "files" ? (
           <FilesPanel
             onOpenFile={onOpenFile}
+            onOpenFileDialog={onOpenFileDialog}
             onOpenFolder={onOpenFolder}
             onRefreshWorkspace={onRefreshWorkspace}
             onShowToast={showToast}
@@ -93,13 +101,13 @@ export function Sidebar({
         {sidebarTab === "outline" ? (
           <div className="panel-scroll">
             <div className="panel-heading">
-              <span>Outline</span>
+              <span>{t("Outline")}</span>
               <span className="panel-count">{outline.length}</span>
             </div>
             {outline.length === 0 ? (
               <div className="empty-panel">
                 <Heading size={22} strokeWidth={1.3} />
-                <p>Headings appear here as you write.</p>
+                <p>{t("Headings appear here as you write.")}</p>
               </div>
             ) : (
               <div className="outline-list">
@@ -109,10 +117,12 @@ export function Sidebar({
                     className="outline-item"
                     style={{ paddingLeft: 10 + (item.level - 1) * 14 }}
                     onClick={() => requestGotoLine(item.line)}
-                    title={`Line ${item.line}`}
+                    title={t("Line {line}", { line: item.line })}
                   >
                     <span className="outline-marker">H{item.level}</span>
-                    <span className="outline-text">{item.text || "Untitled heading"}</span>
+                    <span className="outline-text">
+                      {item.text || t("Untitled heading")}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -131,12 +141,21 @@ export function Sidebar({
       </div>
 
       <div className="sidebar-footer">
-        <button className="sidebar-action" onClick={onOpenFolder} title="Open folder">
-          <FolderPlus size={15} strokeWidth={1.8} />
-          <span>Open folder</span>
+        <button
+          className="sidebar-action"
+          onClick={onOpenFileDialog}
+          title={t("Open file")}
+        >
+          <FileText size={15} strokeWidth={1.8} />
+          <span>{t("Open file")}</span>
         </button>
-        <button className="sidebar-action sidebar-action-icon" onClick={onNewFile} title="New file">
+        <button
+          className="sidebar-action"
+          onClick={onNewFile}
+          title={t("New document")}
+        >
           <FilePlus2 size={16} strokeWidth={1.8} />
+          <span>{t("New document")}</span>
         </button>
       </div>
     </aside>
@@ -147,6 +166,7 @@ interface FilesPanelProps {
   recent: Array<{ path: string; name: string }>;
   workspace: { path: string; entries: FileEntry[]; loading: boolean } | null;
   onOpenFile: (path: string) => void;
+  onOpenFileDialog: () => void;
   onOpenFolder: () => void;
   onRefreshWorkspace: () => void;
   onShowToast: (message: string, tone?: "info" | "success" | "error") => void;
@@ -156,19 +176,21 @@ function FilesPanel({
   recent,
   workspace,
   onOpenFile,
+  onOpenFileDialog,
   onOpenFolder,
   onRefreshWorkspace,
   onShowToast,
 }: FilesPanelProps) {
+  const t = useT();
   return (
     <div className="panel-scroll">
       <div className="panel-heading">
-        <span>{workspace ? fileName(workspace.path) : "Workspace"}</span>
+        <span>{workspace ? fileName(workspace.path) : t("Workspace")}</span>
         {workspace ? (
           <button
             className="mini-button"
-            title="Refresh folder"
-            aria-label="Refresh folder"
+            title={t("Refresh folder")}
+            aria-label={t("Refresh folder")}
             onClick={onRefreshWorkspace}
           >
             <RefreshCw size={13} strokeWidth={1.8} />
@@ -180,12 +202,12 @@ function FilesPanel({
         workspace.loading ? (
           <div className="panel-loading">
             <Loader2 size={15} className="spin" />
-            <span>Reading folder…</span>
+            <span>{t("Reading folder…")}</span>
           </div>
         ) : workspace.entries.length === 0 ? (
           <div className="empty-panel compact">
             <FolderOpen size={22} strokeWidth={1.3} />
-            <p>This folder has no visible files.</p>
+            <p>{t("This folder has no visible files.")}</p>
           </div>
         ) : (
           <div className="file-tree">
@@ -204,15 +226,20 @@ function FilesPanel({
         <div className="workspace-empty">
           <div className="empty-panel compact">
             <FolderOpen size={24} strokeWidth={1.3} />
-            <p>Open a folder to keep your Markdown files close.</p>
-            <button className="button button-quiet" onClick={onOpenFolder}>
-              Open folder
-            </button>
+            <p>{t("Open a folder to keep your Markdown files close.")}</p>
+            <div className="workspace-empty-actions">
+              <button className="button button-quiet" onClick={onOpenFileDialog}>
+                {t("Open file")}
+              </button>
+              <button className="button button-quiet" onClick={onOpenFolder}>
+                {t("Open folder")}
+              </button>
+            </div>
           </div>
 
-          <div className="panel-subheading">Recent files</div>
+          <div className="panel-subheading">{t("Recent files")}</div>
           {recent.length === 0 ? (
-            <div className="recent-empty">No recent documents yet.</div>
+            <div className="recent-empty">{t("No recent documents yet.")}</div>
           ) : (
             <div className="recent-list">
               {recent.slice(0, 8).map((item) => (
@@ -242,6 +269,7 @@ interface FileTreeNodeProps {
 }
 
 function FileTreeNode({ entry, depth, onOpenFile, onShowToast }: FileTreeNodeProps) {
+  const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [children, setChildren] = useState<FileEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -255,7 +283,7 @@ function FileTreeNode({ entry, depth, onOpenFile, onShowToast }: FileTreeNodePro
 
     if (!expanded && children === null) {
       if (!isTauri()) {
-        onShowToast("Folder expansion is available in the desktop app.", "info");
+        onShowToast(t("Folder expansion is available in the desktop app."), "info");
         return;
       }
       setLoading(true);
@@ -335,6 +363,7 @@ function SearchPanel({
   onSelect,
   onOpenFile,
 }: SearchPanelProps) {
+  const t = useT();
   const searchScope = useAppStore((state) => state.searchScope);
   const setSearchScope = useAppStore((state) => state.setSearchScope);
   const showToast = useAppStore((state) => state.showToast);
@@ -424,11 +453,15 @@ function SearchPanel({
   return (
     <div className="panel-scroll">
       <div className="panel-heading">
-        <span>Search</span>
+        <span>{t("Search")}</span>
         {hasQuery ? <span className="panel-count">{resultCount}</span> : null}
       </div>
 
-      <div className="search-scope" role="group" aria-label="Search scope">
+      <div
+        className="search-scope"
+        role="group"
+        aria-label={t("Search scope")}
+      >
         {(
           [
             { id: "document", label: "Document" },
@@ -442,11 +475,11 @@ function SearchPanel({
             disabled={scope.id === "workspace" && !workspace}
             title={
               scope.id === "workspace" && !workspace
-                ? "Open a folder to search it"
+                ? t("Open a folder to search it")
                 : undefined
             }
           >
-            {scope.label}
+            {t(scope.label)}
           </button>
         ))}
       </div>
@@ -458,17 +491,19 @@ function SearchPanel({
           value={term}
           onChange={(event) => setTerm(event.target.value)}
           placeholder={
-            isWorkspaceSearch ? "Search this folder…" : "Find in document…"
+            isWorkspaceSearch
+              ? t("Search this folder…")
+              : t("Find in document…")
           }
           aria-label={
-            isWorkspaceSearch ? "Search workspace" : "Search in document"
+            isWorkspaceSearch ? t("Search workspace") : t("Search in document")
           }
         />
         <button
           type="button"
           className={`search-case ${caseSensitive ? "is-active" : ""}`}
           aria-pressed={caseSensitive}
-          title="Match case"
+          title={t("Match case")}
           onClick={() => setCaseSensitive((value) => !value)}
         >
           Aa
@@ -478,14 +513,16 @@ function SearchPanel({
       {loading ? (
         <div className="panel-loading">
           <Loader2 size={14} className="spin" />
-          <span>Searching folder…</span>
+          <span>{t("Searching folder…")}</span>
         </div>
       ) : null}
 
       {hasQuery ? (
         isWorkspaceSearch ? (
           workspaceResults.length === 0 && !loading ? (
-            <div className="recent-empty">No matches in this folder.</div>
+            <div className="recent-empty">
+              {t("No matches in this folder.")}
+            </div>
           ) : (
             <div className="search-results">
               {workspaceResults.map((result) => (
@@ -512,7 +549,7 @@ function SearchPanel({
             </div>
           )
         ) : documentResults.length === 0 ? (
-          <div className="recent-empty">No matches.</div>
+          <div className="recent-empty">{t("No matches.")}</div>
         ) : (
           <div className="search-results">
             {documentResults.map((result) => (
@@ -520,7 +557,7 @@ function SearchPanel({
                 key={result.number}
                 className="search-result"
                 onClick={() => onSelect(result.number)}
-                title={`Line ${result.number}`}
+                title={t("Line {line}", { line: result.number })}
               >
                 <span className="search-line">{result.number}</span>
                 <span className="search-text">{result.line.trim() || " "}</span>
@@ -533,8 +570,10 @@ function SearchPanel({
           <Search size={22} strokeWidth={1.3} />
           <p>
             {isWorkspaceSearch
-              ? "Search every Markdown and text file in the open folder."
-              : "Search the current document. Use Ctrl+Shift+F to search the whole folder."}
+              ? t("Search every Markdown and text file in the open folder.")
+              : t(
+                  "Search the current document. Use Ctrl+Shift+F to search the whole folder.",
+                )}
           </p>
         </div>
       )}

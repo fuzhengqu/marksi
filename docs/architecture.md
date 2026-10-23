@@ -43,9 +43,9 @@ source mode and live preview operate on the same text.
 
 ## Local persistence
 
-Settings (including writing-mode, typing, and interface-zoom preferences),
-theme, recent files, and sidebar state are kept in WebView `localStorage`
-through the Zustand store's `persist` middleware. Persisted
+Settings (including interface language, writing-mode, typing, and
+interface-zoom preferences), theme, recent files, and sidebar state are kept in
+WebView `localStorage` through the Zustand store's `persist` middleware. Persisted
 settings are merged with current defaults so older profiles gain new fields
 without losing saved preferences. The recovery draft is a separate,
 version-tolerant record under `marksi-recovery-draft`. It is written 700 ms
@@ -131,6 +131,17 @@ HTML export and rich clipboard copy render detached markup before serializing.
 Failures keep the source open and show a concise error instead of breaking the
 rest of the document. Plain-text copy intentionally keeps the source text.
 
+## Interface localization
+
+`src/i18n.ts` owns the English source labels, the Simplified Chinese
+dictionary, interpolation, and CodeMirror search-panel phrases. The persisted
+`AppSettings.language` defaults to `zh-CN`; the Settings dialog can switch to
+English immediately without a restart. Components subscribe through `useT()`,
+while event handlers use `tNow()` so native confirmations and toasts follow the
+current language. New untitled documents are named `未命名.md` in Chinese and
+`Untitled.md` in English. The document HTML export sets its `lang` attribute
+from the same setting.
+
 ## Editor view modes
 
 Writing modes are frontend-only and never change the document.
@@ -150,6 +161,16 @@ history. Read-only mode uses `EditorView.editable.of(false)` plus application
 guards around formatting and image insertion. Search, selection, copy, export,
 and print remain available. The three mode flags live in `AppSettings` and are
 persisted with the rest of the preferences.
+
+`ViewMode` now has `source`, `preview`, and `reading`. `preview` is an editable
+live preview backed by the same CodeMirror state; `src/editor/livePreview.ts`
+adds a view plugin that hides Markdown punctuation on inactive lines while
+leaving the active line fully editable. Markers and URLs are collected from the
+Lezer tree, filtered against active selection lines, sorted, and installed as
+replace decorations. Selection or document changes rebuild the decorations.
+The rendered `PreviewPane` is reserved for `reading` mode and print; switching
+between source, live preview, and reading never changes the Markdown source or
+undo history.
 
 ## Typing assistance
 
@@ -225,7 +246,11 @@ success toasts.
 - `src/lib/zoom.ts` owns zoom bounds, stepping, clamping, and percentage
   formatting; it has no DOM or Tauri dependency.
 - `src/lib/mermaid.ts` owns lazy Mermaid loading, theme variables, SVG
-  sanitization, and diagram hydration for preview/export/clipboard markup.
+  sanitization, and diagram hydration for reading/export/clipboard markup.
+- `src/i18n.ts` owns the bilingual dictionary, interpolation, and editor phrase
+  localization; it is covered by unit tests.
+- `src/editor/livePreview.ts` owns the source-preserving live-preview
+  decorations.
 - `src/lib/clipboardText.ts` owns plain-text clipboard writes and the legacy
   fallback.
 - `src/lib/clipboard.ts` owns sanitized HTML/plain-text document

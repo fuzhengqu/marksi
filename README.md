@@ -7,13 +7,14 @@ designed around a calm, single-document writing surface: a slim title bar, a
 collapsible file/outline/search sidebar, a centered source editor, and a quiet
 status bar.
 
-> Status: MVP (M4, M5 in progress). The desktop shell, source editor, file open/save,
-> encoding-aware IO, workspace browser, outline, search, themes, rendered
-> preview, extended Markdown, Mermaid diagrams, local image assets, formatting
-> commands, find/replace, HTML/PDF export, writing modes, smart typing,
-> interface zoom, document copy actions, preferences, quick open, workspace
-> full-text search, autosave, crash recovery, and external-change detection are
-> implemented. See `docs/feature-parity.md` for the roadmap.
+> Status: MVP (M4, M5 in progress). The desktop shell, source editor, editable
+> live preview, reading view, bilingual Chinese/English interface, file
+> open/save, encoding-aware IO, workspace browser, outline, search, themes,
+> extended Markdown, Mermaid diagrams, local image assets, formatting commands,
+> find/replace, HTML/PDF export, writing modes, smart typing, interface zoom,
+> document copy actions, preferences, quick open, workspace full-text search,
+> autosave, crash recovery, and external-change detection are implemented. See
+> `docs/feature-parity.md` for the roadmap.
 
 ## Principles
 
@@ -53,8 +54,13 @@ M1 established the desktop foundation:
 
 M2 adds the reading and formatting workflow:
 
-- Source and rendered preview modes, toggled with `Ctrl+/` or the status bar.
-  Switching modes keeps the CodeMirror document and undo history in place.
+- Source, editable live-preview, and reading modes. `Ctrl+/` or the status bar
+  toggles source and live preview; View > Reading view opens the fully rendered,
+  read-only surface. Switching modes keeps the CodeMirror document and undo
+  history in place.
+- The live preview keeps the CodeMirror document editable while hiding
+  formatting punctuation on inactive lines. The active line shows its Markdown
+  source, and images/links/emphasis remain based on the same canonical text.
 - Sanitized CommonMark/GFM rendering with tables, task lists, strikethrough,
   autolinks, heading anchors, and lazy-loaded syntax highlighting for common
   languages.
@@ -67,9 +73,12 @@ M2 adds the reading and formatting workflow:
 
 M3 adds the workspace and reliability layer:
 
-- Preferences for theme, editor text size, writing-column width, spell check,
-  opt-in autosave, and the autosave pause. Preferences persist locally and apply
-  immediately.
+- Preferences for language, theme, editor text size, writing-column width,
+  spell check, opt-in autosave, and the autosave pause. Preferences persist
+  locally and apply immediately.
+- Chinese (`zh-CN`) is the default interface language; English is available in
+  Preferences > Appearance. The choice applies to the application chrome,
+  menus, dialogs, status bar, and editor search panel.
 - Quick open (`Ctrl+P`) across recent files and the current workspace, with
   fuzzy ranking, path context, and arrow-key navigation.
 - Workspace full-text search with optional case matching, line/column results,
@@ -154,6 +163,18 @@ M4 also adds typing assistance and interface zoom:
 - Interface zoom scales the whole window from 80% to 160% with `Ctrl+=`,
   `Ctrl+-`, `Ctrl+0`, the View menu, or Preferences > Appearance. The level
   persists across launches.
+
+The interface and writing flow also include:
+
+- A compact categorized menu. File, Format, View, Copy, Export, and Help live
+  in a short tab strip instead of one long scrolling menu.
+- Sidebar actions for opening a file and creating a new document. The duplicate
+  bottom “Open folder” action is gone; the empty workspace offers both Open file
+  and Open folder.
+- New-document actions clear the editor, focus it, and show a confirmation
+  toast so the action is visible even from an already empty document.
+- A Chinese-first interface with an English option, and a live-preview editing
+  mode that keeps Markdown source canonical.
 
 M5 begins with Mermaid diagrams:
 

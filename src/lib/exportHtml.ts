@@ -1,10 +1,12 @@
 import { escapeHtml, renderMarkdown } from "./markdown";
 import { extractFrontMatter } from "./frontMatter";
 import { renderMermaidMarkup } from "./mermaid";
+import type { Language } from "../types";
 
 interface ExportDocumentOptions {
   title: string;
   content: string;
+  language?: Language;
 }
 
 const documentStyles = `
@@ -295,6 +297,7 @@ tr:nth-child(even) td { background: #faf9f7; }
 export async function buildStandaloneHtml({
   title,
   content,
+  language = "zh-CN",
 }: ExportDocumentOptions): Promise<string> {
   const frontMatter = extractFrontMatter(content);
   const metadata = frontMatter?.metadata ?? {};
@@ -326,7 +329,7 @@ export async function buildStandaloneHtml({
     "light",
   );
   return `<!doctype html>
-<html lang="en">
+<html lang="${language === "zh-CN" ? "zh-CN" : "en"}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

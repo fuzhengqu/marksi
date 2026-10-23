@@ -89,6 +89,7 @@ interface AppStore {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  language: "zh-CN",
   editorFontSize: 16,
   contentWidth: 860,
   zoomLevel: 1,
@@ -150,12 +151,18 @@ export const useAppStore = create<AppStore>()(
       searchScope: "document",
 
       newDocument: () =>
-        set({
-          doc: { ...emptyDocument },
+        set((state) => ({
+          doc: {
+            ...emptyDocument,
+            name:
+              state.settings.language === "zh-CN"
+                ? "未命名.md"
+                : "Untitled.md",
+          },
           cursor: { line: 1, column: 1 },
           viewMode: "source",
           menuOpen: false,
-        }),
+        })),
 
       setLoadedDocument: (payload) => {
         const name = fileName(payload.path);

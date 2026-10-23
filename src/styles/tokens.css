@@ -1,6 +1,6 @@
 :root {
-  --font-ui: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-editor: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "PingFang SC", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-editor: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei", "Noto Sans CJK SC", "PingFang SC", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "Cascadia Code", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
   --titlebar-height: 38px;

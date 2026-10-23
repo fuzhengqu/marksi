@@ -6,7 +6,9 @@ export type SearchScope = "document" | "workspace";
 
 export type Theme = "light" | "dark";
 
-export type ViewMode = "source" | "preview";
+export type Language = "zh-CN" | "en";
+
+export type ViewMode = "source" | "preview" | "reading";
 
 export type CopyFormat = "markdown" | "html" | "text";
 
@@ -92,6 +94,7 @@ export interface ImageAsset {
 }
 
 export interface AppSettings {
+  language: Language;
   editorFontSize: number;
   contentWidth: number;
   zoomLevel: number;
