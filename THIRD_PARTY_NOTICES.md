@@ -41,6 +41,10 @@ icons, translations, or branding are included.
 DOMPurify is dual-licensed under MPL-2.0 or Apache-2.0. MarkSI relies on the
 Apache-2.0 option.
 
+Pandoc is an optional external tool and is not bundled or distributed with
+MarkSI. If the user installs it separately, Pandoc's own license
+(GPL-2.0-or-later) applies to that separate program.
+
 The complete dependency tree and exact license texts are available from the
 package manifests, `node_modules`, and the Cargo registry used for a given build.
 When producing a binary release, run the dependency license audit for the locked

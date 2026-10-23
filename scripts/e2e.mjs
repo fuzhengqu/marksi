@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
@@ -6,6 +7,9 @@ const origin = process.env.MARKSI_E2E_ORIGIN ?? "localhost:1420";
 const fixtureDir = resolve(".tmp/e2e-fixtures");
 const markdownFixture = resolve(fixtureDir, "fixture.md");
 const imageFixture = resolve(fixtureDir, "icon.png");
+const pandocExecutable = resolve(
+  ".tmp/pandoc/portable/pandoc-3.12.1/pandoc.exe",
+);
 const fixtureMarkdown = [
   "# 标题",
   "",
@@ -203,6 +207,7 @@ async function resetBase({ clearContent = true } = {}) {
     dev.getState().setMenuOpen(false);
     dev.getState().setSettingsOpen(false);
     dev.closeExport?.();
+    dev.closePandoc?.();
     dev.getState().setQuickOpen(false);
     dev.getState().setTheme("light");
     dev.getState().setViewMode("preview");
@@ -338,6 +343,7 @@ async function main() {
     })()`);
     assert(state.labels.includes("导出…"), "export dialog entry missing", state);
     assert(state.labels.includes("图片 (PNG)…"), "image export entry missing", state);
+    assert(state.labels.includes("Pandoc 导出…"), "Pandoc export entry missing", state);
     assert(state.labels.includes("偏好设置…"), "preferences missing", state);
     assert(state.last === "退出 MarkSI", "quit should be last", state);
     assert(!state.footer, "menu footer must be gone", state);
@@ -354,7 +360,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.07"), "About should show version 0.07", state);
+    assert(state.version?.includes("0.08"), "About should show version 0.08", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1001,6 +1007,135 @@ async function main() {
       await resetBase();
     }
   });
+
+  if (existsSync(pandocExecutable)) {
+    await test("Pandoc export writes a real DOCX", async () => {
+      await resetBase();
+      const docxPath = resolve(fixtureDir, "pandoc-export.docx");
+      const source = [
+        "# Pandoc export",
+        "",
+        "- one",
+        "- two",
+        "",
+        "A **bold** paragraph.",
+      ].join("\n");
+      try {
+        await evaluate(
+          `window.__MARKSI_DEV__.setContent(${JSON.stringify(source)})`,
+        );
+        await evaluate(
+          `window.__MARKSI_DEV__.setSettings(${JSON.stringify({
+            pandocPath: pandocExecutable,
+          })})`,
+        );
+        await evaluate("window.__MARKSI_DEV__.openPandoc()");
+        await waitFor('document.querySelector(".pandoc-dialog")');
+        await waitFor(
+          'document.querySelector(".pandoc-status.is-ready")',
+          20_000,
+        );
+        const status = await evaluate(
+          'document.querySelector(".pandoc-dialog .settings-copy small")?.textContent ?? ""',
+        );
+        assert(status.includes("pandoc"), "Pandoc version was not detected", status);
+
+        await evaluate(`(async () => {
+          const platform = await import("/src/lib/platform.ts");
+          window.__MARKSI_PANDOC_CAPTURE__ = null;
+          platform.setSaveDialogForTests(async (options) => {
+            window.__MARKSI_PANDOC_CAPTURE__ = options;
+            return ${JSON.stringify(docxPath)};
+          });
+        })()`);
+        const clicked = await evaluate(`(() => {
+          const button = document.querySelector(".pandoc-dialog .button-primary");
+          button?.click();
+          return Boolean(button);
+        })()`);
+        assert(clicked, "Pandoc export button is missing");
+        await waitFor('!document.querySelector(".pandoc-dialog")', 30_000);
+
+        const docx = await readFile(docxPath);
+        assert(
+          docx.subarray(0, 4).toString("hex") === "504b0304",
+          "Pandoc output is not a DOCX zip",
+        );
+        assert(
+          docx.includes(Buffer.from("word/document.xml")),
+          "DOCX payload is missing word/document.xml",
+        );
+        assert(docx.length > 1000, "DOCX payload is too small", docx.length);
+
+        const state = await evaluate(`({
+          content: window.__MARKSI_DEV__.getState().doc.content,
+          pandocPath: window.__MARKSI_DEV__.getState().settings.pandocPath,
+          capture: window.__MARKSI_PANDOC_CAPTURE__,
+          toast: document.querySelector(".toast")?.textContent?.trim() ?? null
+        })`);
+        assert(state.content === source, "Pandoc export must not rewrite the source", state);
+        assert(state.pandocPath === pandocExecutable, "Pandoc path was not persisted", state);
+        assert(state.toast?.includes("已导出"), "Pandoc success toast is missing", state);
+        assert(
+          state.capture?.defaultPath?.endsWith(".docx") &&
+            state.capture?.filters?.[0]?.extensions?.includes("docx"),
+          "Pandoc save dialog options are wrong",
+          state.capture,
+        );
+      } finally {
+        await evaluate(`(async () => {
+          const platform = await import("/src/lib/platform.ts");
+          platform.setSaveDialogForTests(null);
+          delete window.__MARKSI_PANDOC_CAPTURE__;
+        })()`).catch(() => {});
+        await rm(docxPath, { force: true });
+        await resetBase();
+      }
+    });
+  } else {
+    console.log(
+      "SKIP  Pandoc export writes a real DOCX (portable Pandoc not present)",
+    );
+  }
+
+  if (existsSync(pandocExecutable)) {
+    await test("Preferences detects the configured Pandoc", async () => {
+      await resetBase();
+      try {
+        await evaluate(
+          `window.__MARKSI_DEV__.setSettings(${JSON.stringify({
+            pandocPath: pandocExecutable,
+          })})`,
+        );
+        await evaluate(
+          'window.__MARKSI_DEV__.getState().setSettingsOpen(true)',
+        );
+        await waitFor('document.querySelector(".settings-dialog")');
+        const clicked = await evaluate(`(() => {
+          const button = Array.from(document.querySelectorAll(".settings-dialog button"))
+            .find((node) => node.textContent?.trim() === "检测");
+          button?.click();
+          return Boolean(button);
+        })()`);
+        assert(clicked, "Pandoc detect button is missing");
+        await waitFor(
+          'document.querySelector(".settings-dialog")?.textContent?.includes("已检测到")',
+          20_000,
+        );
+        const state = await evaluate(`({
+          value: document.querySelector('.settings-dialog input[aria-label="Pandoc 可执行文件"]')?.value,
+          text: document.querySelector(".settings-dialog")?.textContent ?? ""
+        })`);
+        assert(state.value === pandocExecutable, "Pandoc path input is wrong", state);
+        assert(state.text.includes("pandoc 3.12.1"), "Pandoc version is missing", state);
+      } finally {
+        await evaluate(
+          'window.__MARKSI_DEV__.getState().setSettingsOpen(false)',
+        ).catch(() => {});
+        await resetBase();
+      }
+    });
+  }
 
   await test("Mermaid diagrams render in reading view without script or foreignObject", async () => {
     await evaluate(`window.__MARKSI_DEV__.getState().setContent(${JSON.stringify(

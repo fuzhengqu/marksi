@@ -2617,6 +2617,48 @@ body.is-resizing-image[data-resize-axis="height"] * {
   color: var(--danger);
 }
 
+.pandoc-dialog {
+  width: min(560px, 100%);
+}
+
+.pandoc-path-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pandoc-path {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pandoc-status {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg-faint);
+  font-size: 9.5px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pandoc-status.is-ready {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.pandoc-error {
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+
+.pandoc-format {
+  min-width: 200px;
+}
+
 @media (max-width: 620px) {
   .export-actions {
     width: 100%;

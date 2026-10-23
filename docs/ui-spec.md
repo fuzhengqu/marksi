@@ -250,6 +250,22 @@ ease-out; honor `prefers-reduced-motion`.
   when a margin box is ignored.
 - Empty documents show an inline note and disable both export actions.
 
+## Pandoc export
+
+- File > Pandoc export... opens a dialog that probes the configured external
+  Pandoc and shows its reported version. Export stays disabled until detection
+  succeeds. Format choices are DOCX, ODT, EPUB, LaTeX, and RTF.
+- Preferences stores an optional executable path; an empty path means `pandoc`
+  from PATH. A Detect button runs `pandoc --version` and reports success or a
+  bounded error message.
+- Pandoc is not bundled or downloaded. The dialog warns that Pandoc may fetch
+  remote images referenced by the document and that relative local images need
+  a saved document.
+- Export writes a temporary Markdown source, runs Pandoc with fixed arguments
+  and the document folder as the resource path, then writes the output through
+  the same atomic file path as other exports. The native save dialog filters by
+  the selected format.
+
 ## Images
 
 - The menu exposes Image... under Format. Insertion uses the same flow as

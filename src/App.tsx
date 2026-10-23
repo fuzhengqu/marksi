@@ -3,6 +3,7 @@ import { DraftRecovery } from "./components/DraftRecovery";
 import { EditorPane } from "./components/EditorPane";
 import { ExportDialog } from "./components/ExportDialog";
 import { MenuOverlay } from "./components/MenuOverlay";
+import { PandocDialog } from "./components/PandocDialog";
 import { QuickOpen } from "./components/QuickOpen";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { Sidebar } from "./components/Sidebar";
@@ -98,6 +99,7 @@ export default function App() {
   const [draftToRecover, setDraftToRecover] =
     useState<DocumentDraft | null>(() => loadDraft());
   const [exportOpen, setExportOpen] = useState(false);
+  const [pandocOpen, setPandocOpen] = useState(false);
   const savingRef = useRef(false);
 
   useEffect(() => {
@@ -494,6 +496,10 @@ export default function App() {
 
   const handleOpenExport = useCallback(() => {
     setExportOpen(true);
+  }, []);
+
+  const handleOpenPandoc = useCallback(() => {
+    setPandocOpen(true);
   }, []);
 
   const handleCopyDocument = useCallback(async (format: CopyFormat) => {
@@ -1301,6 +1307,8 @@ export default function App() {
       customExport: handleCustomExport,
       openExport: handleOpenExport,
       closeExport: () => setExportOpen(false),
+      openPandoc: handleOpenPandoc,
+      closePandoc: () => setPandocOpen(false),
       copyDocument: handleCopyDocument,
       print: handlePrint,
       openQuickOpen: () => useAppStore.getState().setQuickOpen(true),
@@ -1325,6 +1333,7 @@ export default function App() {
     handleExportImage,
     handleCustomExport,
     handleOpenExport,
+    handleOpenPandoc,
     handleCopyDocument,
     handlePrint,
   ]);
@@ -1402,6 +1411,7 @@ export default function App() {
         onSaveAs={handleSaveAs}
         onExport={handleOpenExport}
         onExportImage={() => void handleExportImage()}
+        onPandocExport={handleOpenPandoc}
         onPrint={handlePrint}
         onCopy={handleCopyDocument}
         onToggleView={handleToggleView}
@@ -1436,6 +1446,11 @@ export default function App() {
         onExport={handleExportHtml}
         onCustomExport={handleCustomExport}
         onPrint={handlePrint}
+      />
+      <PandocDialog
+        open={pandocOpen}
+        hasContent={Boolean(doc.content.trim())}
+        onClose={() => setPandocOpen(false)}
       />
       {draftToRecover ? (
         <DraftRecovery

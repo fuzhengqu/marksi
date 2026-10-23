@@ -147,7 +147,8 @@ the image context menu and are preserved in HTML export and print.
 | Export PDF | done | M2 |
 | Export image | done | M5 |
 | Copy as Markdown / HTML / plain text | done | M4 |
-| Pandoc import/export | todo | M5 |
+| Pandoc export (DOCX/ODT/EPUB/LaTeX/RTF) | done | M5 |
+| Pandoc import (DOCX/ODT/EPUB/RTF/HTML) | todo | M5 |
 | Export profiles | done | M5 |
 | Custom export command | done | M5 |
 | Front matter export options | done | M5 |
@@ -175,6 +176,16 @@ limits the canvas by dimension and total pixels so the browser can allocate it.
 Documents below the minimum readable scale are rejected with a clear message
 instead of producing an unreadable or blank file. Remote images remain
 placeholders, so capture never depends on a network request.
+
+Pandoc export is optional and works only with an externally installed Pandoc.
+Preferences stores an optional executable path; empty means `pandoc` from PATH.
+A detection probe shows the reported version before export. The export dialog
+offers DOCX, ODT, EPUB, LaTeX, and RTF, writes the current Markdown to a
+temporary source file, runs Pandoc with a fixed argument list and the document
+folder as its resource path, then saves the result atomically. Pandoc is never
+bundled or downloaded. It may fetch remote images referenced by the document,
+so the UI states that explicitly; relative local images require a saved
+document.
 
 ## Appearance and settings
 

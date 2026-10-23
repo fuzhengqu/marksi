@@ -112,6 +112,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   exportOptions: { ...DEFAULT_EXPORT_OPTIONS },
   customExportProgram: "",
   customExportArgs: "",
+  pandocPath: "",
 };
 
 const emptyDocument: DocumentState = {
@@ -360,6 +361,10 @@ export const useAppStore = create<AppStore>()(
             customExportArgs: persistedString(
               saved.settings?.customExportArgs,
               32_768,
+            ),
+            pandocPath: persistedString(
+              saved.settings?.pandocPath,
+              4096,
             ),
           },
         };

@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  BookOpen,
   Braces,
   Focus,
   Image as ImageIcon,
@@ -11,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useT } from "../i18n";
+import { pandocVersion } from "../lib/platform";
 import { ZOOM_MAX, ZOOM_MIN, zoomPercent } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { AppSettings, Language, Theme } from "../types";
@@ -25,6 +27,9 @@ export function SettingsDialog() {
   const setTheme = useAppStore((state) => state.setTheme);
   const updateSettings = useAppStore((state) => state.updateSettings);
   const resetSettings = useAppStore((state) => state.resetSettings);
+  const [pandocDetected, setPandocDetected] = useState<string | null>(null);
+  const [pandocError, setPandocError] = useState<string | null>(null);
+  const [pandocDetecting, setPandocDetecting] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -48,6 +53,21 @@ export function SettingsDialog() {
     value: AppSettings[K],
   ) {
     updateSettings({ [key]: value } as Pick<AppSettings, K>);
+  }
+
+  async function detectPandoc(): Promise<void> {
+    setPandocDetecting(true);
+    setPandocDetected(null);
+    setPandocError(null);
+    try {
+      setPandocDetected(await pandocVersion(settings.pandocPath));
+    } catch (error) {
+      setPandocError(
+        error instanceof Error ? error.message : String(error),
+      );
+    } finally {
+      setPandocDetecting(false);
+    }
   }
 
   return (
@@ -427,6 +447,60 @@ export function SettingsDialog() {
               {t(
                 "Placeholders: {input}, {document}, {title}. The HTML file is written first; the command runs without a shell in the exported file's folder, and a non-zero exit code is reported.",
               )}
+            </p>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-heading">
+              <BookOpen size={15} strokeWidth={1.8} />
+              <span>{t("Pandoc")}</span>
+            </div>
+            <div className="settings-row settings-row-stacked">
+              <div className="settings-copy">
+                <span>{t("Pandoc executable")}</span>
+                <small>
+                  {t("Leave empty to use pandoc from PATH.")}
+                </small>
+              </div>
+              <div className="pandoc-path-row">
+                <input
+                  className="settings-text pandoc-path"
+                  type="text"
+                  value={settings.pandocPath}
+                  placeholder="pandoc"
+                  maxLength={4096}
+                  spellCheck={false}
+                  onChange={(event) => {
+                    setPandocDetected(null);
+                    setPandocError(null);
+                    update("pandocPath", event.target.value);
+                  }}
+                  aria-label={t("Pandoc executable")}
+                />
+                <button
+                  className="button"
+                  onClick={() => void detectPandoc()}
+                  disabled={pandocDetecting}
+                >
+                  {pandocDetecting ? t("Checking…") : t("Detect")}
+                </button>
+              </div>
+            </div>
+            <p
+              className="settings-note"
+              title={pandocError ?? undefined}
+            >
+              {pandocDetecting
+                ? t("Checking Pandoc…")
+                : pandocDetected
+                  ? t("Detected: {version}", { version: pandocDetected })
+                  : pandocError
+                    ? t("Pandoc error: {error}", {
+                        error: pandocError.slice(0, 300),
+                      })
+                    : t(
+                        "Pandoc is not bundled. Install it separately or set its executable path.",
+                      )}
             </p>
           </section>
         </div>

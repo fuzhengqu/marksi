@@ -21,8 +21,9 @@ and coordinated disclosure before publishing details.
 MarkSI is a local-first desktop editor. Security-sensitive areas include file
 path validation, image import and data-URL handling, Markdown sanitization,
 external link handling, custom export command execution, and the Tauri
-capability configuration. Custom export is opt-in local code execution: only
-configure executables and arguments that you trust.
+capability configuration. Custom export and optional Pandoc export are opt-in
+external-process features: only configure executables that you trust. Pandoc is
+not bundled and may fetch remote images referenced by the exported document.
 
 ## Supported versions
 

@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.07` product version.
+- About dialog close behavior and display of the `0.08` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -97,6 +97,12 @@ The E2E suite currently covers:
 - PNG image export from the reading view: signature and IHDR dimensions, decoded
   pixel diversity (not a blank canvas), native save-dialog filter, source
   retention, and reading-view transition.
+- Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
+  real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
+  filter, source retention, and persisted executable path. The check runs only
+  when `.tmp/pandoc/portable/pandoc-3.12.1/pandoc.exe` is present and is skipped
+  otherwise; the manual checklist covers a fresh external install.
+- Pandoc detection from Preferences, including the reported version.
 - Mermaid rendering in reading mode, including SVG sanitization checks.
 - Auto pairing, smart punctuation, and emoji completion.
 - Local image context menu and lightbox action.
@@ -115,11 +121,13 @@ formatting, zoom math, strict-heading and lax-list normalization, front-matter
 parsing, save-name extraction/sanitization, image helpers, image-source scanning
 and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
-minimal text-change calculation, quick-open ranking, and analysis helpers.
+Pandoc format metadata and filenames, minimal text-change calculation,
+quick-open ranking, and analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic text and binary writes,
 image import and data URLs, workspace listing/search, file timestamps,
 custom-command validation, successful/non-zero execution, missing executables,
-and working-directory handling.
+working-directory handling, Pandoc argument construction, format allowlisting,
+and bounded process-output capture.
 
 ## Limits and native-dialog checks
 
@@ -141,6 +149,10 @@ the launched process; child processes it starts may outlive it and are outside
 MarkSI's control. Only configure trusted executables. PNG capture depends on the
 WebView canvas/SVG pipeline; documents that exceed the readable canvas scale are
 rejected, and very large documents should be checked manually before release.
+Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
+remote images referenced by the document. The real Pandoc E2E uses a portable
+executable under `.tmp`; on a fresh machine install Pandoc separately and run the
+manual DOCX/EPUB check.
 
 No finite test suite can prove the absence of every bug. The gate guarantees
 that all listed automated paths pass and that no known reproducible failure is

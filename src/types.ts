@@ -132,6 +132,7 @@ export interface AppSettings {
   exportOptions: ExportOptions;
   customExportProgram: string;
   customExportArgs: string;
+  pandocPath: string;
 }
 
 export interface DocumentDraft {

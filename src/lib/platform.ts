@@ -301,7 +301,7 @@ export async function saveDocument(
   });
 }
 
-async function chooseExportPath(
+export async function chooseExportSavePath(
   defaultPath: string,
   filters: Array<{ name: string; extensions: string[] }>,
 ): Promise<string | null> {
@@ -332,7 +332,7 @@ export async function saveHtmlFile(
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  const selected = await chooseExportPath(defaultPath, [
+  const selected = await chooseExportSavePath(defaultPath, [
     { name: "HTML document", extensions: ["html", "htm"] },
   ]);
   if (!selected) {
@@ -374,7 +374,7 @@ export async function savePngFile(
   }
 
   const { invoke } = await import("@tauri-apps/api/core");
-  const selected = await chooseExportPath(defaultPath, [
+  const selected = await chooseExportSavePath(defaultPath, [
     { name: "PNG image", extensions: ["png"] },
   ]);
   if (!selected) {
@@ -401,6 +401,43 @@ export async function runExportCommand(
     program,
     args,
     workingDirectory,
+  });
+}
+
+export interface PandocExportRequest {
+  program: string;
+  content: string;
+  documentPath: string | null;
+  outputPath: string;
+  format: string;
+}
+
+export interface PandocExportResult {
+  path: string;
+  size: number;
+}
+
+export async function pandocVersion(program: string): Promise<string> {
+  if (!isTauri()) {
+    throw new Error("Pandoc is only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<string>("pandoc_version", { program });
+}
+
+export async function pandocExport(
+  request: PandocExportRequest,
+): Promise<PandocExportResult> {
+  if (!isTauri()) {
+    throw new Error("Pandoc is only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<PandocExportResult>("pandoc_export", {
+    program: request.program,
+    content: request.content,
+    documentPath: request.documentPath,
+    outputPath: request.outputPath,
+    format: request.format,
   });
 }
 

@@ -122,6 +122,39 @@ const ZH: Record<string, string> = {
   "Print / Save as PDF": "打印 / 另存为 PDF",
   "Export…": "导出…",
   "Image (PNG)…": "图片 (PNG)…",
+  "Pandoc export…": "Pandoc 导出…",
+  "Export with Pandoc": "使用 Pandoc 导出",
+  "Convert the current Markdown with an external Pandoc.":
+    "使用外部 Pandoc 转换当前 Markdown。",
+  "Close Pandoc dialog": "关闭 Pandoc 对话框",
+  Pandoc: "Pandoc",
+  Status: "状态",
+  "Checking Pandoc…": "正在检测 Pandoc…",
+  "Detected: {version}": "已检测到：{version}",
+  "Pandoc was not found. Set its path in Preferences.":
+    "未找到 Pandoc。请在偏好设置中填写路径。",
+  Ready: "可用",
+  Unavailable: "不可用",
+  "Pandoc error: {error}": "Pandoc 错误：{error}",
+  Output: "输出",
+  "Written by Pandoc, then saved atomically.":
+    "由 Pandoc 写入，然后原子保存。",
+  "Word document (.docx)": "Word 文档 (.docx)",
+  "OpenDocument text (.odt)": "OpenDocument 文本 (.odt)",
+  "EPUB book (.epub)": "EPUB 电子书 (.epub)",
+  "LaTeX document (.tex)": "LaTeX 文档 (.tex)",
+  "Rich Text Format (.rtf)": "RTF 富文本 (.rtf)",
+  "Pandoc is not bundled. It runs as an external program and may fetch remote images referenced by the document. Save the document first if it uses relative local images.":
+    "Pandoc 不会随应用打包，作为外部程序运行，可能会获取文档中引用的远程图片。如果文档使用相对本地图片，请先保存文档。",
+  "Pandoc executable": "Pandoc 可执行文件",
+  "Leave empty to use pandoc from PATH.":
+    "留空则使用 PATH 中的 pandoc。",
+  "Checking…": "检测中…",
+  Detect: "检测",
+  "Pandoc is not bundled. Install it separately or set its executable path.":
+    "Pandoc 不会随应用打包。请单独安装或填写可执行文件路径。",
+  "Pandoc is only available in the desktop app.":
+    "Pandoc 仅在桌面应用中可用。",
   "The document is too long to export as a single image.":
     "文档太长，无法导出为单张图片。",
   "The reading view is not ready yet.": "阅读视图尚未准备好。",

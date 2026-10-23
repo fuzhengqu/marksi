@@ -315,7 +315,7 @@ pub(crate) fn write_atomic(target: &Path, bytes: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
-fn resolve_write_target(path: &Path) -> Result<PathBuf, String> {
+pub(crate) fn resolve_write_target(path: &Path) -> Result<PathBuf, String> {
     if path.exists() {
         return dunce::canonicalize(path)
             .map_err(|error| format!("Cannot resolve {}: {error}", path.display()));
