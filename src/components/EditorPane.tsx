@@ -17,7 +17,7 @@ import {
 } from "../editor/setup";
 import { livePreview } from "../editor/livePreview";
 import { searchPhrases } from "../i18n";
-import { setImageWidth } from "../lib/imageSize";
+import { setImageSize } from "../lib/imageSize";
 import { minimalTextChange } from "../lib/textChange";
 import { smartTyping } from "../editor/smartTyping";
 import {
@@ -390,10 +390,11 @@ export function EditorPane({
         return;
       }
       const current = view.state.doc.toString();
-      const next = setImageWidth(
+      const next = setImageSize(
         current,
         request.imageIndex,
         request.width,
+        request.height,
         request.alt,
       );
       const change = minimalTextChange(current, next);

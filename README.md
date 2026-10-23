@@ -214,19 +214,21 @@ M5 also adds image context actions:
 - Local image actions use the resolved asset path; pasted data-URL images keep
   the lightbox action only.
 
-M5 also adds image width resizing:
+M5 also adds image resizing:
 
 - Image dimensions use the canonical Markdown form
-  `![alt](image.png){width=320}`. Width is validated as 24–1600 px and height
-  follows the aspect ratio.
-- In reading view, hover or focus a loaded image to reveal its corner handle.
-  Drag horizontally, or use Left/Right from the handle, to resize. The source
-  is updated only when the gesture ends, as one undoable editor transaction.
+  `![alt](image.png){width=320 height=180}`. Width and height are validated as
+  24–1600 px; width-only images preserve their aspect ratio.
+- In reading view, hover or focus a loaded image to reveal width and height
+  handles. Drag horizontally or use Left/Right for width; drag vertically or
+  use Up/Down for height. The source is updated only when the gesture ends, as
+  one undoable editor transaction.
 - Resizing is disabled in read-only mode, does not appear for footnote images,
   and is rejected when the source image cannot be identified unambiguously.
   Fenced code, inline code, YAML front matter, and reference definitions cannot
   shift the target image.
-- HTML export, rich clipboard HTML, and print preserve the width attribute.
+- HTML export, rich clipboard HTML, and print preserve width and height
+  attributes.
 
 Raw HTML remains escaped and inert, unsafe URLs are rejected, and remote images
 are never fetched by the preview renderer. Math rendering disables KaTeX's

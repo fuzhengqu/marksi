@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  clampImageHeight,
   clampImageWidth,
+  clearImageSize,
   findImageOccurrences,
+  imageHeightFromAttributes,
   imageWidthFromAttributes,
+  setImageHeight,
+  setImageSize,
   setImageWidth,
 } from "../src/lib/imageSize";
 
@@ -154,14 +159,51 @@ describe("setImageWidth", () => {
     expect(setImageWidth(indentedCode, 0, 240, "missing")).toBe(indentedCode);
   });
 
+  it("writes height attributes independently of width", () => {
+    expect(setImageHeight("![alt](image.png)", 0, 180)).toBe(
+      "![alt](image.png){height=180}",
+    );
+    expect(
+      setImageHeight("![alt](image.png){width=320 height=180}", 0, 220),
+    ).toBe("![alt](image.png){width=320 height=220}");
+    expect(setImageHeight("![alt](image.png){width=320}", 0, 220)).toBe(
+      "![alt](image.png){width=320 height=220}",
+    );
+  });
+
+  it("updates width and height together without losing either", () => {
+    expect(setImageSize("![alt](image.png)", 0, 320, 180)).toBe(
+      "![alt](image.png){width=320 height=180}",
+    );
+    expect(
+      setImageSize("![alt](image.png){width=100 height=90}", 0, 320, 180),
+    ).toBe("![alt](image.png){width=320 height=180}");
+  });
+
+  it("clears image width and height while preserving other attributes", () => {
+    expect(clearImageSize("![alt](image.png){width=320 height=180}", 0)).toBe(
+      "![alt](image.png)",
+    );
+    expect(
+      clearImageSize("![alt](image.png){.photo width=320 height=180}", 0),
+    ).toBe("![alt](image.png){.photo}");
+    expect(clearImageSize("![alt](image.png)", 0, "alt")).toBe(
+      "![alt](image.png)",
+    );
+  });
+
   it("clamps sizes to the safe range", () => {
     expect(clampImageWidth(1)).toBe(24);
     expect(clampImageWidth(5000)).toBe(1600);
     expect(clampImageWidth(Number.NaN)).toBe(0);
+    expect(clampImageHeight(1)).toBe(24);
+    expect(clampImageHeight(5000)).toBe(1600);
   });
 
-  it("reads width attributes for tests and future controls", () => {
+  it("reads width and height attributes for tests and future controls", () => {
     expect(imageWidthFromAttributes("height=200 width=320")).toBe(320);
     expect(imageWidthFromAttributes("height=200")).toBeNull();
+    expect(imageHeightFromAttributes("height=200 width=320")).toBe(200);
+    expect(imageHeightFromAttributes("width=320")).toBeNull();
   });
 });

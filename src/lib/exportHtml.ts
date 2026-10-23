@@ -235,8 +235,10 @@ tr:nth-child(even) td { background: #faf9f7; }
 }
 .markdown-body img {
   max-width: 100%;
-  height: auto;
   border-radius: 8px;
+}
+.markdown-body img:not([height]) {
+  height: auto;
 }
 .image-placeholder {
   display: inline-flex;

@@ -112,13 +112,15 @@ sanitization boundary and is not planned unless that safety requirement changes.
 | Image lightbox and zoom | done | M4 |
 | Image context menu | done | M5 |
 | Image width resize (drag handle) | done | M5 |
-| Image height / fit controls | todo | M5 |
+| Image height resize (drag handle) | done | M5 |
+| Image fit controls (contain/cover) | todo | M5 |
 | Remote image cache | todo | M5 |
 | Root URL / uploader path mode | todo | M5 |
 | Uploader integration (PicGo/PicList/custom) | todo | M5 |
 
-Image resizing stores a width in the canonical Markdown attribute block. Height
-follows the aspect ratio; explicit height and fit modes remain future work.
+Image resizing stores width and optional height in the canonical Markdown
+attribute block. Width-only images preserve their aspect ratio; explicit height
+is also supported. Fit modes such as contain/cover remain future work.
 
 ## Export and import
 

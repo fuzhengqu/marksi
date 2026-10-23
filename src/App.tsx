@@ -439,12 +439,17 @@ export default function App() {
   }, []);
 
   const handleResizeImage = useCallback(
-    (imageIndex: number, width: number, alt: string) => {
+    (
+      imageIndex: number,
+      width: number | null,
+      height: number | null,
+      alt: string,
+    ) => {
       const state = useAppStore.getState();
       if (state.settings.readOnlyMode) {
         return;
       }
-      dispatchEditorImageResize({ imageIndex, width, alt });
+      dispatchEditorImageResize({ imageIndex, width, height, alt });
     },
     [],
   );

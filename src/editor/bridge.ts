@@ -13,7 +13,8 @@ export interface EditorInsertRequest {
 
 export interface EditorImageResizeRequest {
   imageIndex: number;
-  width: number;
+  width?: number | null;
+  height?: number | null;
   alt: string;
 }
 

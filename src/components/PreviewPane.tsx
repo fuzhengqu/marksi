@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useT } from "../i18n";
-import { clampImageWidth } from "../lib/imageSize";
+import { clampImageHeight, clampImageWidth } from "../lib/imageSize";
 import { directoryName, resolveLocalImagePath } from "../lib/images";
 import { renderMarkdown } from "../lib/markdown";
 import { renderMermaidDiagrams } from "../lib/mermaid";
@@ -37,7 +37,12 @@ interface PreviewPaneProps {
   workspacePath: string | null;
   gotoLine: number | null;
   theme: Theme;
-  onResizeImage: (imageIndex: number, width: number, alt: string) => void;
+  onResizeImage: (
+    imageIndex: number,
+    width: number | null,
+    height: number | null,
+    alt: string,
+  ) => void;
 }
 
 interface LightboxImage {
@@ -127,13 +132,15 @@ export function PreviewPane({
   const debouncedContent = useDebouncedValue(content, 90);
   const readOnlyMode = useAppStore((state) => state.settings.readOnlyMode);
   const resizeLabel = t("Resize image");
+  const heightResizeLabel = t("Resize image height");
   const html = useMemo(
     () =>
       renderMarkdown(debouncedContent, {
         imageResizeLabel: resizeLabel,
+        imageHeightResizeLabel: heightResizeLabel,
         imageResizable: !readOnlyMode,
       }),
-    [debouncedContent, resizeLabel, readOnlyMode],
+    [debouncedContent, heightResizeLabel, readOnlyMode, resizeLabel],
   );
   const surfaceRef = useRef<HTMLElement | null>(null);
   const [lightbox, setLightbox] = useState<LightboxImage | null>(null);
@@ -311,26 +318,39 @@ export function PreviewPane({
 
     event.preventDefault();
     event.stopPropagation();
+    const axis = handle.dataset.axis === "height" ? "height" : "width";
     const startX = event.clientX;
-    const startWidth = image.getBoundingClientRect().width;
-    if (startWidth < 1) {
+    const startY = event.clientY;
+    const rect = image.getBoundingClientRect();
+    const startSize = axis === "width" ? rect.width : rect.height;
+    if (startSize < 1) {
       return;
     }
-    let nextWidth = startWidth;
+    let nextSize = startSize;
     const onMove = (moveEvent: globalThis.MouseEvent) => {
-      nextWidth = clampImageWidth(
-        startWidth + moveEvent.clientX - startX,
-      );
-      image.style.width = `${nextWidth}px`;
-      image.style.height = "auto";
+      if (axis === "width") {
+        nextSize = clampImageWidth(startSize + moveEvent.clientX - startX);
+        image.style.width = `${nextSize}px`;
+        image.style.height = "auto";
+      } else {
+        nextSize = clampImageHeight(startSize + moveEvent.clientY - startY);
+        image.style.height = `${nextSize}px`;
+      }
     };
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
       document.body.classList.remove("is-resizing-image");
-      onResizeImage(imageIndex, nextWidth, image.alt);
+      delete document.body.dataset.resizeAxis;
+      onResizeImage(
+        imageIndex,
+        axis === "width" ? nextSize : null,
+        axis === "height" ? nextSize : null,
+        image.alt,
+      );
     };
     document.body.classList.add("is-resizing-image");
+    document.body.dataset.resizeAxis = axis;
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
   }
@@ -344,7 +364,12 @@ export function PreviewPane({
     if (!(handle instanceof HTMLElement)) {
       return;
     }
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+    const axis = handle.dataset.axis === "height" ? "height" : "width";
+    const keys =
+      axis === "width"
+        ? ["ArrowLeft", "ArrowRight"]
+        : ["ArrowUp", "ArrowDown"];
+    if (!keys.includes(event.key)) {
       return;
     }
     const frame = handle.closest(".markdown-image-frame");
@@ -355,10 +380,13 @@ export function PreviewPane({
     }
     event.preventDefault();
     event.stopPropagation();
-    const direction = event.key === "ArrowLeft" ? -20 : 20;
+    const direction =
+      event.key === "ArrowLeft" || event.key === "ArrowUp" ? -20 : 20;
+    const rect = image.getBoundingClientRect();
     onResizeImage(
       imageIndex,
-      clampImageWidth(image.getBoundingClientRect().width + direction),
+      axis === "width" ? clampImageWidth(rect.width + direction) : null,
+      axis === "height" ? clampImageHeight(rect.height + direction) : null,
       image.alt,
     );
   }

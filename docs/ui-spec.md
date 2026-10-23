@@ -223,19 +223,23 @@ ease-out; honor `prefers-reduced-motion`.
   viewport, follows the shared menu-item visual language, and dismisses on
   Escape, outside click, scroll, or resize. Placeholders and remote images do
   not open it.
-- Image dimensions are written in the canonical source as a width attribute:
-  `![alt](image.png){width=320}`. The attribute block must follow the image
-  immediately; resizing normalizes a spaced block onto the image.
-- Loaded images in reading view reveal a corner handle on hover or keyboard
-  focus when read-only mode is off. Drag horizontally, or focus the handle and
-  use Left/Right, to change width from 24 to 1600 px. Height follows the aspect
-  ratio, and the source is updated when the gesture ends as one undoable editor
-  transaction. Handles are omitted in read-only mode and for footnote images;
-  placeholders and remote images are not resizable. Resizing is the only
-  source-editing affordance in reading view; text remains read-only.
-- Width attributes are preserved through reading view, HTML export, rich
-  clipboard HTML, and print. The lightbox remains a viewing surface and never
-  edits the Markdown source or copies an asset.
+- Image dimensions are written in the canonical source as width and optional
+  height attributes: `![alt](image.png){width=320 height=180}`. The attribute
+  block must follow the image immediately; resizing normalizes a spaced block
+  onto the image. Width-only images preserve their aspect ratio.
+- Loaded images in reading view reveal a width handle at the right edge and a
+  height handle at the bottom edge on hover or keyboard focus when read-only
+  mode is off. Drag the width handle horizontally or use Left/Right; drag the
+  height handle vertically or use Up/Down. Both dimensions are bounded to
+  24–1600 px and the source is updated when the gesture ends as one undoable
+  editor transaction. Explicit width and height are independent; resizing one
+  does not silently remove the other.
+- Handles are omitted in read-only mode and for footnote images; placeholders
+  and remote images are not resizable. Resizing is the only source-editing
+  affordance in reading view; text remains read-only.
+- Width and height attributes are preserved through reading view, HTML export,
+  rich clipboard HTML, and print. The lightbox remains a viewing surface and
+  never edits the Markdown source or copies an asset.
 
 ## Mermaid diagrams
 

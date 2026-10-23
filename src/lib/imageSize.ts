@@ -2,6 +2,8 @@ import { extractFrontMatter } from "./frontMatter";
 
 export const IMAGE_WIDTH_MIN = 24;
 export const IMAGE_WIDTH_MAX = 1600;
+export const IMAGE_HEIGHT_MIN = 24;
+export const IMAGE_HEIGHT_MAX = 1600;
 
 interface TextRange {
   start: number;
@@ -424,6 +426,100 @@ export function clampImageWidth(width: number): number {
   );
 }
 
+export function clampImageHeight(height: number): number {
+  if (!Number.isFinite(height)) {
+    return 0;
+  }
+  return Math.round(
+    Math.min(IMAGE_HEIGHT_MAX, Math.max(IMAGE_HEIGHT_MIN, height)),
+  );
+}
+
+function targetOccurrence(
+  source: string,
+  imageIndex: number,
+  expectedAlt?: string,
+): ImageOccurrence | null {
+  const occurrences = findImageOccurrences(source);
+  let occurrence = occurrences[imageIndex];
+  if (expectedAlt !== undefined) {
+    const expected = normalizeAlt(expectedAlt);
+    if (!occurrence || normalizeAlt(occurrence.alt) !== expected) {
+      const matches = occurrences.filter(
+        (candidate) => normalizeAlt(candidate.alt) === expected,
+      );
+      if (matches.length !== 1) {
+        return null;
+      }
+      occurrence = matches[0];
+    }
+  }
+  return occurrence ?? null;
+}
+
+function updateDimensions(
+  attrs: string,
+  width: number | null | undefined,
+  height: number | null | undefined,
+): string {
+  let updated = attrs;
+  const values: Array<["width" | "height", number]> = [];
+  if (width !== null && width !== undefined) {
+    const clamped = clampImageWidth(width);
+    if (clamped > 0) {
+      values.push(["width", clamped]);
+    }
+  }
+  if (height !== null && height !== undefined) {
+    const clamped = clampImageHeight(height);
+    if (clamped > 0) {
+      values.push(["height", clamped]);
+    }
+  }
+
+  for (const [name, value] of values) {
+    const pattern = new RegExp(`(^|\\s)${name}\\s*=\\s*[^\\s}]+`, "i");
+    if (pattern.test(updated)) {
+      updated = updated.replace(pattern, `$1${name}=${value}`);
+    } else {
+      const trimmed = updated.trim();
+      updated = `${trimmed ? `${trimmed} ` : ""}${name}=${value}`;
+    }
+  }
+  return updated.trim();
+}
+
+/**
+ * Sets width and/or height on the nth image, preserving other attributes.
+ * Returns the original source when the image cannot be identified safely.
+ */
+export function setImageSize(
+  source: string,
+  imageIndex: number,
+  width: number | null | undefined,
+  height: number | null | undefined,
+  expectedAlt?: string,
+): string {
+  const occurrence = targetOccurrence(source, imageIndex, expectedAlt);
+  if (!occurrence) {
+    return source;
+  }
+  const attrs =
+    occurrence.attrsFrom !== null && occurrence.attrsTo !== null
+      ? source.slice(occurrence.attrsFrom + 1, occurrence.attrsTo - 1)
+      : "";
+  const updated = updateDimensions(attrs, width, height);
+  if (!updated) {
+    return source;
+  }
+
+  // Remove whitespace between the image and its attribute block. markdown-it
+  // would otherwise attach a spaced attribute block to the paragraph instead.
+  return `${source.slice(0, occurrence.to)}{${updated}}${source.slice(
+    occurrence.attrsTo ?? occurrence.to,
+  )}`;
+}
+
 /**
  * Sets the pixel width of the nth image in the document, preserving any other
  * attributes. Returns the original source when the image index is out of range.
@@ -434,57 +530,69 @@ export function setImageWidth(
   width: number,
   expectedAlt?: string,
 ): string {
-  const occurrences = findImageOccurrences(source);
-  let occurrence = occurrences[imageIndex];
-  if (expectedAlt !== undefined) {
-    const expected = normalizeAlt(expectedAlt);
-    if (!occurrence || normalizeAlt(occurrence.alt) !== expected) {
-      const matches = occurrences.filter(
-        (candidate) => normalizeAlt(candidate.alt) === expected,
-      );
-      if (matches.length !== 1) {
-        return source;
-      }
-      occurrence = matches[0];
-    }
-  }
-  if (!occurrence) {
+  return setImageSize(source, imageIndex, width, null, expectedAlt);
+}
+
+export function setImageHeight(
+  source: string,
+  imageIndex: number,
+  height: number,
+  expectedAlt?: string,
+): string {
+  return setImageSize(source, imageIndex, null, height, expectedAlt);
+}
+
+/**
+ * Removes width/height from the nth image while retaining unrelated attributes.
+ */
+export function clearImageSize(
+  source: string,
+  imageIndex: number,
+  expectedAlt?: string,
+): string {
+  const occurrence = targetOccurrence(source, imageIndex, expectedAlt);
+  if (!occurrence || occurrence.attrsFrom === null || occurrence.attrsTo === null) {
     return source;
   }
-  const clamped = clampImageWidth(width);
-  if (clamped === 0) {
-    return source;
-  }
-
-  if (occurrence.attrsFrom === null || occurrence.attrsTo === null) {
-    return `${source.slice(0, occurrence.to)}{width=${clamped}}${source.slice(
-      occurrence.to,
-    )}`;
-  }
-
   const attrs = source.slice(occurrence.attrsFrom + 1, occurrence.attrsTo - 1);
-  const updated = /(?:^|\s)width\s*=\s*[^\s}]+/i.test(attrs)
-    ? attrs.replace(/(^|\s)width\s*=\s*[^\s}]+/i, `$1width=${clamped}`)
-    : attrs.trim()
-      ? `${attrs.trim()} width=${clamped}`
-      : `width=${clamped}`;
-  // Remove whitespace between the image and its attribute block. markdown-it
-  // would otherwise attach a spaced attribute block to the paragraph instead.
-  return `${source.slice(0, occurrence.to)}{${updated}}${source.slice(
+  const remaining = attrs
+    .replace(/(?:^|\s)(?:width|height)\s*=\s*[^\s}]+/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!remaining) {
+    return `${source.slice(0, occurrence.to)}${source.slice(occurrence.attrsTo)}`;
+  }
+  return `${source.slice(0, occurrence.to)}{${remaining}}${source.slice(
     occurrence.attrsTo,
   )}`;
+}
+
+function dimensionFromAttributes(
+  attrs: string | null | undefined,
+  name: "width" | "height",
+  clamp: (value: number) => number,
+): number | null {
+  if (!attrs) {
+    return null;
+  }
+  const match = new RegExp(`(?:^|\\s)${name}\\s*=\\s*([^\\s}]+)`, "i").exec(
+    attrs,
+  );
+  if (!match) {
+    return null;
+  }
+  const value = Number.parseFloat(match[1]);
+  return Number.isFinite(value) ? clamp(value) : null;
 }
 
 export function imageWidthFromAttributes(
   attrs: string | null | undefined,
 ): number | null {
-  if (!attrs) {
-    return null;
-  }
-  const match = /(?:^|\s)width\s*=\s*([^\s}]+)/i.exec(attrs);
-  if (!match) {
-    return null;
-  }
-  const value = Number.parseFloat(match[1]);
-  return Number.isFinite(value) ? clampImageWidth(value) : null;
+  return dimensionFromAttributes(attrs, "width", clampImageWidth);
+}
+
+export function imageHeightFromAttributes(
+  attrs: string | null | undefined,
+): number | null {
+  return dimensionFromAttributes(attrs, "height", clampImageHeight);
 }

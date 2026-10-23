@@ -60,6 +60,7 @@ interface MarkdownEnvironment {
   mathOutput?: MathOutput;
   imageIndex?: number;
   imageResizeLabel?: string;
+  imageHeightResizeLabel?: string;
   imageResizable?: boolean;
 }
 
@@ -83,7 +84,7 @@ md.use(footnote)
   .use(sub)
   .use(sup)
   .use(markdownItAttrs, {
-    allowedAttributes: ["width"],
+    allowedAttributes: ["width", "height"],
   })
   .use(alert, {
     titleRenderer: (tokens, index) => {
@@ -341,12 +342,13 @@ md.renderer.rules.fence = (tokens, index) => {
   ].join("");
 };
 
-function imageDimensionAttribute(token: Token): string {
-  const raw = String(token.attrGet("width") ?? "").trim();
-  if (!raw || !/^\d{1,4}$/.test(raw)) {
-    return "";
-  }
-  return ` width="${raw}"`;
+function imageDimensionAttributes(token: Token): string {
+  return (["width", "height"] as const)
+    .map((name) => {
+      const raw = String(token.attrGet(name) ?? "").trim();
+      return raw && /^\d{1,4}$/.test(raw) ? ` ${name}="${raw}"` : "";
+    })
+    .join("");
 }
 
 function imagePlaceholder(alt: string, label: string, detail?: string): string {
@@ -376,7 +378,7 @@ md.renderer.rules.image = (tokens, index, _options, environment) => {
   const title = token.attrGet("title");
   const source = classifyImageSource(raw);
   const mode = env?.imageMode;
-  const dimensions = imageDimensionAttribute(token);
+  const dimensions = imageDimensionAttributes(token);
 
   if (source.kind === "unsafe" || !raw) {
     return imagePlaceholder(alt, "IMG", raw || "No image source");
@@ -406,17 +408,22 @@ md.renderer.rules.image = (tokens, index, _options, environment) => {
           `${dimensions} class="markdown-image is-loading" loading="lazy" />`,
         ].join("");
 
-  const handle =
+  const handles =
     env?.imageResizable === false
       ? ""
-      : `<span class="image-resize-handle" role="button" tabindex="0" aria-label="${escapeHtml(
-          env?.imageResizeLabel ?? "Resize image",
-        )}" data-image-index="${imageIndex}"></span>`;
+      : [
+          `<span class="image-resize-handle" role="button" tabindex="0" data-axis="width" aria-label="${escapeHtml(
+            env?.imageResizeLabel ?? "Resize image",
+          )}" data-image-index="${imageIndex}"></span>`,
+          `<span class="image-resize-handle" role="button" tabindex="0" data-axis="height" aria-label="${escapeHtml(
+            env?.imageHeightResizeLabel ?? "Resize image height",
+          )}" data-image-index="${imageIndex}"></span>`,
+        ].join("");
 
   return [
     `<span class="markdown-image-frame" data-image-index="${imageIndex}">`,
     image,
-    handle,
+    handles,
     "</span>",
   ].join("");
 };
@@ -487,6 +494,7 @@ export function renderMarkdown(
     imageMode?: "preview" | "export";
     mathOutput?: MathOutput;
     imageResizeLabel?: string;
+    imageHeightResizeLabel?: string;
     imageResizable?: boolean;
   } = {},
 ): string {
@@ -497,6 +505,8 @@ export function renderMarkdown(
       options.mathOutput ?? (imageMode === "export" ? "mathml" : "html"),
     imageIndex: 0,
     imageResizeLabel: options.imageResizeLabel ?? "Resize image",
+    imageHeightResizeLabel:
+      options.imageHeightResizeLabel ?? "Resize image height",
     imageResizable: options.imageResizable ?? true,
   };
   const rendered = md.render(source, environment);
@@ -508,6 +518,7 @@ export function renderMarkdown(
       "data-marksi-src",
       "data-marksi-image",
       "data-image-index",
+      "data-axis",
       "data-mermaid-source",
       "target",
       "rel",

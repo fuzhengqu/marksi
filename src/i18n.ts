@@ -225,6 +225,7 @@ const ZH: Record<string, string> = {
   "View image": "查看图片",
   "Image actions": "图片操作",
   "Resize image": "调整图片宽度",
+  "Resize image height": "调整图片高度",
   Image: "图片",
   "Rendered document": "渲染文档",
   "Could not copy image path: {error}": "无法复制图片路径：{error}",

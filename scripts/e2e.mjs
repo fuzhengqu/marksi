@@ -774,6 +774,105 @@ async function main() {
     );
   });
 
+  await test("image height handle writes height back", async () => {
+    await resetBase();
+    const imageDoc = resolve(fixtureDir, "image-height.md");
+    await writeFile(imageDoc, "![icon](icon.png)\n", "utf8");
+    await evaluate(
+      `window.__MARKSI_DEV__.openPath(${JSON.stringify(imageDoc)})`,
+    );
+    await waitFor(
+      'window.__MARKSI_DEV__.getState().doc.path === ' +
+        JSON.stringify(imageDoc),
+      10_000,
+    );
+    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+    await waitFor(
+      'document.querySelector("img.markdown-image[data-marksi-resolved]")',
+      10_000,
+    );
+    await sleep(250);
+    const before = await evaluate(`(() => {
+      const image = document.querySelector("img.markdown-image");
+      const box = image.getBoundingClientRect();
+      return { height: box.height, width: box.width };
+    })()`);
+    const heightHandlePoint = await evaluate(`(() => {
+      const box = document.querySelector('.image-resize-handle[data-axis="height"]').getBoundingClientRect();
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    })()`);
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: heightHandlePoint.x,
+      y: heightHandlePoint.y,
+    });
+    await sleep(120);
+    await send("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      x: heightHandlePoint.x,
+      y: heightHandlePoint.y,
+      button: "left",
+      buttons: 1,
+      clickCount: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: heightHandlePoint.x,
+      y: heightHandlePoint.y + 30,
+      button: "left",
+      buttons: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      x: heightHandlePoint.x,
+      y: heightHandlePoint.y + 30,
+      button: "left",
+      buttons: 0,
+      clickCount: 1,
+    });
+    await sleep(450);
+    const content = await evaluate(
+      "window.__MARKSI_DEV__.getState().doc.content",
+    );
+    const expectedHeight = Math.round(before.height + 30);
+    assert(
+      content.includes(`height=${expectedHeight}`),
+      "height drag did not write height back",
+      { content, before, expectedHeight },
+    );
+    assert(
+      content.includes("![icon](icon.png){"),
+      "height was not written as an image attribute block",
+      content,
+    );
+    const rendered = await evaluate(`(() => {
+      const image = document.querySelector("img.markdown-image");
+      return {
+        heightAttribute: image?.getAttribute("height"),
+        height: image?.getBoundingClientRect().height ?? null
+      };
+    })()`);
+    assert(
+      rendered.heightAttribute === String(expectedHeight),
+      "height attribute was not rendered",
+      rendered,
+    );
+    await evaluate(
+      'document.querySelector(\'.image-resize-handle[data-axis="height"]\')?.focus()',
+    );
+    await press("ArrowDown", "ArrowDown", 40);
+    await sleep(350);
+    const keyboardContent = await evaluate(
+      "window.__MARKSI_DEV__.getState().doc.content",
+    );
+    assert(
+      keyboardContent.includes(`height=${expectedHeight + 20}`),
+      "keyboard height adjustment did not update the source",
+      keyboardContent,
+    );
+    await resetBase();
+  });
+
   await test("recent files reveal per-item close and File > Clear recent files", async () => {
     const saved = await evaluate("window.__MARKSI_DEV__.getState().recent");
     const recentOne = resolve(fixtureDir, "recent-one.md");

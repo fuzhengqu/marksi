@@ -95,29 +95,30 @@ allows `opener:allow-open-path` in addition to the default opener permissions;
 data-URL images do not expose file actions. This menu is presentation-only and
 never rewrites the Markdown source.
 
-Image width uses a constrained Markdown attribute block:
-`![alt](image.png){width=320}`. `markdown-it-attrs` is configured to accept only
-the `width` attribute; the image renderer validates it as a four-digit pixel
-value before emitting HTML, and DOMPurify remains the final boundary. The
-renderer wraps local and data-URL images in a positioning frame and appends a
-keyboard-focusable resize handle unless read-only mode or the footnote section
-disables it.
+Image dimensions use a constrained Markdown attribute block:
+`![alt](image.png){width=320 height=180}`. `markdown-it-attrs` is configured to
+accept only `width` and `height`; the image renderer validates each as a
+four-digit pixel value before emitting HTML, and DOMPurify remains the final
+boundary. The renderer wraps local and data-URL images in a positioning frame
+and appends keyboard-focusable width and height handles unless read-only mode or
+the footnote section disables them. Width-only images keep their intrinsic
+aspect ratio; explicit height is applied independently.
 
 `src/lib/imageSize.ts` maps the rendered handle back to canonical source. Its
 scanner skips fenced and inline code, YAML front matter, footnote bodies, and
 reference-definition lines; it understands inline, full-reference, collapsed,
 and shortcut images. `setImageWidth` preserves other attributes, inserts or
-updates only the width, normalizes a spaced attribute block onto the image, and
-clamps to 24–1600 px. The rendered image alt text is passed back as a safety
-check when the scanner index is ambiguous; if the target cannot be identified
-uniquely, the source is left unchanged rather than rewriting the wrong image.
-The resize request travels through the editor bridge rather than replacing the
-store content. `EditorPane` computes the source update from its current
-CodeMirror document and commits one annotated transaction, so the change is
-undoable/redoable and does not rebuild the editor state. The annotation is the
-only doc-changing transaction permitted while the reading view's editor is
-otherwise read-only. Width is emitted in exported HTML; height follows the image
-aspect ratio, and explicit height/fit controls remain future work.
+updates only the requested dimension, normalizes a spaced attribute block onto
+the image, and clamps both dimensions to 24–1600 px. The rendered image alt text
+is passed back as a safety check when the scanner index is ambiguous; if the
+target cannot be identified uniquely, the source is left unchanged rather than
+rewriting the wrong image. The resize request travels through the editor bridge
+rather than replacing the store content. `EditorPane` computes the source
+update from its current CodeMirror document and commits one annotated
+transaction, so the change is undoable/redoable and does not rebuild the editor
+state. The annotation is the only doc-changing transaction permitted while the
+reading view's editor is otherwise read-only. Width and height are emitted in
+exported HTML; fit modes such as contain/cover remain future work.
 
 ## Extended Markdown
 
@@ -271,8 +272,8 @@ success toasts.
   dependencies and is covered by unit tests.
 - `src/lib/images.ts` owns image classification, path resolution, Markdown
   generation, and filename helpers; it is covered by unit tests.
-- `src/lib/imageSize.ts` owns source-image scanning, width clamping, and
-  source-preserving width updates; it is covered by unit tests.
+- `src/lib/imageSize.ts` owns source-image scanning, dimension clamping, and
+  source-preserving width/height updates; it is covered by unit tests.
 - `src/lib/textChange.ts` owns minimal text-diff calculation for programmatic
   editor transactions; it is covered by unit tests.
 - `src/lib/frontMatter.ts` owns front-matter extraction and metadata parsing; it
