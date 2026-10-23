@@ -14,6 +14,26 @@ export type CopyFormat = "markdown" | "html" | "text";
 
 export type ToastTone = "info" | "success" | "error";
 
+export type ExportProfileId = "document" | "print" | "minimal" | "custom";
+
+export type ExportPageSize = "a4" | "letter" | "legal";
+
+export type ExportOrientation = "portrait" | "landscape";
+
+export type ExportMargin = "normal" | "narrow" | "wide";
+
+export interface ExportOptions {
+  profile: ExportProfileId;
+  useFrontMatter: boolean;
+  includeMetadataTags: boolean;
+  includeDocumentInfo: boolean;
+  pageSize: ExportPageSize;
+  orientation: ExportOrientation;
+  margin: ExportMargin;
+  header: string;
+  footer: string;
+}
+
 export interface DocumentPayload {
   path: string;
   content: string;
@@ -109,6 +129,7 @@ export interface AppSettings {
   smartPunctuation: boolean;
   emojiAutocomplete: boolean;
   strictMode: boolean;
+  exportOptions: ExportOptions;
 }
 
 export interface DocumentDraft {

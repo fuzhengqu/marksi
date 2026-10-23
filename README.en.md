@@ -23,8 +23,9 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   outline, quick open, and full-text search; preserves encoding and line endings.
 - **Images**: insert, drag and drop, or paste; document-relative assets;
   lightbox; width and height resizing; contain/cover fit and original-size reset.
-- **Export and copy**: standalone HTML; print or save as PDF through the system
-  print dialog; copy as Markdown, HTML, or plain text.
+- **Export and copy**: standalone HTML with document, print, minimal, or custom
+  profiles; front matter metadata and page setup controls; print or save as PDF
+  through the system print dialog; copy as Markdown, HTML, or plain text.
 - **Reliability**: optional autosave for named documents, unsaved-work recovery,
   and external-change notices.
 - **Interface**: Chinese and English, built-in light and dark themes, and

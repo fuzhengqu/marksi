@@ -139,8 +139,9 @@ inline math.
 
 YAML front matter is recognized only at the first line and is hidden from the
 rendered body. `src/lib/frontMatter.ts` extracts a tolerant subset of scalar
-metadata and folded indented values; HTML export uses `title`, `author`,
-`description`, `keywords`, and `tags` for document metadata.
+metadata and folded indented values; HTML export can use `title`, `author`,
+`date`, `description`, `keywords`, and `tags` for document metadata, subject to
+the export dialog's front matter options.
 
 Math runs through KaTeX with trust and HTML extensions disabled. Preview renders
 KaTeX HTML with the bundled KaTeX CSS and fonts. HTML export instead renders
@@ -159,6 +160,24 @@ document. The preview calls the same renderer after each HTML or theme change;
 HTML export and rich clipboard copy render detached markup before serializing.
 Failures keep the source open and show a concise error instead of breaking the
 rest of the document. Plain-text copy intentionally keeps the source text.
+
+## Export pipeline
+
+`src/lib/exportOptions.ts` owns export profiles, persisted option
+normalization, and `@page` CSS generation. `src/lib/exportMetadata.ts` owns
+escaped meta tags and the optional document-info panel, while
+`src/lib/exportHtml.ts` assembles the standalone document from the same
+sanitized renderer used by preview and clipboard copy. Images use export mode,
+math uses MathML, and Mermaid is hydrated before serialization.
+
+A preset fills a concrete set of values; editing any value demotes it to
+`custom`, and persisted options are normalized on load so an inconsistent
+preset cannot survive a restart. Header and footer templates are inserted as
+escaped CSS strings with `counter(page)` and `counter(pages)` substitutions,
+not as raw CSS. The in-app print path injects the same `@page` block into a
+temporary style element and removes it after `afterprint` or a timeout. Chromium
+and WebView2 honor paper size, orientation, and margins; margin-box headers and
+footers remain engine-dependent, and the native print dialog can override them.
 
 ## Interface localization
 
@@ -338,8 +357,8 @@ export. The document text is never round-tripped through rendered HTML.
 - Native file watcher with debounce, replacing the current mtime poll when a
   platform watcher is available.
 - SQLite session/history store for multi-window restore and local snapshots.
-- Shared export pipeline and Pandoc adapter (Pandoc is invoked externally,
-  never bundled).
+- Custom export command with explicit configuration and no shell interpolation.
+- Pandoc adapter (Pandoc is invoked externally, never bundled).
 - PlantUML lazy rendering and a worker for unusually heavy diagrams.
 - Remote image caching and optional uploader integrations.
 - Cross-platform print-to-PDF adapters.

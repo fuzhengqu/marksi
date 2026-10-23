@@ -135,7 +135,8 @@ fully lax continuation blocks to the future continuation/quote item above.
 
 Image resizing stores width and optional height in the canonical Markdown
 attribute block. Width-only images preserve their aspect ratio; explicit height
-is also supported. Fit modes such as contain/cover remain future work.
+is also supported. Contain/cover fit and original-size reset are available from
+the image context menu and are preserved in HTML export and print.
 
 ## Export and import
 
@@ -147,10 +148,19 @@ is also supported. Fit modes such as contain/cover remain future work.
 | Export image | todo | M5 |
 | Copy as Markdown / HTML / plain text | done | M4 |
 | Pandoc import/export | todo | M5 |
-| Export profiles | todo | M5 |
+| Export profiles | done | M5 |
 | Custom export command | todo | M5 |
-| Front matter export options | todo | M5 |
-| Page setup / headers / footers | todo | M5 |
+| Front matter export options | done | M5 |
+| Page setup / headers / footers | done | M5 |
+
+The export dialog offers Document, Print, Minimal, and Custom profiles. It
+controls whether YAML front matter supplies the HTML title, whether author,
+description, and keywords meta tags are emitted, and whether a sanitized
+metadata panel appears above the document. Page setup writes `@page` size,
+orientation, margins, and optional header/footer margin boxes. Paper size and
+margins affect both exported HTML and the system print dialog; the operating
+system print dialog may add or override its own headers and footers, and CSS
+margin-box support varies by print engine.
 
 ## Appearance and settings
 

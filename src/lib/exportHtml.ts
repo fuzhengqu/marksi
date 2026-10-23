@@ -1,13 +1,16 @@
 import { escapeHtml, renderMarkdown } from "./markdown";
+import { buildMetaTags, documentInfoMarkup } from "./exportMetadata";
 import { extractFrontMatter } from "./frontMatter";
+import { buildPageCss, normalizeExportOptions } from "./exportOptions";
 import { renderMermaidMarkup } from "./mermaid";
-import type { Language } from "../types";
+import type { ExportOptions, Language } from "../types";
 
-interface ExportDocumentOptions {
+export interface ExportDocumentOptions {
   title: string;
   content: string;
   language?: Language;
   strictMode?: boolean;
+  exportOptions?: ExportOptions;
 }
 
 const documentStyles = `
@@ -76,6 +79,22 @@ sup { vertical-align: super; }
   margin-right: auto;
 }
 math { font-size: 1.05em; }
+.document-info {
+  margin: 0 0 2.2em;
+  padding: 14px 18px;
+  border: 1px solid #e4e2dd;
+  border-radius: 9px;
+  background: #f5f3ef;
+  font-size: 0.9em;
+}
+.document-info dl { display: grid; gap: 6px; margin: 0; }
+.document-info div {
+  display: grid;
+  grid-template-columns: 7em minmax(0, 1fr);
+  gap: 12px;
+}
+.document-info dt { color: #6f7378; font-weight: 650; }
+.document-info dd { margin: 0; overflow-wrap: anywhere; }
 .table-of-contents {
   margin: 1.5em 0;
   padding: 14px 18px;
@@ -294,7 +313,8 @@ tr:nth-child(even) td { background: #faf9f7; }
 @media print {
   body { padding: 0; background: #fff; }
   .markdown-body { max-width: none; }
-  pre, blockquote, table, .markdown-alert, .table-of-contents, .mermaid-block {
+  pre, blockquote, table, .markdown-alert, .document-info,
+  .table-of-contents, .mermaid-block {
     break-inside: avoid;
   }
   .code-block, .task-checkbox:checked {
@@ -310,29 +330,22 @@ export async function buildStandaloneHtml({
   content,
   language = "zh-CN",
   strictMode = true,
+  exportOptions,
 }: ExportDocumentOptions): Promise<string> {
+  const options = normalizeExportOptions(exportOptions);
   const frontMatter = extractFrontMatter(content);
-  const metadata = frontMatter?.metadata ?? {};
-  const safeTitle = escapeHtml(
-    (metadata.title || title).trim() || "Untitled",
+  const metadata = options.useFrontMatter
+    ? frontMatter?.metadata ?? {}
+    : {};
+  const documentTitle = (metadata.title || title).trim() || "Untitled";
+  const safeTitle = escapeHtml(documentTitle);
+  const metaTags = buildMetaTags(metadata, options.includeMetadataTags);
+  const info = documentInfoMarkup(
+    metadata,
+    language,
+    options.includeDocumentInfo,
   );
-  const metaTags = [
-    metadata.author
-      ? `<meta name="author" content="${escapeHtml(metadata.author)}">`
-      : "",
-    metadata.description
-      ? `<meta name="description" content="${escapeHtml(
-          metadata.description,
-        )}">`
-      : "",
-    metadata.keywords || metadata.tags
-      ? `<meta name="keywords" content="${escapeHtml(
-          metadata.keywords || metadata.tags,
-        )}">`
-      : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const pageCss = buildPageCss(options, documentTitle);
   const body = await renderMermaidMarkup(
     renderMarkdown(content, {
       imageMode: "export",
@@ -349,11 +362,12 @@ export async function buildStandaloneHtml({
 <meta name="generator" content="MarkSI">
 <title>${safeTitle}</title>
 ${metaTags}
-<style>${documentStyles}</style>
+<style>${documentStyles}
+${pageCss}</style>
 </head>
 <body>
 <article class="markdown-body">
-${body}
+${info ? `${info}\n` : ""}${body}
 </article>
 </body>
 </html>

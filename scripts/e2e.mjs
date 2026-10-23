@@ -202,6 +202,7 @@ async function resetBase({ clearContent = true } = {}) {
     const dev = window.__MARKSI_DEV__;
     dev.getState().setMenuOpen(false);
     dev.getState().setSettingsOpen(false);
+    dev.closeExport?.();
     dev.getState().setQuickOpen(false);
     dev.getState().setTheme("light");
     dev.getState().setViewMode("preview");
@@ -335,7 +336,7 @@ async function main() {
         last: labels[labels.length - 1]
       };
     })()`);
-    assert(state.labels.includes("HTML 文档…"), "HTML export missing", state);
+    assert(state.labels.includes("导出…"), "export dialog entry missing", state);
     assert(state.labels.includes("偏好设置…"), "preferences missing", state);
     assert(state.last === "退出 MarkSI", "quit should be last", state);
     assert(!state.footer, "menu footer must be gone", state);
@@ -352,7 +353,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.04"), "About should show version 0.04", state);
+    assert(state.version?.includes("0.05"), "About should show version 0.05", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -635,6 +636,179 @@ async function main() {
     assert(lax.code.includes("1. 代码不是列表"), "lax mode changed the code fence", lax);
     assert(lax.content === source, "rendering must not rewrite the source", lax);
     await resetBase();
+  });
+
+  await test("export dialog applies profile, front matter, and page setup", async () => {
+    await resetBase();
+    const exportPath = resolve(fixtureDir, "export-options.html");
+    const source = [
+      "---",
+      "title: Export Test",
+      "author: Ada <script>alert(1)</script>",
+      "description: A short note",
+      "tags: alpha, beta",
+      "---",
+      "# Body",
+      "",
+      "Hello.",
+    ].join("\n");
+    try {
+      await evaluate(
+        `window.__MARKSI_DEV__.setContent(${JSON.stringify(source)})`,
+      );
+      await evaluate("window.__MARKSI_DEV__.openExport()");
+      await waitFor('document.querySelector(".export-dialog")');
+      const initial = await evaluate(`({
+        title: document.querySelector("#export-title")?.textContent,
+        profile: document.querySelector(".export-profile-select")?.value,
+        selects: Array.from(document.querySelectorAll(".export-dialog select")).map((node) => node.getAttribute("aria-label")),
+        toggles: Array.from(document.querySelectorAll('.export-dialog [role="switch"]')).map((node) => node.getAttribute("aria-label")),
+        buttons: Array.from(document.querySelectorAll(".export-actions button")).map((node) => node.textContent?.trim())
+      })`);
+      assert(initial.title === "导出文档", "export dialog should be Chinese", initial);
+      assert(initial.profile === "document", "document profile should be the default", initial);
+      assert(
+        JSON.stringify(initial.selects) ===
+          JSON.stringify(["导出配置档", "纸张大小", "方向", "页边距"]),
+        "export dialog selects are incomplete",
+        initial,
+      );
+      assert(
+        ["使用 front matter", "元数据标签", "文档信息面板"].every((label) =>
+          initial.toggles.includes(label),
+        ),
+        "metadata toggles are missing",
+        initial,
+      );
+      assert(
+        initial.buttons.includes("导出 HTML") &&
+          initial.buttons.includes("打印 / PDF"),
+        "export actions are missing",
+        initial,
+      );
+
+      await evaluate(`(() => {
+        const select = document.querySelector('.export-dialog select[aria-label="导出配置档"]');
+        const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set;
+        setter.call(select, "print");
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      })()`);
+      await sleep(180);
+      const printProfile = await evaluate(`({
+        profile: document.querySelector(".export-profile-select")?.value,
+        header: document.querySelector('.export-dialog input[aria-label="页眉"]')?.value,
+        footer: document.querySelector('.export-dialog input[aria-label="页脚"]')?.value
+      })`);
+      assert(printProfile.profile === "print", "print profile was not selected", printProfile);
+      assert(printProfile.header === "{title}", "print header was not filled", printProfile);
+      assert(printProfile.footer === "{page} / {pages}", "print footer was not filled", printProfile);
+
+      await evaluate(
+        'document.querySelector(\'.export-dialog button[aria-label="使用 front matter"]\')?.click()',
+      );
+      await sleep(140);
+      const withoutFrontMatter = await evaluate(`({
+        enabled: document.querySelector('.export-dialog button[aria-label="使用 front matter"]')?.getAttribute("aria-checked"),
+        metaDisabled: document.querySelector('.export-dialog button[aria-label="元数据标签"]')?.disabled,
+        panelDisabled: document.querySelector('.export-dialog button[aria-label="文档信息面板"]')?.disabled
+      })`);
+      assert(withoutFrontMatter.enabled === "false", "front matter toggle did not turn off", withoutFrontMatter);
+      assert(withoutFrontMatter.metaDisabled, "metadata tags should disable", withoutFrontMatter);
+      assert(withoutFrontMatter.panelDisabled, "document info should disable", withoutFrontMatter);
+
+      await evaluate(
+        'document.querySelector(\'.export-dialog button[aria-label="使用 front matter"]\')?.click()',
+      );
+      await sleep(150);
+      await evaluate(
+        'document.querySelector(\'.export-dialog button[aria-label="文档信息面板"]\')?.click()',
+      );
+      await sleep(120);
+      await evaluate(`(() => {
+        const setSelect = (label, value) => {
+          const select = document.querySelector('.export-dialog select[aria-label="' + label + '"]');
+          const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set;
+          setter.call(select, value);
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+        };
+        setSelect("纸张大小", "letter");
+        setSelect("方向", "landscape");
+        setSelect("页边距", "wide");
+      })()`);
+      await sleep(180);
+      const custom = await evaluate(`({
+        profile: document.querySelector(".export-profile-select")?.value,
+        header: document.querySelector('.export-dialog input[aria-label="页眉"]')?.value,
+        footer: document.querySelector('.export-dialog input[aria-label="页脚"]')?.value,
+        pageSize: document.querySelector('.export-dialog select[aria-label="纸张大小"]')?.value,
+        orientation: document.querySelector('.export-dialog select[aria-label="方向"]')?.value,
+        margin: document.querySelector('.export-dialog select[aria-label="页边距"]')?.value,
+        panel: document.querySelector('.export-dialog button[aria-label="文档信息面板"]')?.getAttribute("aria-checked")
+      })`);
+      assert(custom.profile === "custom", "editing a preset should switch to custom", custom);
+      assert(custom.pageSize === "letter", "paper size was not changed", custom);
+      assert(custom.orientation === "landscape", "orientation was not changed", custom);
+      assert(custom.margin === "wide", "margin was not changed", custom);
+      assert(custom.header === "{title}" && custom.footer === "{page} / {pages}", "print header/footer should be retained", custom);
+      assert(custom.panel === "true", "document info panel was not enabled", custom);
+
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        window.__MARKSI_EXPORT_CAPTURE__ = null;
+        platform.setSaveDialogForTests(async (options) => {
+          window.__MARKSI_EXPORT_CAPTURE__ = options;
+          return ${JSON.stringify(exportPath)};
+        });
+      })()`);
+      const clicked = await evaluate(`(() => {
+        const button = Array.from(document.querySelectorAll(".export-actions button"))
+          .find((node) => node.textContent?.includes("导出 HTML"));
+        button?.click();
+        return Boolean(button);
+      })()`);
+      assert(clicked, "export HTML button is missing");
+      await waitFor('!document.querySelector(".export-dialog")', 10_000);
+
+      const html = await readFile(exportPath, "utf8");
+      assert(html.includes("<title>Export Test</title>"), "front matter title missing", html.slice(0, 500));
+      assert(html.includes("size: Letter landscape;"), "page size or orientation missing", html.slice(0, 800));
+      assert(html.includes("margin: 26mm 24mm;"), "wide margins missing", html.slice(0, 800));
+      assert(html.includes("@top-center") && html.includes('content: "Export Test";'), "header tokens missing", html.slice(0, 800));
+      assert(html.includes('counter(page) "/" counter(pages)'), "footer page tokens missing", html.slice(0, 800));
+      assert(
+        html.includes('meta name="author" content="Ada &lt;script&gt;alert(1)&lt;/script&gt;"'),
+        "metadata tag was not escaped",
+        html.slice(0, 800),
+      );
+      assert(html.includes('class="document-info"'), "document info panel missing", html.slice(0, 1200));
+      assert(html.includes("<dt>作者</dt>"), "document info panel is not localized", html.slice(0, 1200));
+      assert(!html.includes("<script>alert(1)</script>"), "front matter injected a script");
+
+      const state = await evaluate(`({
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        options: window.__MARKSI_DEV__.getState().settings.exportOptions,
+        capture: window.__MARKSI_EXPORT_CAPTURE__
+      })`);
+      assert(state.content === source, "export must not rewrite the Markdown source", state);
+      assert(state.options.pageSize === "letter", "paper size was not persisted", state);
+      assert(state.options.orientation === "landscape", "orientation was not persisted", state);
+      assert(state.options.margin === "wide", "margin was not persisted", state);
+      assert(state.options.includeDocumentInfo === true, "document info option was not persisted", state);
+      assert(
+        state.capture?.defaultPath?.endsWith(".html") &&
+          state.capture?.filters?.[0]?.extensions?.includes("html"),
+        "HTML save dialog options are wrong",
+        state.capture,
+      );
+    } finally {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setSaveDialogForTests(null);
+        delete window.__MARKSI_EXPORT_CAPTURE__;
+      })()`).catch(() => {});
+      await rm(exportPath, { force: true });
+      await resetBase();
+    }
   });
 
   await test("Mermaid diagrams render in reading view without script or foreignObject", async () => {

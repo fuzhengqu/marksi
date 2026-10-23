@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   extractFrontMatter,
+  frontMatterTitle,
   parseFrontMatterMetadata,
 } from "../src/lib/frontMatter";
 
@@ -45,6 +46,14 @@ describe("extractFrontMatter", () => {
     const frontMatter = extractFrontMatter("---\ntitle: Dot\n...\nBody");
     expect(frontMatter?.metadata.title).toBe("Dot");
     expect(frontMatter?.body).toBe("Body");
+  });
+});
+
+describe("frontMatterTitle", () => {
+  it("returns a trimmed title or null", () => {
+    expect(frontMatterTitle("---\ntitle:  Notes  \n---\nBody")).toBe("Notes");
+    expect(frontMatterTitle("---\ntitle:   \n---\nBody")).toBeNull();
+    expect(frontMatterTitle("# No front matter")).toBeNull();
   });
 });
 

@@ -1,5 +1,9 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import {
+  DEFAULT_EXPORT_OPTIONS,
+  normalizeExportOptions,
+} from "../lib/exportOptions";
 import type {
   AppSettings,
   CursorPosition,
@@ -105,6 +109,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   smartPunctuation: false,
   emojiAutocomplete: true,
   strictMode: true,
+  exportOptions: { ...DEFAULT_EXPORT_OPTIONS },
 };
 
 const emptyDocument: DocumentState = {
@@ -336,7 +341,13 @@ export const useAppStore = create<AppStore>()(
         return {
           ...current,
           ...saved,
-          settings: { ...DEFAULT_SETTINGS, ...(saved.settings ?? {}) },
+          settings: {
+            ...DEFAULT_SETTINGS,
+            ...(saved.settings ?? {}),
+            exportOptions: normalizeExportOptions(
+              saved.settings?.exportOptions,
+            ),
+          },
         };
       },
     },

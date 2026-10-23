@@ -45,6 +45,11 @@ export function parseFrontMatterMetadata(
   return metadata;
 }
 
+export function frontMatterTitle(source: string): string | null {
+  const title = extractFrontMatter(source)?.metadata.title?.trim();
+  return title || null;
+}
+
 export function extractFrontMatter(source: string): FrontMatter | null {
   const match = FRONT_MATTER_PATTERN.exec(source);
   if (!match) {

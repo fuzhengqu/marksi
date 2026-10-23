@@ -322,10 +322,12 @@ export async function saveHtmlFile(
 
   const { save } = await import("@tauri-apps/plugin-dialog");
   const { invoke } = await import("@tauri-apps/api/core");
-  const selected = await save({
-    defaultPath,
-    filters: [{ name: "HTML document", extensions: ["html", "htm"] }],
-  });
+  const filters = [
+    { name: "HTML document", extensions: ["html", "htm"] },
+  ];
+  const selected = testSaveDialog
+    ? await testSaveDialog({ defaultPath, filters })
+    : await save({ defaultPath, filters });
   if (!selected) {
     return null;
   }

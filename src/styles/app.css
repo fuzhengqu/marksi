@@ -2479,6 +2479,11 @@ body.is-resizing-image[data-resize-axis="height"] * {
   background: var(--accent);
 }
 
+.switch:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .switch-knob {
   position: absolute;
   top: 3px;
@@ -2555,6 +2560,44 @@ body.is-resizing-image[data-resize-axis="height"] * {
   padding: 12px 22px;
   border-top: 1px solid var(--border);
   background: var(--titlebar-bg);
+}
+
+/* ------------------------------------------------------------------ */
+/* Export                                                              */
+/* ------------------------------------------------------------------ */
+
+.export-dialog {
+  width: min(600px, 100%);
+}
+
+.export-profile-select {
+  min-width: 122px;
+}
+
+.export-template {
+  flex-basis: 210px;
+}
+
+.export-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.export-empty-note {
+  color: var(--danger);
+}
+
+@media (max-width: 620px) {
+  .export-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .export-template {
+    flex-basis: 100%;
+  }
 }
 
 /* ------------------------------------------------------------------ */

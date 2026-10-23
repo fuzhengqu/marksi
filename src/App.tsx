@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { DraftRecovery } from "./components/DraftRecovery";
 import { EditorPane } from "./components/EditorPane";
+import { ExportDialog } from "./components/ExportDialog";
 import { MenuOverlay } from "./components/MenuOverlay";
 import { QuickOpen } from "./components/QuickOpen";
 import { SettingsDialog } from "./components/SettingsDialog";
@@ -18,6 +19,8 @@ import {
 } from "./editor/bridge";
 import type { EditorCommand } from "./editor/format";
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
+import { buildPageCss, normalizeExportOptions } from "./lib/exportOptions";
+import { frontMatterTitle } from "./lib/frontMatter";
 import { resolveSaveName } from "./lib/saveName";
 import { tNow, useT } from "./i18n";
 import { clampZoom, stepZoom } from "./lib/zoom";
@@ -47,6 +50,7 @@ import type {
   AppSettings,
   CopyFormat,
   DocumentDraft,
+  ExportOptions,
   FileMeta,
   ImageAsset,
 } from "./types";
@@ -86,6 +90,7 @@ export default function App() {
   const workspacePath = useAppStore((state) => state.workspace?.path ?? null);
   const [draftToRecover, setDraftToRecover] =
     useState<DocumentDraft | null>(() => loadDraft());
+  const [exportOpen, setExportOpen] = useState(false);
   const savingRef = useRef(false);
 
   useEffect(() => {
@@ -339,39 +344,54 @@ export default function App() {
     void saveCurrent(true);
   }, [saveCurrent]);
 
-  const handleExportHtml = useCallback(async () => {
-    const state = useAppStore.getState();
-    if (!state.doc.content.trim()) {
-      state.showToast(tNow("There is nothing to export yet."), "info");
-      return;
-    }
-    try {
-      const { buildStandaloneHtml, htmlExportPath } = await import(
-        "./lib/exportHtml"
+  const handleExportHtml = useCallback(
+    async (options?: ExportOptions): Promise<boolean> => {
+      const state = useAppStore.getState();
+      if (!state.doc.content.trim()) {
+        state.showToast(tNow("There is nothing to export yet."), "info");
+        return false;
+      }
+      const exportOptions = normalizeExportOptions(
+        options ?? state.settings.exportOptions,
       );
-      const title =
-        state.doc.name.replace(/\.[^.\\/]+$/, "") || tNow("Untitled");
-      const html = await buildStandaloneHtml({
-        title,
-        content: state.doc.content,
-        language: state.settings.language,
-        strictMode: state.settings.strictMode,
-      });
-      const meta = await saveHtmlFile(
-        htmlExportPath(state.doc.path, state.doc.name),
-        html,
-      );
-      if (meta) {
+      state.updateSettings({ exportOptions });
+      try {
+        const { buildStandaloneHtml, htmlExportPath } = await import(
+          "./lib/exportHtml"
+        );
+        const title =
+          state.doc.name.replace(/\.[^.\\/]+$/, "") || tNow("Untitled");
+        const html = await buildStandaloneHtml({
+          title,
+          content: state.doc.content,
+          language: state.settings.language,
+          strictMode: state.settings.strictMode,
+          exportOptions,
+        });
+        const meta = await saveHtmlFile(
+          htmlExportPath(state.doc.path, state.doc.name),
+          html,
+        );
+        if (!meta) {
+          return false;
+        }
         useAppStore
           .getState()
           .showToast(
             tNow("Exported {name}", { name: fileName(meta.path) }),
             "success",
           );
+        return true;
+      } catch (error) {
+        useAppStore.getState().showToast(errorMessage(error), "error");
+        return false;
       }
-    } catch (error) {
-      useAppStore.getState().showToast(errorMessage(error), "error");
-    }
+    },
+    [],
+  );
+
+  const handleOpenExport = useCallback(() => {
+    setExportOpen(true);
   }, []);
 
   const handleCopyDocument = useCallback(async (format: CopyFormat) => {
@@ -638,12 +658,35 @@ export default function App() {
     [ensureEditable, ensureImageTarget, insertImageAsset],
   );
 
-  const handlePrint = useCallback(() => {
+  const handlePrint = useCallback((options?: ExportOptions) => {
     const state = useAppStore.getState();
     if (!state.doc.content.trim()) {
       state.showToast(tNow("There is nothing to print yet."), "info");
       return;
     }
+    const exportOptions = normalizeExportOptions(
+      options ?? state.settings.exportOptions,
+    );
+    state.updateSettings({ exportOptions });
+    const title =
+      frontMatterTitle(state.doc.content) ??
+      (state.doc.name.replace(/\.[^.\\/]+$/, "") || tNow("Untitled"));
+    document.getElementById("marksi-print-page")?.remove();
+    const pageStyle = document.createElement("style");
+    pageStyle.id = "marksi-print-page";
+    pageStyle.textContent = buildPageCss(exportOptions, title);
+    document.head.appendChild(pageStyle);
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) {
+        return;
+      }
+      cleaned = true;
+      pageStyle.remove();
+    };
+    window.addEventListener("afterprint", cleanup, { once: true });
+    window.setTimeout(cleanup, 60_000);
+
     if (state.viewMode !== "reading") {
       state.setViewMode("reading");
     }
@@ -1152,6 +1195,8 @@ export default function App() {
       insertImagePath: handleInsertImagePath,
       pasteImage: handlePasteImage,
       exportHtml: handleExportHtml,
+      openExport: handleOpenExport,
+      closeExport: () => setExportOpen(false),
       copyDocument: handleCopyDocument,
       print: handlePrint,
       openQuickOpen: () => useAppStore.getState().setQuickOpen(true),
@@ -1173,6 +1218,7 @@ export default function App() {
     handleInsertImagePath,
     handlePasteImage,
     handleExportHtml,
+    handleOpenExport,
     handleCopyDocument,
     handlePrint,
   ]);
@@ -1248,7 +1294,7 @@ export default function App() {
         onOpenFolder={() => void handleOpenFolder()}
         onSave={handleSave}
         onSaveAs={handleSaveAs}
-        onExportHtml={handleExportHtml}
+        onExport={handleOpenExport}
         onPrint={handlePrint}
         onCopy={handleCopyDocument}
         onToggleView={handleToggleView}
@@ -1276,6 +1322,13 @@ export default function App() {
       />
       <QuickOpen onOpen={(path) => void handleOpenPath(path)} />
       <SettingsDialog />
+      <ExportDialog
+        open={exportOpen}
+        hasContent={Boolean(doc.content.trim())}
+        onClose={() => setExportOpen(false)}
+        onExport={handleExportHtml}
+        onPrint={handlePrint}
+      />
       {draftToRecover ? (
         <DraftRecovery
           draft={draftToRecover}

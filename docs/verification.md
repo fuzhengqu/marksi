@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.04` product version.
+- About dialog close behavior and display of the `0.05` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -86,6 +86,10 @@ The E2E suite currently covers:
 - Source / live-preview / reading mode transitions.
 - Strict mode on/off behavior for compact ATX headings and lax nested list marker indentation, including the Preferences toggle.
 - Chinese settings, language switch to English and back.
+- Export dialog profile switching, front matter toggles, page setup, and the
+  real HTML write. The test replaces only the native save-dialog boundary and
+  verifies escaped metadata, localized document info, `@page` size/margins,
+  header/footer tokens, persisted options, and source retention.
 - Mermaid rendering in reading mode, including SVG sanitization checks.
 - Auto pairing, smart punctuation, and emoji completion.
 - Local image context menu and lightbox action.
@@ -101,9 +105,9 @@ The E2E suite currently covers:
 
 Vitest covers formatting, smart typing, emoji catalogs, i18n, version display
 formatting, zoom math, strict-heading and lax-list normalization, front-matter
-parsing, save-name extraction/sanitization, image helpers, image-source scanning and
-width/height/fit handling, minimal text-change calculation, quick-open ranking,
-and analysis helpers.
+parsing, save-name extraction/sanitization, image helpers, image-source scanning
+and width/height/fit handling, export profiles and page CSS, metadata escaping,
+minimal text-change calculation, quick-open ranking, and analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic writes, image import and
 data URLs, workspace listing/search, and file timestamps.
 
@@ -117,7 +121,10 @@ possible. GitHub Actions currently runs the publication audit only; the full
 Windows/Linux build-and-test CI matrix remains open under M0. The save-name E2E replaces the native dialog boundary and verifies the
 default filename plus the real write; the exact native dialog text remains a
 manual release check. Before a release build, the native-dialog checklist must still be
-exercised on Windows and Linux.
+exercised on Windows and Linux. Print/PDF pagination, including CSS margin-box
+headers and footers, depends on the platform print engine; automated tests cover
+the generated CSS, not the final paginated output. The native print preview must
+be checked manually on each supported platform.
 
 No finite test suite can prove the absence of every bug. The gate guarantees
 that all listed automated paths pass and that no known reproducible failure is

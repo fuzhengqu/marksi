@@ -10,6 +10,7 @@ import { tex } from "@mdit/plugin-tex";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import { extractFrontMatter } from "./frontMatter";
+import { escapeHtml } from "./htmlEscape";
 import { classifyImageSource } from "./images";
 import { normalizeLaxMarkdown } from "./strictMarkdown";
 import hljs from "highlight.js/lib/core";
@@ -120,15 +121,6 @@ md.use(footnote)
       }
     },
   });
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 function slugifyHeading(value: string): string {
   return (

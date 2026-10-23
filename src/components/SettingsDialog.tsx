@@ -13,29 +13,7 @@ import { useT } from "../i18n";
 import { ZOOM_MAX, ZOOM_MIN, zoomPercent } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { AppSettings, Language, Theme } from "../types";
-
-function Toggle({
-  checked,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      className={`switch ${checked ? "is-on" : ""}`}
-      onClick={() => onChange(!checked)}
-    >
-      <span className="switch-knob" />
-    </button>
-  );
-}
+import { Toggle } from "./Toggle";
 
 export function SettingsDialog() {
   const t = useT();

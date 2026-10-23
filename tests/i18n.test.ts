@@ -10,6 +10,12 @@ describe("translate", () => {
     );
   });
 
+  it("localizes export dialog labels", () => {
+    expect(translate("zh-CN", "Export document")).toBe("导出文档");
+    expect(translate("zh-CN", "Export HTML")).toBe("导出 HTML");
+    expect(translate("zh-CN", "Page setup")).toBe("页面设置");
+  });
+
   it("returns the source label for English", () => {
     expect(translate("en", "New document")).toBe("New document");
   });

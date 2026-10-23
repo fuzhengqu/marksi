@@ -7,7 +7,7 @@ import {
   Code2,
   Copy,
   Eye,
-  FileCode2,
+  FileDown,
   FilePlus2,
   FileText,
   Focus,
@@ -59,7 +59,7 @@ interface MenuOverlayProps {
   onOpenFolder: () => void;
   onSave: () => void;
   onSaveAs: () => void;
-  onExportHtml: () => void;
+  onExport: () => void;
   onPrint: () => void;
   onCopy: (format: CopyFormat) => void;
   onToggleView: () => void;
@@ -80,7 +80,7 @@ export function MenuOverlay({
   onOpenFolder,
   onSave,
   onSaveAs,
-  onExportHtml,
+  onExport,
   onPrint,
   onCopy,
   onToggleView,
@@ -266,9 +266,9 @@ export function MenuOverlay({
               />
               <div className="menu-separator" />
               <MenuItem
-                icon={<FileCode2 size={16} strokeWidth={1.8} />}
-                label={t("HTML document…")}
-                onClick={() => run(onExportHtml)}
+                icon={<FileDown size={16} strokeWidth={1.8} />}
+                label={t("Export…")}
+                onClick={() => run(onExport)}
               />
               <MenuItem
                 icon={<Printer size={16} strokeWidth={1.8} />}

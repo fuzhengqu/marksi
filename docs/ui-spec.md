@@ -219,6 +219,26 @@ ease-out; honor `prefers-reduced-motion`.
 - Each action confirms success with a transient toast. Clipboard HTML never
   introduces raw HTML or remote asset fetches beyond the normal renderer.
 
+## Export
+
+- File > Export... opens a compact dialog with Document, Print, Minimal, and
+  Custom profiles. Choosing a preset fills the controls; editing any control
+  switches the profile to Custom and persists the resulting options.
+- Front matter controls whether YAML metadata supplies the HTML title, whether
+  author/description/keywords meta tags are emitted, and whether a sanitized
+  metadata panel appears above the exported body. Metadata values are escaped;
+  front matter itself is never rendered as document content.
+- Page setup controls paper size, orientation, margins, and optional header and
+  footer templates. Templates accept `{title}`, `{page}`, and `{pages}`. The
+  dialog shows the token help inline.
+- Export HTML writes a standalone file through the native save dialog. Print /
+  PDF switches to reading view, injects the same `@page` rules, waits for
+  Mermaid rendering, and opens the system print dialog.
+- The operating system print dialog may add or override headers and footers.
+  CSS margin-box support varies by print engine; the exported HTML remains valid
+  when a margin box is ignored.
+- Empty documents show an inline note and disable both export actions.
+
 ## Images
 
 - The menu exposes Image... under Format. Insertion uses the same flow as
@@ -278,8 +298,9 @@ ease-out; honor `prefers-reduced-motion`.
 
 - YAML front matter is recognized only at the top of a document and is hidden
   from preview. The source remains visible and editable in the editor. HTML
-  export reads `title`, `author`, `description`, `keywords`, and `tags` for
-  document metadata.
+  export can read `title`, `author`, `date`, `description`, `keywords`, and
+  `tags` for document metadata; the export dialog can disable all front matter
+  use or enable a visible document-info panel.
 - A paragraph containing only `[TOC]` is replaced by a linked contents block
   built from the document headings. The block updates as headings change, and
   the placeholder disappears when there are no headings.
