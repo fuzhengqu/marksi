@@ -365,7 +365,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.10"), "About should show version 0.10", state);
+    assert(state.version?.includes("0.11"), "About should show version 0.11", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1056,6 +1056,67 @@ async function main() {
       })()`).catch(() => {});
       await rm(pngPath, { force: true });
       await rm(imageDoc, { force: true });
+      await resetBase();
+    }
+  });
+
+  await test("remote images load only after explicit opt-in", async () => {
+    await resetBase();
+    const remoteUrl = "https://example.com/pixel.png";
+    const pixel =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
+    try {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setRemoteImageLoaderForTests(async () => ${JSON.stringify(pixel)});
+      })()`);
+      await evaluate(
+        `window.__MARKSI_DEV__.setContent(${JSON.stringify(
+          `![remote](${remoteUrl})`,
+        )})`,
+      );
+      await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+      await waitFor(
+        'document.querySelector(".markdown-body [data-marksi-remote-src]")',
+      );
+      const off = await evaluate(`({
+        placeholder: Boolean(document.querySelector(".markdown-body [data-marksi-remote-src]")),
+        loaded: Boolean(document.querySelector('.markdown-body img[data-marksi-remote="true"]')),
+        setting: window.__MARKSI_DEV__.getState().settings.loadRemoteImages
+      })`);
+      assert(off.setting === false, "remote images should be off by default", off);
+      assert(off.placeholder && !off.loaded, "remote image loaded without opt-in", off);
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ loadRemoteImages: true })',
+      );
+      await waitFor(
+        'document.querySelector(\'.markdown-body img[data-marksi-remote="true"]\')',
+      );
+      const on = await evaluate(`({
+        src: document.querySelector('.markdown-body img[data-marksi-remote="true"]')?.getAttribute("src") ?? "",
+        title: document.querySelector('.markdown-body img[data-marksi-remote="true"]')?.getAttribute("title") ?? "",
+        placeholder: Boolean(document.querySelector(".markdown-body [data-marksi-remote-src]"))
+      })`);
+      assert(on.src.startsWith("data:image/png;base64,"), "remote image was not cached as data", on);
+      assert(on.title === remoteUrl, "remote image title is wrong", on);
+      assert(!on.placeholder, "remote placeholder should be replaced", on);
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ loadRemoteImages: false })',
+      );
+      await waitFor(
+        'document.querySelector(".markdown-body [data-marksi-remote-src]")',
+      );
+      const restored = await evaluate(
+        'Boolean(document.querySelector(\'.markdown-body img[data-marksi-remote="true"]\'))',
+      );
+      assert(!restored, "remote image should disappear when opt-in is disabled");
+    } finally {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setRemoteImageLoaderForTests(null);
+      })()`).catch(() => {});
       await resetBase();
     }
   });

@@ -12,7 +12,10 @@ import {
   X,
 } from "lucide-react";
 import { useT } from "../i18n";
-import { pandocVersion } from "../lib/platform";
+import {
+  clearRemoteImageCache,
+  pandocVersion,
+} from "../lib/platform";
 import { ZOOM_MAX, ZOOM_MIN, zoomPercent } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { AppSettings, Language, Theme } from "../types";
@@ -30,6 +33,7 @@ export function SettingsDialog() {
   const [pandocDetected, setPandocDetected] = useState<string | null>(null);
   const [pandocError, setPandocError] = useState<string | null>(null);
   const [pandocDetecting, setPandocDetecting] = useState(false);
+  const [clearingRemoteCache, setClearingRemoteCache] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -53,6 +57,30 @@ export function SettingsDialog() {
     value: AppSettings[K],
   ) {
     updateSettings({ [key]: value } as Pick<AppSettings, K>);
+  }
+
+  async function clearRemoteCache(): Promise<void> {
+    setClearingRemoteCache(true);
+    try {
+      const count = await clearRemoteImageCache();
+      useAppStore
+        .getState()
+        .showToast(
+          count > 0
+            ? t("Cleared {count} cached images.", { count })
+            : t("Remote image cache is already empty."),
+          "success",
+        );
+    } catch (error) {
+      useAppStore
+        .getState()
+        .showToast(
+          error instanceof Error ? error.message : String(error),
+          "error",
+        );
+    } finally {
+      setClearingRemoteCache(false);
+    }
   }
 
   async function detectPandoc(): Promise<void> {
@@ -356,6 +384,43 @@ export function SettingsDialog() {
             <p className="settings-note">
               {t(
                 "Inserted, dropped, and pasted images are copied into this folder. Use a relative path such as assets or media/images.",
+              )}
+            </p>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Load remote images")}</span>
+                <small>
+                  {t(
+                    "Download remote images only after you enable this. Images are cached locally.",
+                  )}
+                </small>
+              </div>
+              <Toggle
+                label={t("Load remote images")}
+                checked={settings.loadRemoteImages}
+                onChange={(value) => update("loadRemoteImages", value)}
+              />
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Remote image cache")}</span>
+                <small>
+                  {t("Cached images stay on this device.")}
+                </small>
+              </div>
+              <button
+                className="button"
+                onClick={() => void clearRemoteCache()}
+                disabled={clearingRemoteCache}
+              >
+                {clearingRemoteCache
+                  ? t("Clearing…")
+                  : t("Clear cache")}
+              </button>
+            </div>
+            <p className="settings-note">
+              {t(
+                "Remote requests go directly to the image host. Localhost, private addresses, redirects, non-image responses, and files over 10 MB are blocked. MarkSI never uploads images.",
               )}
             </p>
           </section>

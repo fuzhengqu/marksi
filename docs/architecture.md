@@ -82,10 +82,20 @@ contain parent traversal or a drive prefix.
 
 Preview never loads local files directly. `read_image_data_url` validates and
 reads the asset, then returns a data URL that the sanitized preview displays.
-Remote images are intentionally replaced by labelled placeholders in preview;
-exported HTML keeps their original URL. Missing local assets also degrade to
-placeholders. The preview lightbox is a frontend-only zoom surface and does not
-modify the document.
+Remote images are labelled placeholders by default; exported HTML keeps their
+original URL. Missing local assets also degrade to placeholders. The preview
+lightbox is a frontend-only zoom surface and does not modify the document.
+
+Remote image loading is an explicit opt-in. With the setting enabled, the
+preview asks `remote_image_data_url` for each placeholder. Rust validates the
+URL, rejects localhost/private/link-local/multicast addresses and embedded
+credentials, resolves the host and rejects private DNS answers, fetches through
+WinHTTP on Windows or system curl on Linux, caps the response at 10 MB, verifies
+that it is a supported image, and stores it atomically under the app cache
+folder keyed by SHA-256 of the URL. Redirects are not followed. Cached images are
+returned as data URLs; `clear_remote_image_cache` removes them. No image is ever
+uploaded. Turning the setting off remounts the preview and restores
+placeholders.
 
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
@@ -386,14 +396,17 @@ success toasts.
 - Pandoc is an optional external process with fixed arguments, a timeout, and
   bounded diagnostics. It is not bundled or downloaded. Imported media is
   embedded only after canonical path validation against the temporary folder.
+- Remote image fetches validate schemes, credentials, hosts, DNS answers, size,
+  and image type before an atomic cache write. Windows uses WinHTTP; Linux uses
+  system curl. No upload path exists.
 - No activation, account, or telemetry subsystem exists.
 
 ## Current surface (M4/M5)
 
 Document commands: `read_document`, `write_document`, `write_export`,
 `write_export_binary`, `list_directory`, `app_version`,
-`run_export_command`, `pandoc_version`, `pandoc_export`, and
-`pandoc_import`. Workspace commands:
+`run_export_command`, `pandoc_version`, `pandoc_export`,
+`pandoc_import`, `remote_image_data_url`, and `clear_remote_image_cache`. Workspace commands:
 `list_workspace_files`, `search_workspace`, and `file_modified_ms`. Image
 commands: `import_image_asset`, `save_image_data`, and `read_image_data_url`.
 

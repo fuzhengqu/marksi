@@ -391,6 +391,19 @@ const ZH: Record<string, string> = {
     "这些模式也可以从“视图”菜单切换。专注、打字机和只读模式的快捷键分别是 Ctrl Alt F、Ctrl Alt T 和 Ctrl Alt R。",
   "Relative to the document folder.": "相对于文档所在文件夹。",
   "Image asset folder": "图片资源文件夹",
+  "Load remote images": "加载远程图片",
+  "Download remote images only after you enable this. Images are cached locally.":
+    "仅在开启后下载远程图片。图片会缓存到本地。",
+  "Remote image cache": "远程图片缓存",
+  "Cached images stay on this device.": "缓存的图片保存在本设备上。",
+  "Clear cache": "清除缓存",
+  "Clearing…": "正在清除…",
+  "Cleared {count} cached images.": "已清除 {count} 张缓存图片。",
+  "Remote image cache is already empty.": "远程图片缓存已为空。",
+  "Remote requests go directly to the image host. Localhost, private addresses, redirects, non-image responses, and files over 10 MB are blocked. MarkSI never uploads images.":
+    "远程请求直接发往图片主机。会阻止 localhost、私有地址、重定向、非图片响应和超过 10 MB 的文件。MarkSI 从不上传图片。",
+  "Remote images are only available in the desktop app.":
+    "远程图片仅在桌面应用中可用。",
   "Inserted, dropped, and pasted images are copied into this folder. Use a relative path such as assets or media/images.":
     "插入、拖放和粘贴的图片会复制到此文件夹。请使用相对路径，例如 assets 或 media/images。",
   "Save named documents automatically after a pause.":

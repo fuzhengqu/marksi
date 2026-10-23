@@ -130,7 +130,7 @@ expanded. The canonical Markdown source is never rewritten.
 | Image width resize (drag handle) | done | M5 |
 | Image height resize (drag handle) | done | M5 |
 | Image fit controls (contain/cover) | done | M5 |
-| Remote image cache | todo | M5 |
+| Remote image cache (opt-in) | done | M5 |
 | Root URL / uploader path mode | todo | M5 |
 | Uploader integration (PicGo/PicList/custom) | todo | M5 |
 
@@ -176,7 +176,8 @@ It waits for local images, fonts, and Mermaid rendering before capture, then
 limits the canvas by dimension and total pixels so the browser can allocate it.
 Documents below the minimum readable scale are rejected with a clear message
 instead of producing an unreadable or blank file. Remote images remain
-placeholders, so capture never depends on a network request.
+placeholders unless the user has explicitly enabled the remote cache; capture
+never starts a new network request on its own.
 
 Pandoc export is optional and works only with an externally installed Pandoc.
 Preferences stores an optional executable path; empty means `pandoc` from PATH.
@@ -187,6 +188,13 @@ folder as its resource path, then saves the result atomically. Pandoc is never
 bundled or downloaded. It may fetch remote images referenced by the document,
 so the UI states that explicitly; relative local images require a saved
 document.
+
+Remote image loading is opt-in and off by default. When enabled, http/https
+images are fetched only on demand, validated as image data, capped at 10 MB,
+and cached under the app cache folder. Localhost, private, link-local,
+multicast, and credential-bearing URLs are rejected; redirects are not followed.
+The Settings dialog can clear the cache. MarkSI never uploads images. Root
+URL/path resolution and third-party uploaders remain open items.
 
 Pandoc import accepts DOCX, ODT, EPUB, RTF, HTML, and HTM. It converts to Pandoc
 Markdown in a temporary folder, embeds extracted images as data URLs in the new

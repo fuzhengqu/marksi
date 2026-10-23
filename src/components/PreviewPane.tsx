@@ -28,6 +28,7 @@ import {
   openExternal,
   openLocalPath,
   readImageDataUrl,
+  remoteImageDataUrl,
   revealLocalPath,
 } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
@@ -148,6 +149,9 @@ export function PreviewPane({
   const debouncedContent = useDebouncedValue(content, 90);
   const readOnlyMode = useAppStore((state) => state.settings.readOnlyMode);
   const strictMode = useAppStore((state) => state.settings.strictMode);
+  const loadRemoteImages = useAppStore(
+    (state) => state.settings.loadRemoteImages,
+  );
   const resizeLabel = t("Resize image");
   const heightResizeLabel = t("Resize image height");
   const html = useMemo(
@@ -238,6 +242,47 @@ export function PreviewPane({
       cancelled = true;
     };
   }, [baseDirectory, html]);
+
+  useEffect(() => {
+    const surface = surfaceRef.current;
+    if (!surface || !loadRemoteImages) {
+      return;
+    }
+    let cancelled = false;
+    const placeholders = Array.from(
+      surface.querySelectorAll<HTMLElement>("[data-marksi-remote-src]"),
+    );
+    placeholders.forEach((placeholder) => {
+      const url = placeholder.dataset.marksiRemoteSrc ?? "";
+      if (!url) {
+        return;
+      }
+      void remoteImageDataUrl(url)
+        .then((source) => {
+          if (cancelled || !placeholder.isConnected) {
+            return;
+          }
+          const image = document.createElement("img");
+          image.src = source;
+          image.alt = placeholder.getAttribute("aria-label") ?? "Image";
+          image.className = "markdown-image remote-image is-loaded";
+          image.dataset.marksiImage = "true";
+          image.dataset.marksiRemote = "true";
+          image.loading = "lazy";
+          image.title = url;
+          placeholder.replaceWith(image);
+        })
+        .catch((error) => {
+          if (!cancelled && placeholder.isConnected) {
+            placeholder.dataset.marksiError = "true";
+            placeholder.title = `Could not load ${url}: ${messageFor(error)}`;
+          }
+        });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [html, loadRemoteImages]);
 
   useEffect(() => {
     setContextMenu(null);
@@ -570,6 +615,7 @@ export function PreviewPane({
         onContextMenu={handleContextMenu}
       >
         <article
+          key={loadRemoteImages ? "remote-images-on" : "remote-images-off"}
           className="markdown-body"
           dangerouslySetInnerHTML={{ __html: html }}
         />

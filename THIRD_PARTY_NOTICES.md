@@ -21,6 +21,8 @@ icons, translations, or branding are included.
 | Mermaid | MIT |
 | DOMPurify | MPL-2.0 OR Apache-2.0 |
 | html-to-image | MIT |
+| sha2 | MIT OR Apache-2.0 |
+| url | MIT OR Apache-2.0 |
 | highlight.js | BSD-3-Clause |
 | encoding_rs | Apache-2.0 OR MIT |
 | chardetng | Apache-2.0 OR MIT |
@@ -44,6 +46,10 @@ Apache-2.0 option.
 Pandoc is an optional external tool and is not bundled or distributed with
 MarkSI. If the user installs it separately, Pandoc's own license
 (GPL-2.0-or-later) applies to that separate program.
+
+Remote image loading uses the operating system's WinHTTP API on Windows or the
+system curl executable on Linux. Neither is bundled by MarkSI; Linux users need
+curl installed separately to enable remote image caching.
 
 The complete dependency tree and exact license texts are available from the
 package manifests, `node_modules`, and the Cargo registry used for a given build.

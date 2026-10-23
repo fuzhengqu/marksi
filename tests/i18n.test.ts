@@ -17,6 +17,8 @@ describe("translate", () => {
     expect(translate("zh-CN", "Export with Pandoc")).toBe("使用 Pandoc 导出");
     expect(translate("zh-CN", "Pandoc export…")).toBe("Pandoc 导出…");
     expect(translate("zh-CN", "Pandoc import…")).toBe("Pandoc 导入…");
+    expect(translate("zh-CN", "Load remote images")).toBe("加载远程图片");
+    expect(translate("zh-CN", "Remote image cache")).toBe("远程图片缓存");
   });
 
   it("returns the source label for English", () => {

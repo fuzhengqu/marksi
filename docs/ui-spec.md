@@ -292,8 +292,14 @@ ease-out; honor `prefers-reduced-motion`.
 - Preferences > Images configures a document-relative asset folder. The default
   is `assets`; absolute paths and `..` traversal are rejected.
 - Local images render inline in preview. Remote images, unsafe sources, and
-  missing files render as labelled placeholders instead of making a network
-  request.
+  missing files render as labelled placeholders by default.
+- Preferences > Images has an off-by-default "Load remote images" toggle. When
+  enabled, http/https placeholders are replaced with locally cached data URLs.
+  Turning it off immediately restores placeholders. A "Clear cache" action
+  removes cached files. Localhost, private addresses, redirects, non-image
+  responses, credential-bearing URLs, and files over 10 MB are rejected.
+- No image is uploaded by MarkSI. Network access happens only for explicitly
+  enabled remote images, never during normal preview or image export.
 - Clicking a rendered image opens a full-window lightbox over a dimmed scrim.
   The toolbar provides zoom out, zoom in, reset, and close. `+`, `-`, `0`, and
   `Esc` work from the keyboard. Zoom is bounded to 50%-400%.

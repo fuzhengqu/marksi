@@ -348,10 +348,16 @@ function imageDimensionAttributes(token: Token): string {
     : dimensions;
 }
 
-function imagePlaceholder(alt: string, label: string, detail?: string): string {
+function imagePlaceholder(
+  alt: string,
+  label: string,
+  detail?: string,
+  attributes = "",
+): string {
   return [
     `<span class="image-placeholder" role="img" aria-label="${escapeHtml(alt)}"`,
     detail ? ` title="${escapeHtml(detail)}"` : "",
+    attributes,
     `>`,
     `<span class="image-placeholder-mark" aria-hidden="true">${escapeHtml(label)}</span>`,
     `<span class="image-placeholder-copy"><span>${escapeHtml(alt)}</span>`,
@@ -389,7 +395,12 @@ md.renderer.rules.image = (tokens, index, _options, environment) => {
   }
 
   if (source.kind === "remote") {
-    return imagePlaceholder(alt, "REMOTE", raw);
+    return imagePlaceholder(
+      alt,
+      "REMOTE",
+      raw,
+      ` data-marksi-remote-src="${escapeHtml(raw)}"`,
+    );
   }
 
   const image =

@@ -1,6 +1,6 @@
 [package]
 name = "marksi"
-version = "0.10.0"
+version = "0.11.0"
 description = "MarkSI - a focused Markdown studio for Windows and Linux"
 authors = ["MarkSI contributors"]
 edition = "2021"
@@ -27,6 +27,8 @@ dunce = "1"
 walkdir = "2"
 base64 = "0.22"
 regex = "1"
+sha2 = "0.10"
+url = "2"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59", features = ["Win32_Storage_FileSystem"] }
+windows-sys = { version = "0.59", features = ["Win32_Storage_FileSystem", "Win32_Networking_WinHttp", "Win32_Foundation"] }

@@ -16,6 +16,8 @@ pub fn run() {
             commands::pandoc::pandoc_version,
             commands::pandoc::pandoc_export,
             commands::pandoc::pandoc_import,
+            commands::remote_image::remote_image_data_url,
+            commands::remote_image::clear_remote_image_cache,
             commands::workspace::list_workspace_files,
             commands::workspace::search_workspace,
             commands::workspace::file_modified_ms,

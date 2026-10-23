@@ -24,6 +24,9 @@ external link handling, custom export command execution, and the Tauri
 capability configuration. Custom export and optional Pandoc export/import are
 opt-in external-process features: only configure executables that you trust.
 Pandoc is not bundled and may fetch remote resources referenced by the document.
+Remote image caching is also opt-in and off by default; it validates schemes,
+credentials, hosts, private addresses, response size, and image type, does not
+follow redirects, and never uploads images.
 
 ## Supported versions
 

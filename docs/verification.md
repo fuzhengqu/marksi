@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.10` product version.
+- About dialog close behavior and display of the `0.11` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -99,6 +99,9 @@ The E2E suite currently covers:
 - PNG image export from the reading view: signature and IHDR dimensions, decoded
   pixel diversity (not a blank canvas), native save-dialog filter, source
   retention, and reading-view transition.
+- Remote image opt-in: placeholders remain while disabled, enabling replaces
+  them with a cached data URL, and disabling restores placeholders. The E2E
+  loader is a test seam; real fetching is covered by Rust WinHTTP tests.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -134,7 +137,8 @@ image import and data URLs, workspace listing/search, file timestamps,
 custom-command validation, successful/non-zero execution, missing executables,
 working-directory handling, Pandoc argument construction, format allowlisting,
 bounded process-output capture, media path validation, percent-decoded paths,
-and media embedding limits.
+media embedding limits, remote URL/private-address validation, image sniffing,
+cache round trips/clearing, and a real local WinHTTP fetch.
 
 ## Limits and native-dialog checks
 
@@ -163,6 +167,15 @@ manual DOCX/EPUB check. Imported images are inlined as data URLs, which can make
 the Markdown source large; very large imported documents should be checked
 manually for memory and save-size behavior. PDF import/export is not offered
 because it requires an additional PDF engine.
+
+Remote image fetching is tested with a local WinHTTP server and a test seam for
+the preview. Linux uses system curl, which must be installed separately; the
+Linux path is covered by code review and manual checks. Redirects are
+deliberately not followed. DNS is resolved and private answers are rejected, but
+a hostile DNS service could still change answers between validation and the
+request; the setting remains off by default. Cached responses have no TTL, so
+users must clear the cache to refresh a changed remote image. The cache location
+is the platform app cache directory, not the document folder.
 
 No finite test suite can prove the absence of every bug. The gate guarantees
 that all listed automated paths pass and that no known reproducible failure is

@@ -133,6 +133,7 @@ export interface AppSettings {
   customExportProgram: string;
   customExportArgs: string;
   pandocPath: string;
+  loadRemoteImages: boolean;
 }
 
 export interface DocumentDraft {

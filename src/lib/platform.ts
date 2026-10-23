@@ -47,8 +47,11 @@ export type TestOpenDialog = (
   options: OpenDialogOptions,
 ) => Promise<string | null>;
 
+export type TestRemoteImageLoader = (url: string) => Promise<string>;
+
 let testSaveDialog: TestSaveDialog | null = null;
 let testOpenDialog: TestOpenDialog | null = null;
+let testRemoteImageLoader: TestRemoteImageLoader | null = null;
 
 /**
  * Lets the E2E suite observe and answer the save dialog without opening a
@@ -63,6 +66,14 @@ export function setSaveDialogForTests(dialog: TestSaveDialog | null): void {
 export function setOpenDialogForTests(dialog: TestOpenDialog | null): void {
   if (import.meta.env.DEV) {
     testOpenDialog = dialog;
+  }
+}
+
+export function setRemoteImageLoaderForTests(
+  loader: TestRemoteImageLoader | null,
+): void {
+  if (import.meta.env.DEV) {
+    testRemoteImageLoader = loader;
   }
 }
 
@@ -502,6 +513,27 @@ export async function pandocImport(
     program,
     inputPath,
   });
+}
+
+export async function remoteImageDataUrl(url: string): Promise<string> {
+  if (import.meta.env.DEV && testRemoteImageLoader) {
+    return testRemoteImageLoader(url);
+  }
+  if (!isTauri()) {
+    throw new Error(
+      "Remote images are only available in the desktop app.",
+    );
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<string>("remote_image_data_url", { url });
+}
+
+export async function clearRemoteImageCache(): Promise<number> {
+  if (!isTauri()) {
+    return 0;
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<number>("clear_remote_image_cache");
 }
 
 export async function getAppVersion(): Promise<string> {
