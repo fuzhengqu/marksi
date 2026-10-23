@@ -8,7 +8,9 @@ const WORD_RANGE = /[A-Za-z0-9_]+(?:['’\-][A-Za-z0-9_]+)*/g;
 export function stripInlineMarkdown(value: string): string {
   return value
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/!\[([^\]]*)\]\[[^\]]*\]/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\[[^\]]*\]/g, "$1")
     .replace(/`([^`]+)`/g, "$1")
     .replace(/[*_~]{1,3}/g, "")
     .replace(/<[^>]+>/g, "")

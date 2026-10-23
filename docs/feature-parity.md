@@ -27,6 +27,7 @@ that design decisions do not paint us into a corner.
 | Feature | Status | Milestone |
 |---|---|---|
 | New / open / save / save as | done | M1 |
+| New-document save name from first H1 | done | M5 |
 | Encoding detection and preservation | done | M1 |
 | Line ending detection and preservation | done | M1 |
 | Atomic save | done | M1 |

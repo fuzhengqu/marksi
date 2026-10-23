@@ -75,6 +75,9 @@ The E2E suite currently covers:
   Quit placement, and absent menu footer.
 - About dialog close behavior.
 - New-document transition, welcome dismissal, focus, and toast.
+- New-document save dialog default names from the first H1 and the untitled
+  fallback. The test suite replaces only the native dialog boundary so the
+  complete save/write flow still runs.
 - Opening a Markdown fixture in editable live preview.
 - Live-preview editing, hidden inactive markers, and source retention.
 - Chinese CodeMirror search panel and Escape dismissal.
@@ -90,8 +93,9 @@ The E2E suite currently covers:
 - Final cleanup and removal of fixture paths from recent files.
 
 Vitest covers formatting, smart typing, emoji catalogs, i18n, zoom math,
-front-matter parsing, image helpers, image-source scanning and width clamping,
-minimal text-change calculation, quick-open ranking, and analysis helpers.
+front-matter parsing, save-name extraction/sanitization, image helpers,
+image-source scanning and width clamping, minimal text-change calculation,
+quick-open ranking, and analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic writes, image import and
 data URLs, workspace listing/search, and file timestamps.
 
@@ -101,7 +105,9 @@ Some operating-system dialogs cannot be driven reliably through CDP alone:
 native open/save/folder/image pickers, print/PDF dialogs, drag-and-drop from the
 OS shell, external browser launches, and the final Quit action. Their underlying
 file and image logic is covered by Rust tests and by dev-hook/E2E flows where
-possible. Before a release build, the native-dialog checklist must still be
+possible. The save-name E2E replaces the native dialog boundary and verifies the
+default filename plus the real write; the exact native dialog text remains a
+manual release check. Before a release build, the native-dialog checklist must still be
 exercised on Windows and Linux.
 
 No finite test suite can prove the absence of every bug. The gate guarantees

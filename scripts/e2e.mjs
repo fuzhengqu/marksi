@@ -1,4 +1,4 @@
-import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const port = process.env.MARKSI_CDP_PORT ?? "9222";
@@ -366,6 +366,80 @@ async function main() {
     assert(state.viewMode === "preview", "new document should open in preview", state);
     assert(state.focused, "editor should be focused", state);
     assert(state.toast?.includes("已新建空白文档"), "missing new-document toast", state);
+  });
+
+  await test("new document save dialog uses its first level heading", async () => {
+    const headingSavePath = resolve(fixtureDir, "save-heading.md");
+    const untitledSavePath = resolve(fixtureDir, "save-untitled.md");
+    await resetBase();
+    try {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        window.__MARKSI_SAVE_CAPTURE__ = null;
+        window.__MARKSI_SAVE_RETURN__ = ${JSON.stringify(headingSavePath)};
+        platform.setSaveDialogForTests(async (options) => {
+          window.__MARKSI_SAVE_CAPTURE__ = options;
+          return window.__MARKSI_SAVE_RETURN__;
+        });
+      })()`);
+      await evaluate(
+        'window.__MARKSI_DEV__.setContent("# 项目计划\\n\\n正文内容")',
+      );
+      await evaluate("window.__MARKSI_DEV__.save()");
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(headingSavePath) +
+          " && !window.__MARKSI_DEV__.getState().doc.dirty",
+        10_000,
+      );
+      const headingCapture = await evaluate(
+        "window.__MARKSI_SAVE_CAPTURE__",
+      );
+      assert(
+        headingCapture?.defaultPath === "项目计划.md",
+        "the save dialog should default to the H1 filename",
+        headingCapture,
+      );
+      const savedMarkdown = await readFile(headingSavePath, "utf8");
+      assert(
+        savedMarkdown.includes("# 项目计划"),
+        "the save flow should write the edited Markdown",
+        savedMarkdown,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.getState().newDocument()");
+      await evaluate(
+        'window.__MARKSI_DEV__.setContent("## 只有二级标题\\n\\n正文内容")',
+      );
+      await evaluate(
+        `window.__MARKSI_SAVE_RETURN__ = ${JSON.stringify(untitledSavePath)}`,
+      );
+      await evaluate("window.__MARKSI_DEV__.save()");
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(untitledSavePath),
+        10_000,
+      );
+      const untitledCapture = await evaluate(
+        "window.__MARKSI_SAVE_CAPTURE__",
+      );
+      assert(
+        untitledCapture?.defaultPath === "未命名.md",
+        "a document without an H1 should keep the untitled save name",
+        untitledCapture,
+      );
+    } finally {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setSaveDialogForTests(null);
+        window.__MARKSI_DEV__.getState().newDocument();
+        delete window.__MARKSI_SAVE_CAPTURE__;
+        delete window.__MARKSI_SAVE_RETURN__;
+      })()`).catch(() => {});
+      await rm(headingSavePath, { force: true });
+      await rm(untitledSavePath, { force: true });
+      await resetBase();
+    }
   });
 
   await test("opened Markdown starts in editable live preview", async () => {

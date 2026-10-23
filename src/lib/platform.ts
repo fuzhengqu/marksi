@@ -27,6 +27,27 @@ function normalizeContent(text: string): string {
   return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
 
+export interface SaveDialogOptions {
+  defaultPath?: string;
+  filters: Array<{ name: string; extensions: string[] }>;
+}
+
+export type TestSaveDialog = (
+  options: SaveDialogOptions,
+) => Promise<string | null>;
+
+let testSaveDialog: TestSaveDialog | null = null;
+
+/**
+ * Lets the E2E suite observe and answer the save dialog without opening a
+ * native window. The setter is inert in production builds.
+ */
+export function setSaveDialogForTests(dialog: TestSaveDialog | null): void {
+  if (import.meta.env.DEV) {
+    testSaveDialog = dialog;
+  }
+}
+
 async function pickBrowserFile(accept = ".md,.markdown,.mdown,.mkd,.mdwn,.mmd,.txt,text/markdown,text/plain"): Promise<File | null> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
@@ -252,14 +273,18 @@ export async function saveDocument(
 
   let path = doc.path;
   if (saveAs || !path) {
-    const selected = await save({
+    const options: SaveDialogOptions = {
       defaultPath: doc.path ?? doc.name ?? "Untitled.md",
       filters: [
         { name: "Markdown", extensions: ["md", "markdown", "mdown", "mkd", "mdwn", "mmd"] },
         { name: "Text", extensions: ["txt"] },
         { name: "All files", extensions: ["*"] },
       ],
-    });
+    };
+    const selected =
+      import.meta.env.DEV && testSaveDialog
+        ? await testSaveDialog(options)
+        : await save(options);
     if (!selected) {
       return null;
     }

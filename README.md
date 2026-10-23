@@ -181,6 +181,9 @@ The interface and writing flow also include:
   only that entry. File > Clear recent files empties the whole list.
 - New-document actions clear the editor, dismiss the welcome surface, focus the
   blank editor, and show a confirmation toast so the transition is unambiguous.
+- Saving a new document suggests its first level-one heading as the filename;
+  documents without an H1 keep the localized untitled name. Existing documents
+  retain their filename for Save As.
 - A Chinese-first interface with an English option, and a live-preview editing
   mode that keeps Markdown source canonical.
 

@@ -38,8 +38,10 @@ describe("extractOutline", () => {
 describe("stripInlineMarkdown", () => {
   it("removes common inline markers without flattening the words", () => {
     expect(
-      stripInlineMarkdown("A [link](https://example.com) and `code` and **bold**"),
-    ).toBe("A link and code and bold");
+      stripInlineMarkdown(
+        "A [link](https://example.com), [reference][id], and `code` and **bold**",
+      ),
+    ).toBe("A link, reference, and code and bold");
   });
 });
 

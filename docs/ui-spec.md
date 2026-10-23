@@ -74,6 +74,11 @@ ease-out; honor `prefers-reduced-motion`.
 - `Ctrl+Shift+O`: open folder.
 - `Ctrl+S`: save.
 - `Ctrl+Shift+S`: save as.
+- Saving a new document suggests its first level-one heading as the filename,
+  with invalid filesystem characters replaced and a `.md` extension added when
+  needed. If the document has no level-one heading, the existing
+  `未命名.md` / `Untitled.md` name is kept. Existing documents keep their
+  current filename in Save As.
 - `Ctrl+F`: find panel.
 - `Ctrl+H`: find and replace.
 - `Ctrl+P`: quick open across recent files and the workspace.

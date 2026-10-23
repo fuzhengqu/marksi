@@ -18,6 +18,7 @@ import {
 } from "./editor/bridge";
 import type { EditorCommand } from "./editor/format";
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
+import { resolveSaveName } from "./lib/saveName";
 import { tNow, useT } from "./i18n";
 import { clampZoom, stepZoom } from "./lib/zoom";
 import {
@@ -300,13 +301,14 @@ export default function App() {
       const current = state.doc;
       const originalPath = current.path;
       const content = current.content;
+      const name = resolveSaveName(content, current.name, current.path);
       let meta: FileMeta | null = null;
       savingRef.current = true;
       try {
         meta = await saveDocument(
           {
             path: current.path,
-            name: current.name,
+            name,
             content,
             encoding: current.encoding,
             lineEnding: current.lineEnding,

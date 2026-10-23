@@ -164,7 +164,12 @@ dictionary, interpolation, and CodeMirror search-panel phrases. The persisted
 English immediately without a restart. Components subscribe through `useT()`,
 while event handlers use `tNow()` so native confirmations and toasts follow the
 current language. New untitled documents are named `未命名.md` in Chinese and
-`Untitled.md` in English. The document HTML export sets its `lang` attribute
+`Untitled.md` in English. When an unsaved document opens the save dialog,
+`src/lib/saveName.ts` extracts the first level-one heading (ATX or setext,
+ignoring front matter and fenced code), strips inline Markdown, sanitizes
+platform-invalid characters and Windows device names, and adds `.md` when
+needed. Without an H1 it keeps the localized untitled filename. Existing
+documents continue to use their current filename for Save As. The document HTML export sets its `lang` attribute
 from the same setting.
 
 ## Editor view modes
@@ -272,6 +277,8 @@ success toasts.
   editor transactions; it is covered by unit tests.
 - `src/lib/frontMatter.ts` owns front-matter extraction and metadata parsing; it
   is covered by unit tests.
+- `src/lib/saveName.ts` owns first-heading extraction and filename
+  sanitization for new-document save dialogs; it is covered by unit tests.
 - `src/lib/drafts.ts` owns recovery-draft serialization and validation.
 - `src/lib/zoom.ts` owns zoom bounds, stepping, clamping, and percentage
   formatting; it has no DOM or Tauri dependency.
