@@ -115,6 +115,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   customExportArgs: "",
   pandocPath: "",
   loadRemoteImages: false,
+  imageRootPath: "",
 };
 
 const emptyDocument: DocumentState = {
@@ -385,6 +386,10 @@ export const useAppStore = create<AppStore>()(
               typeof saved.settings?.loadRemoteImages === "boolean"
                 ? saved.settings.loadRemoteImages
                 : false,
+            imageRootPath: persistedString(
+              saved.settings?.imageRootPath,
+              4096,
+            ),
           },
         };
       },

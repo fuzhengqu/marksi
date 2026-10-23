@@ -134,6 +134,7 @@ export interface AppSettings {
   customExportArgs: string;
   pandocPath: string;
   loadRemoteImages: boolean;
+  imageRootPath: string;
 }
 
 export interface DocumentDraft {

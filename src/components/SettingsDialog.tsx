@@ -386,6 +386,33 @@ export function SettingsDialog() {
                 "Inserted, dropped, and pasted images are copied into this folder. Use a relative path such as assets or media/images.",
               )}
             </p>
+            <div className="settings-row settings-row-stacked">
+              <div className="settings-copy">
+                <span>{t("Image root path")}</span>
+                <small>
+                  {t(
+                    "Optional folder for /-relative images and as a fallback when an image is not next to the document.",
+                  )}
+                </small>
+              </div>
+              <input
+                className="settings-text"
+                type="text"
+                value={settings.imageRootPath}
+                placeholder="../shared"
+                maxLength={4096}
+                spellCheck={false}
+                onChange={(event) =>
+                  update("imageRootPath", event.target.value)
+                }
+                aria-label={t("Image root path")}
+              />
+            </div>
+            <p className="settings-note">
+              {t(
+                "Use an absolute folder or a path relative to the workspace or document folder. The canonical Markdown is not changed.",
+              )}
+            </p>
             <div className="settings-row">
               <div className="settings-copy">
                 <span>{t("Load remote images")}</span>

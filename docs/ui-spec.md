@@ -291,6 +291,10 @@ ease-out; honor `prefers-reduced-motion`.
   caret when needed. The alt text is derived from the asset filename.
 - Preferences > Images configures a document-relative asset folder. The default
   is `assets`; absolute paths and `..` traversal are rejected.
+- An optional image root path can be absolute or relative to the workspace or
+  document folder. Paths beginning with `/` try the root first; other relative
+  paths try the document folder first and fall back to the root. The canonical
+  Markdown is never rewritten.
 - Local images render inline in preview. Remote images, unsafe sources, and
   missing files render as labelled placeholders by default.
 - Preferences > Images has an off-by-default "Load remote images" toggle. When

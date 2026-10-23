@@ -97,6 +97,13 @@ returned as data URLs; `clear_remote_image_cache` removes them. No image is ever
 uploaded. Turning the setting off remounts the preview and restores
 placeholders.
 
+Local image resolution optionally uses a configured root path. Absolute root
+values are used directly; relative values are joined to the workspace or
+document folder. A path beginning with `/` tries the root first, while other
+relative paths try the document folder first and fall back to the root. The
+preview caches failed reads, so the fallback does not duplicate successful
+loads. This is a read-only resolution aid and never rewrites the Markdown.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set
@@ -345,8 +352,8 @@ success toasts.
   Browser builds use a file input/download fallback.
 - `src/lib/quickOpen.ts` is a pure ranking module; it has no DOM or Tauri
   dependencies and is covered by unit tests.
-- `src/lib/images.ts` owns image classification, path resolution, Markdown
-  generation, and filename helpers; it is covered by unit tests.
+- `src/lib/images.ts` owns image classification, document/root path resolution,
+  Markdown generation, and filename helpers; it is covered by unit tests.
 - `src/lib/imageSize.ts` owns source-image scanning, dimension clamping, and
   source-preserving width/height updates; it is covered by unit tests.
 - `src/lib/textChange.ts` owns minimal text-diff calculation for programmatic

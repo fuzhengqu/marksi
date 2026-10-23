@@ -7,19 +7,19 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.11**
-- Technical version: **0.11.0**
+- Product version: **0.12**
+- Technical version: **0.12.0**
 - Foundation milestones M1 and M3 are complete.
 - M2 core is complete; golden Markdown tests remain open.
 - M4 core is complete, with six planned file/workspace items still open.
-- M5 is in progress with twenty-one completed items and two open items.
+- M5 is in progress with twenty-two completed items and two open items.
 - M6 and M7 have not started.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **85 done, 4 wip,
-31 todo, 1 deferred** across 121 items.
+is the source for exact status values. Current raw count: **86 done, 4 wip,
+31 todo, 1 deferred** across 122 items.
 
 ## Milestone definitions
 
@@ -107,7 +107,7 @@ Exit criteria:
 
 Current M5 completion order:
 
-1. Root URL/path mode for relative image resolution.
+1. Image root URL mode for relative image resolution against a web base.
 2. Uploader integration was explicitly deferred; it requires a separate
    credentials and third-party network review.
 

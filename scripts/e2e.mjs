@@ -365,7 +365,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.11"), "About should show version 0.11", state);
+    assert(state.version?.includes("0.12"), "About should show version 0.12", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1117,6 +1117,49 @@ async function main() {
         const platform = await import("/src/lib/platform.ts");
         platform.setRemoteImageLoaderForTests(null);
       })()`).catch(() => {});
+      await resetBase();
+    }
+  });
+
+  await test("image root path resolves root-relative images", async () => {
+    await resetBase();
+    const rootDir = resolve(fixtureDir, "root-path");
+    const docDir = resolve(rootDir, "docs");
+    const docPath = resolve(docDir, "root.md");
+    try {
+      await mkdir(docDir, { recursive: true });
+      await copyFile(imageFixture, resolve(rootDir, "icon.png"));
+      await writeFile(docPath, "![root](/icon.png)\n", "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.setSettings(${JSON.stringify({
+          imageRootPath: rootDir,
+        })})`,
+      );
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(docPath)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(docPath),
+        10_000,
+      );
+      await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+      await waitFor(
+        'document.querySelector(".markdown-body img.markdown-image[data-marksi-resolved]")',
+        10_000,
+      );
+      const state = await evaluate(`({
+        resolved: document.querySelector(".markdown-body img.markdown-image")?.getAttribute("data-marksi-resolved") ?? "",
+        src: document.querySelector(".markdown-body img.markdown-image")?.getAttribute("src") ?? ""
+      })`);
+      assert(
+        state.resolved.endsWith("/root-path/icon.png"),
+        "root image did not resolve from the configured root",
+        state,
+      );
+      assert(state.src.startsWith("data:image/png;base64,"), "root image did not load", state);
+    } finally {
+      await rm(rootDir, { recursive: true, force: true });
       await resetBase();
     }
   });

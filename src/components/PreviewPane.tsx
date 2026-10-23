@@ -20,7 +20,12 @@ import {
 } from "lucide-react";
 import { useT } from "../i18n";
 import { clampImageHeight, clampImageWidth } from "../lib/imageSize";
-import { directoryName, resolveLocalImagePath } from "../lib/images";
+import {
+  directoryName,
+  resolveImageRootPath,
+  resolveLocalImagePath,
+  resolveRootImagePath,
+} from "../lib/images";
 import { renderMarkdown } from "../lib/markdown";
 import { renderMermaidDiagrams } from "../lib/mermaid";
 import {
@@ -102,6 +107,20 @@ function loadCachedImage(path: string): Promise<string> {
   return request;
 }
 
+async function loadFirstImage(
+  candidates: string[],
+): Promise<{ source: string; path: string }> {
+  let lastError: unknown = null;
+  for (const path of candidates) {
+    try {
+      return { source: await loadCachedImage(path), path };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError ?? new Error("Image path is not local.");
+}
+
 function replaceWithImagePlaceholder(
   image: HTMLImageElement,
   detail: string,
@@ -152,6 +171,9 @@ export function PreviewPane({
   const loadRemoteImages = useAppStore(
     (state) => state.settings.loadRemoteImages,
   );
+  const imageRootSetting = useAppStore(
+    (state) => state.settings.imageRootPath,
+  );
   const resizeLabel = t("Resize image");
   const heightResizeLabel = t("Resize image height");
   const html = useMemo(
@@ -178,6 +200,15 @@ export function PreviewPane({
     () =>
       documentPath ? directoryName(documentPath) : (workspacePath ?? null),
     [documentPath, workspacePath],
+  );
+  const rootDirectory = useMemo(
+    () =>
+      resolveImageRootPath(
+        imageRootSetting,
+        workspacePath,
+        documentPath,
+      ),
+    [documentPath, imageRootSetting, workspacePath],
   );
 
   useEffect(() => {
@@ -208,31 +239,40 @@ export function PreviewPane({
         return;
       }
 
-      const resolved = resolveLocalImagePath(raw, baseDirectory);
-      if (!resolved) {
+      const primary = resolveLocalImagePath(raw, baseDirectory);
+      const root = resolveRootImagePath(raw, rootDirectory);
+      const rootFirst = /^[/\\]/.test(raw.trim());
+      const candidates = [
+        ...new Set(
+          (rootFirst ? [root, primary] : [primary, root]).filter(
+            (value): value is string => Boolean(value),
+          ),
+        ),
+      ];
+      if (!candidates.length) {
         replaceWithImagePlaceholder(image, raw || "Image path is not local.");
         return;
       }
 
-      void loadCachedImage(resolved)
-        .then((source) => {
+      void loadFirstImage(candidates)
+        .then(({ source, path }) => {
           if (cancelled || !image.isConnected) {
             return;
           }
           image.src = source;
           image.dataset.marksiImage = "true";
-          image.dataset.marksiResolved = resolved;
+          image.dataset.marksiResolved = path;
           image.classList.remove("is-loading");
           image.classList.add("is-loaded");
           if (!image.title) {
-            image.title = resolved;
+            image.title = path;
           }
         })
         .catch((error) => {
           if (!cancelled && image.isConnected) {
             replaceWithImagePlaceholder(
               image,
-              `Could not load ${resolved}: ${messageFor(error)}`,
+              `Could not load ${candidates.join(" or ")}: ${messageFor(error)}`,
             );
           }
         });
@@ -241,7 +281,7 @@ export function PreviewPane({
     return () => {
       cancelled = true;
     };
-  }, [baseDirectory, html]);
+  }, [baseDirectory, html, rootDirectory]);
 
   useEffect(() => {
     const surface = surfaceRef.current;

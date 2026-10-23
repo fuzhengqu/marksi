@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.11` product version.
+- About dialog close behavior and display of the `0.12` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -102,6 +102,8 @@ The E2E suite currently covers:
 - Remote image opt-in: placeholders remain while disabled, enabling replaces
   them with a cached data URL, and disabling restores placeholders. The E2E
   loader is a test seam; real fetching is covered by Rust WinHTTP tests.
+- Image root path: a document in a subfolder resolves `/icon.png` from the
+  configured root, while the source Markdown remains unchanged.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -127,7 +129,8 @@ The E2E suite currently covers:
 Vitest covers formatting, smart typing, emoji catalogs, i18n, version display
 formatting, zoom math, strict-heading and lax-list normalization (including
 continuations, quotes, code safety, and CRLF), front-matter parsing, save-name
-extraction/sanitization, image helpers, image-source scanning
+extraction/sanitization, image helpers including document/root path resolution,
+image-source scanning
 and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change

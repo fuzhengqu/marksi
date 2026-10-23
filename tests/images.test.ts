@@ -7,7 +7,9 @@ import {
   extensionForImageMime,
   isImagePath,
   pastedImageName,
+  resolveImageRootPath,
   resolveLocalImagePath,
+  resolveRootImagePath,
 } from "../src/lib/images";
 
 describe("image helpers", () => {
@@ -45,6 +47,36 @@ describe("image helpers", () => {
       null,
     );
     expect(resolveLocalImagePath("assets/a.png", null)).toBe(null);
+  });
+
+  it("resolves an optional image root path", () => {
+    expect(
+      resolveImageRootPath("../shared", "C:\\work\\notes", null),
+    ).toBe("C:/work/notes/../shared");
+    expect(
+      resolveImageRootPath("assets", null, "/home/me/docs/note.md"),
+    ).toBe("/home/me/docs/assets");
+    expect(resolveImageRootPath("/srv/shared", null, null)).toBe(
+      "/srv/shared",
+    );
+    expect(resolveImageRootPath("", "C:\\work", null)).toBe(null);
+    expect(resolveImageRootPath("assets", null, null)).toBe(null);
+  });
+
+  it("maps root-relative and fallback image paths", () => {
+    expect(resolveRootImagePath("/assets/a.png", "C:/site")).toBe(
+      "C:/site/assets/a.png",
+    );
+    expect(resolveRootImagePath("assets/a.png", "C:/site")).toBe(
+      "C:/site/assets/a.png",
+    );
+    expect(resolveRootImagePath("C:\\pictures\\a.png", "C:/site")).toBe(
+      "C:/pictures/a.png",
+    );
+    expect(resolveRootImagePath("https://example.com/a.png", "C:/site")).toBe(
+      null,
+    );
+    expect(resolveRootImagePath("assets/a.png", null)).toBe(null);
   });
 
   it("converts an image to Markdown with an escaped destination", () => {

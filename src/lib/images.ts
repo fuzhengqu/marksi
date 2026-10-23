@@ -119,6 +119,53 @@ export function resolveLocalImagePath(
   return `${base}/${relative}`;
 }
 
+export function resolveImageRootPath(
+  root: string,
+  workspacePath: string | null,
+  documentPath: string | null,
+): string | null {
+  const value = root.trim().replace(/\\/g, "/");
+  if (!value) {
+    return null;
+  }
+  if (/^[A-Za-z]:\//.test(value) || value.startsWith("//")) {
+    return value.replace(/\/+$/, "");
+  }
+  if (value.startsWith("/")) {
+    return value.replace(/\/+$/, "") || "/";
+  }
+  const base = workspacePath ?? (documentPath ? directoryName(documentPath) : null);
+  if (!base) {
+    return null;
+  }
+  return `${base.replace(/\\/g, "/").replace(/\/+$/, "")}/${value.replace(
+    /^\/+/,
+    "",
+  )}`;
+}
+
+export function resolveRootImagePath(
+  raw: string,
+  rootDirectory: string | null,
+): string | null {
+  if (!rootDirectory) {
+    return null;
+  }
+  const source = classifyImageSource(raw);
+  if (source.kind !== "local") {
+    return null;
+  }
+  const value = source.value.replace(/\\/g, "/");
+  if (/^[A-Za-z]:\//.test(value) || value.startsWith("//")) {
+    return value;
+  }
+  const relative = value.replace(/^\/+/, "");
+  if (!relative) {
+    return null;
+  }
+  return `${rootDirectory.replace(/\/+$/, "")}/${relative}`;
+}
+
 export function encodeMarkdownImagePath(path: string): string {
   return path
     .replace(/\\/g, "/")

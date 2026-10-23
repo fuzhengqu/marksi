@@ -22,8 +22,9 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   indentation.
 - **Files and workspace**: open, save, save as, folder workspace, recent files,
   outline, quick open, and full-text search; preserves encoding and line endings.
-- **Images**: insert, drag and drop, or paste; document-relative assets;
-  lightbox; width and height resizing; contain/cover fit and original-size reset.
+- **Images**: insert, drag and drop, or paste; document-relative assets and an
+  optional root path; lightbox; width and height resizing; contain/cover fit and
+  original-size reset.
 - **Export and copy**: standalone HTML with document, print, minimal, or custom
   profiles; front matter metadata and page setup controls; print or save as PDF
   through the system print dialog; an optional user-configured export command

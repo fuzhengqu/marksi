@@ -391,6 +391,11 @@ const ZH: Record<string, string> = {
     "这些模式也可以从“视图”菜单切换。专注、打字机和只读模式的快捷键分别是 Ctrl Alt F、Ctrl Alt T 和 Ctrl Alt R。",
   "Relative to the document folder.": "相对于文档所在文件夹。",
   "Image asset folder": "图片资源文件夹",
+  "Image root path": "图片根路径",
+  "Optional folder for /-relative images and as a fallback when an image is not next to the document.":
+    "用于 / 开头图片的可选文件夹，也在图片不在文档旁边时作为回退。",
+  "Use an absolute folder or a path relative to the workspace or document folder. The canonical Markdown is not changed.":
+    "可使用绝对文件夹，或相对于工作区/文档文件夹的路径。不会修改规范 Markdown。",
   "Load remote images": "加载远程图片",
   "Download remote images only after you enable this. Images are cached locally.":
     "仅在开启后下载远程图片。图片会缓存到本地。",
