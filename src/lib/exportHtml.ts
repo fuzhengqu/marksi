@@ -1,5 +1,6 @@
 import { escapeHtml, renderMarkdown } from "./markdown";
 import { extractFrontMatter } from "./frontMatter";
+import { renderMermaidMarkup } from "./mermaid";
 
 interface ExportDocumentOptions {
   title: string;
@@ -178,6 +179,28 @@ pre code { padding: 0; background: transparent; color: inherit; font-size: 0.88e
   text-transform: uppercase;
 }
 .code-block pre { margin: 0; border-radius: 0; }
+.mermaid-block { margin: 1.35em 0; }
+.mermaid-diagram {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 16px;
+  border: 1px solid #e4e2dd;
+  border-radius: 10px;
+  background: #ffffff;
+}
+.mermaid-diagram svg { max-width: 100%; height: auto; }
+.mermaid-source { margin-top: 7px; color: #6f7378; font-size: 0.78em; }
+.mermaid-source summary { cursor: pointer; }
+.mermaid-source pre { margin-top: 6px; }
+.mermaid-error {
+  padding: 14px;
+  color: #b8473d;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.82em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 .table-scroll { overflow-x: auto; margin: 1.25em 0; }
 table { width: 100%; border-collapse: collapse; font-size: 0.94em; }
 th, td { padding: 8px 11px; border: 1px solid #e4e2dd; text-align: left; vertical-align: top; }
@@ -258,7 +281,9 @@ tr:nth-child(even) td { background: #faf9f7; }
 @media print {
   body { padding: 0; background: #fff; }
   .markdown-body { max-width: none; }
-  pre, blockquote, table, .markdown-alert, .table-of-contents { break-inside: avoid; }
+  pre, blockquote, table, .markdown-alert, .table-of-contents, .mermaid-block {
+    break-inside: avoid;
+  }
   .code-block, .task-checkbox:checked {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -267,10 +292,10 @@ tr:nth-child(even) td { background: #faf9f7; }
 }
 `;
 
-export function buildStandaloneHtml({
+export async function buildStandaloneHtml({
   title,
   content,
-}: ExportDocumentOptions): string {
+}: ExportDocumentOptions): Promise<string> {
   const frontMatter = extractFrontMatter(content);
   const metadata = frontMatter?.metadata ?? {};
   const safeTitle = escapeHtml(
@@ -293,10 +318,13 @@ export function buildStandaloneHtml({
   ]
     .filter(Boolean)
     .join("\n");
-  const body = renderMarkdown(content, {
-    imageMode: "export",
-    mathOutput: "mathml",
-  });
+  const body = await renderMermaidMarkup(
+    renderMarkdown(content, {
+      imageMode: "export",
+      mathOutput: "mathml",
+    }),
+    "light",
+  );
   return `<!doctype html>
 <html lang="en">
 <head>

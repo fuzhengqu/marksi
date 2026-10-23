@@ -113,6 +113,17 @@ depend on local font files. Both output modes pass through DOMPurify with the
 HTML and MathML profiles enabled. Link reference definitions are handled by
 markdown-it itself.
 
+Mermaid fences become a placeholder plus a collapsed source disclosure during
+synchronous Markdown rendering. `src/lib/mermaid.ts` lazy-loads Mermaid only
+when a placeholder exists, initializes it with strict security, HTML labels
+disabled, bounded text/edges, and theme variables derived from the MarkSI
+palette, then replaces the placeholder with sanitized SVG. A per-element render
+token prevents stale asynchronous results from overwriting a newer theme or
+document. The preview calls the same renderer after each HTML or theme change;
+HTML export and rich clipboard copy render detached markup before serializing.
+Failures keep the source open and show a concise error instead of breaking the
+rest of the document. Plain-text copy intentionally keeps the source text.
+
 ## Editor view modes
 
 Writing modes are frontend-only and never change the document.
@@ -206,6 +217,8 @@ success toasts.
 - `src/lib/drafts.ts` owns recovery-draft serialization and validation.
 - `src/lib/zoom.ts` owns zoom bounds, stepping, clamping, and percentage
   formatting; it has no DOM or Tauri dependency.
+- `src/lib/mermaid.ts` owns lazy Mermaid loading, theme variables, SVG
+  sanitization, and diagram hydration for preview/export/clipboard markup.
 - `src/lib/clipboardText.ts` owns plain-text clipboard writes and the legacy
   fallback.
 - `src/lib/clipboard.ts` owns sanitized HTML/plain-text document
@@ -225,7 +238,7 @@ success toasts.
   settings reject absolute and parent-traversal paths.
 - No activation, account, or telemetry subsystem exists.
 
-## Current surface (M4)
+## Current surface (M4/M5)
 
 Document commands: `read_document`, `write_document`, `write_export`,
 `list_directory`, and `app_version`. Workspace commands:
@@ -254,6 +267,6 @@ export. The document text is never round-tripped through rendered HTML.
 - SQLite session/history store for multi-window restore and local snapshots.
 - Shared export pipeline and Pandoc adapter (Pandoc is invoked externally,
   never bundled).
-- Mermaid/PlantUML lazy rendering with a worker for heavy diagrams.
+- PlantUML lazy rendering and a worker for unusually heavy diagrams.
 - Remote image caching and optional uploader integrations.
 - Cross-platform print-to-PDF adapters.

@@ -7,13 +7,13 @@ designed around a calm, single-document writing surface: a slim title bar, a
 collapsible file/outline/search sidebar, a centered source editor, and a quiet
 status bar.
 
-> Status: MVP (M4). The desktop shell, source editor, file open/save,
+> Status: MVP (M4, M5 in progress). The desktop shell, source editor, file open/save,
 > encoding-aware IO, workspace browser, outline, search, themes, rendered
-> preview, extended Markdown, local image assets, formatting commands,
-> find/replace, HTML/PDF export, writing modes, smart typing, interface zoom,
-> document copy actions, preferences, quick open, workspace full-text search,
-> autosave, crash recovery, and external-change detection are implemented. See
-> `docs/feature-parity.md` for the roadmap.
+> preview, extended Markdown, Mermaid diagrams, local image assets, formatting
+> commands, find/replace, HTML/PDF export, writing modes, smart typing,
+> interface zoom, document copy actions, preferences, quick open, workspace
+> full-text search, autosave, crash recovery, and external-change detection are
+> implemented. See `docs/feature-parity.md` for the roadmap.
 
 ## Principles
 
@@ -33,6 +33,7 @@ status bar.
 - [CodeMirror 6](https://codemirror.net/) — editor foundation
 - [markdown-it](https://github.com/markdown-it/markdown-it) + [DOMPurify](https://github.com/cure53/DOMPurify) — sanitized Markdown rendering
 - [KaTeX](https://katex.org/) — inline and display math
+- [Mermaid](https://mermaid.js.org/) — lazy-loaded diagrams in preview and export
 - [highlight.js](https://highlightjs.org/) — curated code highlighting
 - Rust core for file IO, encoding detection, and platform integration
 
@@ -154,17 +155,34 @@ M4 also adds typing assistance and interface zoom:
   `Ctrl+-`, `Ctrl+0`, the View menu, or Preferences > Appearance. The level
   persists across launches.
 
+M5 begins with Mermaid diagrams:
+
+- Fenced code blocks with the `mermaid` language render as diagrams in preview.
+  The diagram library is loaded lazily on first use, so documents without
+  diagrams do not pay its startup cost.
+- Diagrams follow the light and dark themes and re-render when the appearance
+  changes. A collapsed source disclosure beneath each diagram keeps the
+  fenced source available.
+- Syntax errors show a concise error with the source expanded instead of
+  breaking the preview.
+- Standalone HTML export, rich HTML copy, and print keep rendered diagrams.
+  Plain-text copy retains the Mermaid source.
+- Mermaid runs with strict security, HTML labels disabled, and bounded text and
+  edge counts. Its SVG output is sanitized with a dedicated SVG profile before
+  insertion; scripts and foreign objects are rejected.
+
 Raw HTML remains escaped and inert, unsafe URLs are rejected, and remote images
 are never fetched by the preview renderer. Math rendering disables KaTeX's
-trust and HTML-extension features. Clipboard HTML is produced by the same
-sanitized rendering pipeline. Draft recovery stores its snapshot in WebView
+trust and HTML-extension features. Mermaid runs with strict security, no HTML
+labels, bounded input, and a second SVG sanitization pass. Clipboard HTML is
+produced by the same sanitized rendering pipeline. Draft recovery stores its snapshot in WebView
 `localStorage` and never transmits document content.
 
 ## Development
 
 ### Prerequisites
 
-- Node.js 22+ and npm
+- Node.js 22.12+ and npm
 - Rust stable (MSVC toolchain on Windows)
 - Windows: Visual Studio 2022 Build Tools with the **Desktop development with
   C++** workload and Windows SDK

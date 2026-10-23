@@ -1,5 +1,7 @@
 import { copyText } from "./clipboardText";
 import { renderMarkdown } from "./markdown";
+import { renderMermaidMarkup } from "./mermaid";
+import type { Theme } from "../types";
 
 export interface ClipboardDocument {
   html: string;
@@ -114,11 +116,17 @@ export function htmlToPlainText(root: ParentNode): string {
     .trim();
 }
 
-export function buildClipboardDocument(source: string): ClipboardDocument {
-  const html = renderMarkdown(source, {
+export async function buildClipboardDocument(
+  source: string,
+  options: { theme?: Theme; diagrams?: boolean } = {},
+): Promise<ClipboardDocument> {
+  let html = renderMarkdown(source, {
     imageMode: "export",
     mathOutput: "mathml",
   });
+  if (options.diagrams && html.includes('class="mermaid-diagram"')) {
+    html = await renderMermaidMarkup(html, options.theme ?? "light");
+  }
   const textHtml = renderMarkdown(source, {
     imageMode: "export",
     mathOutput: "html",

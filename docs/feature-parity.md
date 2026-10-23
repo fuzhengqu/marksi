@@ -82,7 +82,7 @@ that design decisions do not paint us into a corner.
 | TOC | done | M4 |
 | YAML front matter | done | M4 |
 | Inline/block math | done | M4 |
-| Mermaid diagrams | todo | M5 |
+| Mermaid diagrams | done | M5 |
 | Code fences with language highlight | done | M2 |
 | GitHub alerts | done | M4 |
 | Highlight / sub / sup | done | M4 |

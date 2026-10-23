@@ -8,18 +8,21 @@ import {
 import { Minus, Plus, RotateCcw, X } from "lucide-react";
 import { directoryName, resolveLocalImagePath } from "../lib/images";
 import { renderMarkdown } from "../lib/markdown";
+import { renderMermaidDiagrams } from "../lib/mermaid";
 import {
   isTauri,
   openExternal,
   readImageDataUrl,
 } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
+import type { Theme } from "../types";
 
 interface PreviewPaneProps {
   content: string;
   documentPath: string | null;
   workspacePath: string | null;
   gotoLine: number | null;
+  theme: Theme;
 }
 
 interface LightboxImage {
@@ -89,6 +92,7 @@ export function PreviewPane({
   documentPath,
   workspacePath,
   gotoLine,
+  theme,
 }: PreviewPaneProps) {
   const debouncedContent = useDebouncedValue(content, 90);
   const html = useMemo(
@@ -166,6 +170,14 @@ export function PreviewPane({
       cancelled = true;
     };
   }, [baseDirectory, html]);
+
+  useEffect(() => {
+    const surface = surfaceRef.current;
+    if (!surface) {
+      return;
+    }
+    void renderMermaidDiagrams(surface, theme);
+  }, [html, theme]);
 
   useEffect(() => {
     const surface = surfaceRef.current;

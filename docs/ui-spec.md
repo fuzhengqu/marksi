@@ -1,4 +1,4 @@
-# MarkSI UI specification (M4)
+# MarkSI UI specification (M4/M5)
 
 ## Layout
 
@@ -180,6 +180,20 @@ ease-out; honor `prefers-reduced-motion`.
 - The lightbox is a viewing surface only; it never edits the Markdown source or
   copies an asset.
 
+## Mermaid diagrams
+
+- A fenced block with the `mermaid` language renders as a diagram in preview.
+  The source disclosure below the diagram stays collapsed by default and opens
+  automatically when rendering fails.
+- The Mermaid runtime is loaded lazily on the first diagram, not at application
+  startup. Theme changes re-render diagrams with the light or dark palette.
+- Diagrams are centered in a bordered surface and may scroll horizontally when
+  wide. The preview never executes diagram click directives.
+- Syntax errors show a concise, wrapped message and keep the source visible.
+  Invalid diagrams do not affect the rest of the preview.
+- HTML export, rich HTML copy, and print include the rendered SVG. Plain-text
+  copy keeps the Mermaid source rather than an empty placeholder.
+
 ## Extended Markdown
 
 - YAML front matter is recognized only at the top of a document and is hidden
@@ -199,6 +213,8 @@ ease-out; honor `prefers-reduced-motion`.
 - `==highlight==`, `~subscript~`, and `^superscript^` use the normal text color
   with subtle themed treatment.
 - Link reference definitions work throughout the document.
+- Mermaid uses strict security and disables HTML labels. Its SVG is sanitized
+  with a dedicated profile; scripts and foreign objects are rejected.
 - Raw HTML stays escaped and inert. Unsafe link destinations are not activated,
   and math rendering does not enable KaTeX HTML or trust extensions.
 

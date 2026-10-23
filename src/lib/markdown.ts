@@ -293,6 +293,25 @@ md.renderer.rules.fence = (tokens, index) => {
   const language = info.split(/\s+/)[0]?.toLowerCase() ?? "";
   let highlighted: string;
 
+  if (language === "mermaid") {
+    const sourceLine = token.attrGet("data-source-line");
+    return [
+      `<div class="mermaid-block"`,
+      sourceLine
+        ? ` data-source-line="${escapeHtml(String(sourceLine))}"`
+        : "",
+      `>`,
+      `<div class="mermaid-diagram" data-mermaid-source="${encodeURIComponent(
+        token.content,
+      )}" aria-busy="true"></div>`,
+      `<details class="mermaid-source"><summary>Mermaid source</summary>`,
+      `<pre><code class="language-mermaid">${escapeHtml(
+        token.content,
+      )}</code></pre></details>`,
+      "</div>\n",
+    ].join("");
+  }
+
   if (language && hljs.getLanguage(language)) {
     try {
       highlighted = hljs.highlight(token.content, {
@@ -442,6 +461,7 @@ export function renderMarkdown(
       "data-language",
       "data-marksi-src",
       "data-marksi-image",
+      "data-mermaid-source",
       "target",
       "rel",
       "loading",

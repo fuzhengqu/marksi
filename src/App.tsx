@@ -323,9 +323,13 @@ export default function App() {
         "./lib/exportHtml"
       );
       const title = state.doc.name.replace(/\.[^.\\/]+$/, "") || "Untitled";
+      const html = await buildStandaloneHtml({
+        title,
+        content: state.doc.content,
+      });
       const meta = await saveHtmlFile(
         htmlExportPath(state.doc.path, state.doc.name),
-        buildStandaloneHtml({ title, content: state.doc.content }),
+        html,
       );
       if (meta) {
         useAppStore
@@ -358,7 +362,10 @@ export default function App() {
       const { buildClipboardDocument, copyRichHtml } = await import(
         "./lib/clipboard"
       );
-      const documentToCopy = buildClipboardDocument(content);
+      const documentToCopy = await buildClipboardDocument(content, {
+        theme: state.theme,
+        diagrams: format === "html",
+      });
 
       if (format === "html") {
         const mode = await copyRichHtml(documentToCopy);
@@ -548,13 +555,14 @@ export default function App() {
     }
     const started = Date.now();
     const printWhenReady = () => {
-      if (
-        document.querySelector(".markdown-body") ||
-        Date.now() - started > 2500
-      ) {
+      const body = document.querySelector(".markdown-body");
+      const diagramsPending = document.querySelector(
+        '.mermaid-diagram[aria-busy="true"]',
+      );
+      if ((body && !diagramsPending) || Date.now() - started > 4000) {
         window.print();
       } else {
-        window.setTimeout(printWhenReady, 60);
+        window.setTimeout(printWhenReady, 80);
       }
     };
     window.setTimeout(printWhenReady, 40);
@@ -1098,6 +1106,7 @@ export default function App() {
                 documentPath={doc.path}
                 workspacePath={workspacePath}
                 gotoLine={gotoLine}
+                theme={theme}
               />
             </Suspense>
           ) : null}
