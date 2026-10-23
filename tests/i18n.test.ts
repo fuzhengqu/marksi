@@ -20,6 +20,7 @@ describe("translate", () => {
     expect(translate("zh-CN", "Load remote images")).toBe("加载远程图片");
     expect(translate("zh-CN", "Remote image cache")).toBe("远程图片缓存");
     expect(translate("zh-CN", "Image root path")).toBe("图片根路径");
+    expect(translate("zh-CN", "Image root URL")).toBe("图片根 URL");
   });
 
   it("returns the source label for English", () => {

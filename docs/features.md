@@ -132,8 +132,8 @@ expanded. The canonical Markdown source is never rewritten.
 | Image fit controls (contain/cover) | done | M5 |
 | Remote image cache (opt-in) | done | M5 |
 | Image root path mode | done | M5 |
-| Image root URL mode | todo | M5 |
-| Uploader integration (PicGo/PicList/custom) | todo | M5 |
+| Image root URL mode | done | M5 |
+| Uploader integration (PicGo/PicList/custom) | deferred | M5 |
 
 Image resizing stores width and optional height in the canonical Markdown
 attribute block. Width-only images preserve their aspect ratio; explicit height
@@ -200,7 +200,13 @@ Image root path mode is local-only. Preferences can store an optional absolute
 folder or a path relative to the workspace/document folder. Paths beginning
 with `/` resolve from that root first; other relative paths try the document
 folder first and fall back to the root. Absolute local paths are unchanged.
-Root URL mode and third-party uploaders remain open items.
+
+Image root URL mode is optional and works only when remote image loading is
+enabled. A relative image first resolves against local document/root folders;
+only if those reads fail is it resolved against the configured http/https base
+and fetched through the same opt-in remote cache. The source Markdown remains
+relative. Third-party uploaders are deferred until a separate credentials and
+network review; MarkSI has no upload path.
 
 Pandoc import accepts DOCX, ODT, EPUB, RTF, HTML, and HTM. It converts to Pandoc
 Markdown in a temporary folder, embeds extracted images as data URLs in the new

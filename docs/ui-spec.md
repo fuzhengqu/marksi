@@ -295,6 +295,10 @@ ease-out; honor `prefers-reduced-motion`.
   document folder. Paths beginning with `/` try the root first; other relative
   paths try the document folder first and fall back to the root. The canonical
   Markdown is never rewritten.
+- An optional http/https image root URL is used only when remote image loading
+  is enabled. Local document/root candidates are tried first; a relative image
+  falls back to the URL base only if the local reads fail, then uses the remote
+  cache. No uploader or automatic upload exists.
 - Local images render inline in preview. Remote images, unsafe sources, and
   missing files render as labelled placeholders by default.
 - Preferences > Images has an off-by-default "Load remote images" toggle. When

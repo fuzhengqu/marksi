@@ -166,6 +166,33 @@ export function resolveRootImagePath(
   return `${rootDirectory.replace(/\/+$/, "")}/${relative}`;
 }
 
+export function resolveImageRootUrl(
+  rootUrl: string,
+  raw: string,
+): string | null {
+  const base = rootUrl.trim();
+  if (!/^https?:\/\//i.test(base)) {
+    return null;
+  }
+  const source = classifyImageSource(raw);
+  if (source.kind !== "local") {
+    return null;
+  }
+  const value = source.value.replace(/\\/g, "/");
+  if (/^[A-Za-z]:\//.test(value) || value.startsWith("//")) {
+    return null;
+  }
+  const relative = value.replace(/^\/+/, "");
+  if (!relative) {
+    return null;
+  }
+  try {
+    return new URL(relative, base.endsWith("/") ? base : `${base}/`).toString();
+  } catch {
+    return null;
+  }
+}
+
 export function encodeMarkdownImagePath(path: string): string {
   return path
     .replace(/\\/g, "/")

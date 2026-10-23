@@ -23,6 +23,7 @@ import { clampImageHeight, clampImageWidth } from "../lib/imageSize";
 import {
   directoryName,
   resolveImageRootPath,
+  resolveImageRootUrl,
   resolveLocalImagePath,
   resolveRootImagePath,
 } from "../lib/images";
@@ -109,11 +110,11 @@ function loadCachedImage(path: string): Promise<string> {
 
 async function loadFirstImage(
   candidates: string[],
-): Promise<{ source: string; path: string }> {
+): Promise<{ source: string; path: string; remote: boolean }> {
   let lastError: unknown = null;
   for (const path of candidates) {
     try {
-      return { source: await loadCachedImage(path), path };
+      return { source: await loadCachedImage(path), path, remote: false };
     } catch (error) {
       lastError = error;
     }
@@ -173,6 +174,9 @@ export function PreviewPane({
   );
   const imageRootSetting = useAppStore(
     (state) => state.settings.imageRootPath,
+  );
+  const imageRootUrl = useAppStore(
+    (state) => state.settings.imageRootUrl,
   );
   const resizeLabel = t("Resize image");
   const heightResizeLabel = t("Resize image height");
@@ -241,6 +245,9 @@ export function PreviewPane({
 
       const primary = resolveLocalImagePath(raw, baseDirectory);
       const root = resolveRootImagePath(raw, rootDirectory);
+      const remote = loadRemoteImages
+        ? resolveImageRootUrl(imageRootUrl, raw)
+        : null;
       const rootFirst = /^[/\\]/.test(raw.trim());
       const candidates = [
         ...new Set(
@@ -249,19 +256,33 @@ export function PreviewPane({
           ),
         ),
       ];
-      if (!candidates.length) {
+      if (!candidates.length && !remote) {
         replaceWithImagePlaceholder(image, raw || "Image path is not local.");
         return;
       }
 
       void loadFirstImage(candidates)
-        .then(({ source, path }) => {
+        .catch(async (error) => {
+          if (!remote) {
+            throw error;
+          }
+          return {
+            source: await remoteImageDataUrl(remote),
+            path: remote,
+            remote: true,
+          };
+        })
+        .then(({ source, path, remote: loadedRemote }) => {
           if (cancelled || !image.isConnected) {
             return;
           }
           image.src = source;
           image.dataset.marksiImage = "true";
-          image.dataset.marksiResolved = path;
+          if (loadedRemote) {
+            image.dataset.marksiRemoteOrigin = path;
+          } else {
+            image.dataset.marksiResolved = path;
+          }
           image.classList.remove("is-loading");
           image.classList.add("is-loaded");
           if (!image.title) {
@@ -272,7 +293,9 @@ export function PreviewPane({
           if (!cancelled && image.isConnected) {
             replaceWithImagePlaceholder(
               image,
-              `Could not load ${candidates.join(" or ")}: ${messageFor(error)}`,
+              `Could not load ${
+                candidates.length ? candidates.join(" or ") : remote
+              }: ${messageFor(error)}`,
             );
           }
         });
@@ -281,7 +304,13 @@ export function PreviewPane({
     return () => {
       cancelled = true;
     };
-  }, [baseDirectory, html, rootDirectory]);
+  }, [
+    baseDirectory,
+    html,
+    imageRootUrl,
+    loadRemoteImages,
+    rootDirectory,
+  ]);
 
   useEffect(() => {
     const surface = surfaceRef.current;

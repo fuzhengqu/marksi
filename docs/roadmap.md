@@ -7,19 +7,20 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.12**
-- Technical version: **0.12.0**
+- Product version: **0.13**
+- Technical version: **0.13.0**
 - Foundation milestones M1 and M3 are complete.
 - M2 core is complete; golden Markdown tests remain open.
 - M4 core is complete, with six planned file/workspace items still open.
-- M5 is in progress with twenty-two completed items and two open items.
+- M5 is complete with twenty-three done items and one explicitly deferred
+  uploader integration.
 - M6 and M7 have not started.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **86 done, 4 wip,
-31 todo, 1 deferred** across 122 items.
+is the source for exact status values. Current raw count: **87 done, 4 wip,
+29 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
 
@@ -105,11 +106,9 @@ Exit criteria:
 - Remote image/uploader features define explicit network and privacy behavior.
 - The full gate is green and the release version is incremented one step.
 
-Current M5 completion order:
-
-1. Image root URL mode for relative image resolution against a web base.
-2. Uploader integration was explicitly deferred; it requires a separate
-   credentials and third-party network review.
+M5 is complete except for uploader integration, which is deferred until a
+separate credentials and third-party network review. The next milestone work is
+M6 platform/release engineering and the remaining M4 file/workspace debt.
 
 Remote image and uploader work must not silently enable background network
 requests. They require explicit user action, clear cache behavior, and tests

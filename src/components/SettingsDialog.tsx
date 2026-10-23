@@ -413,6 +413,28 @@ export function SettingsDialog() {
                 "Use an absolute folder or a path relative to the workspace or document folder. The canonical Markdown is not changed.",
               )}
             </p>
+            <div className="settings-row settings-row-stacked">
+              <div className="settings-copy">
+                <span>{t("Image root URL")}</span>
+                <small>
+                  {t(
+                    "Optional web base for relative images when remote loading is enabled.",
+                  )}
+                </small>
+              </div>
+              <input
+                className="settings-text"
+                type="text"
+                value={settings.imageRootUrl}
+                placeholder="https://example.com/assets/"
+                maxLength={4096}
+                spellCheck={false}
+                onChange={(event) =>
+                  update("imageRootUrl", event.target.value)
+                }
+                aria-label={t("Image root URL")}
+              />
+            </div>
             <div className="settings-row">
               <div className="settings-copy">
                 <span>{t("Load remote images")}</span>

@@ -365,7 +365,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.12"), "About should show version 0.12", state);
+    assert(state.version?.includes("0.13"), "About should show version 0.13", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1160,6 +1160,59 @@ async function main() {
       assert(state.src.startsWith("data:image/png;base64,"), "root image did not load", state);
     } finally {
       await rm(rootDir, { recursive: true, force: true });
+      await resetBase();
+    }
+  });
+
+  await test("image root URL resolves through the remote cache", async () => {
+    await resetBase();
+    const rootUrl = "https://example.com/assets/";
+    const expected = `${rootUrl}missing.png`;
+    const pixel =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
+    try {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setRemoteImageLoaderForTests(async () => ${JSON.stringify(pixel)});
+      })()`);
+      await evaluate(
+        `window.__MARKSI_DEV__.setSettings(${JSON.stringify({
+          imageRootUrl: rootUrl,
+          loadRemoteImages: true,
+        })})`,
+      );
+      await evaluate(
+        `window.__MARKSI_DEV__.setContent("![root](missing.png)")`,
+      );
+      await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+      await waitFor(
+        'document.querySelector(\'.markdown-body img[data-marksi-remote-origin]\')',
+        10_000,
+      );
+      const state = await evaluate(`({
+        src: document.querySelector('.markdown-body img[data-marksi-remote-origin]')?.getAttribute("src") ?? "",
+        origin: document.querySelector('.markdown-body img[data-marksi-remote-origin]')?.getAttribute("data-marksi-remote-origin") ?? ""
+      })`);
+      assert(state.src.startsWith("data:image/png;base64,"), "root URL image was not cached", state);
+      assert(state.origin === expected, "root URL composition is wrong", state);
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ loadRemoteImages: false })',
+      );
+      await waitFor(
+        'document.querySelector(".markdown-body .image-placeholder")',
+      );
+      assert(
+        !(await evaluate(
+          'Boolean(document.querySelector(\'.markdown-body img[data-marksi-remote-origin]\'))',
+        )),
+        "root URL image should disappear when remote cache is disabled",
+      );
+    } finally {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setRemoteImageLoaderForTests(null);
+      })()`).catch(() => {});
       await resetBase();
     }
   });

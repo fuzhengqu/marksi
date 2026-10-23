@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.12` product version.
+- About dialog close behavior and display of the `0.13` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -104,6 +104,9 @@ The E2E suite currently covers:
   loader is a test seam; real fetching is covered by Rust WinHTTP tests.
 - Image root path: a document in a subfolder resolves `/icon.png` from the
   configured root, while the source Markdown remains unchanged.
+- Image root URL: a missing local relative image falls back to the configured
+  URL base through the remote cache, and disabling remote loading restores the
+  placeholder.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -129,8 +132,8 @@ The E2E suite currently covers:
 Vitest covers formatting, smart typing, emoji catalogs, i18n, version display
 formatting, zoom math, strict-heading and lax-list normalization (including
 continuations, quotes, code safety, and CRLF), front-matter parsing, save-name
-extraction/sanitization, image helpers including document/root path resolution,
-image-source scanning
+extraction/sanitization, image helpers including document/root path and root
+URL resolution, image-source scanning
 and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
@@ -166,7 +169,9 @@ rejected, and very large documents should be checked manually before release.
 Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the
-manual DOCX/EPUB check. Imported images are inlined as data URLs, which can make
+manual DOCX/EPUB check. Image uploader integration is not implemented; the
+feature is explicitly deferred pending a credentials and third-party network
+review. Imported images are inlined as data URLs, which can make
 the Markdown source large; very large imported documents should be checked
 manually for memory and save-size behavior. PDF import/export is not offered
 because it requires an additional PDF engine.

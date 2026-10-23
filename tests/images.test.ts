@@ -9,6 +9,7 @@ import {
   pastedImageName,
   resolveImageRootPath,
   resolveLocalImagePath,
+  resolveImageRootUrl,
   resolveRootImagePath,
 } from "../src/lib/images";
 
@@ -77,6 +78,24 @@ describe("image helpers", () => {
       null,
     );
     expect(resolveRootImagePath("assets/a.png", null)).toBe(null);
+  });
+
+  it("resolves relative images against an optional root URL", () => {
+    expect(
+      resolveImageRootUrl("https://example.com/assets", "cover.png"),
+    ).toBe("https://example.com/assets/cover.png");
+    expect(
+      resolveImageRootUrl("https://example.com/assets/", "/icons/cover.png"),
+    ).toBe("https://example.com/assets/icons/cover.png");
+    expect(
+      resolveImageRootUrl("https://example.com/assets/", "https://x/a.png"),
+    ).toBe(null);
+    expect(
+      resolveImageRootUrl("file:///tmp", "cover.png"),
+    ).toBe(null);
+    expect(resolveImageRootUrl("https://example.com/", "C:\\a.png")).toBe(
+      null,
+    );
   });
 
   it("converts an image to Markdown with an escaped destination", () => {

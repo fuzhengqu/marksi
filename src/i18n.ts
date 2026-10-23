@@ -396,6 +396,9 @@ const ZH: Record<string, string> = {
     "用于 / 开头图片的可选文件夹，也在图片不在文档旁边时作为回退。",
   "Use an absolute folder or a path relative to the workspace or document folder. The canonical Markdown is not changed.":
     "可使用绝对文件夹，或相对于工作区/文档文件夹的路径。不会修改规范 Markdown。",
+  "Image root URL": "图片根 URL",
+  "Optional web base for relative images when remote loading is enabled.":
+    "启用远程加载后，用于相对图片的可选 Web 基地址。",
   "Load remote images": "加载远程图片",
   "Download remote images only after you enable this. Images are cached locally.":
     "仅在开启后下载远程图片。图片会缓存到本地。",
