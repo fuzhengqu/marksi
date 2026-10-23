@@ -581,6 +581,125 @@ async function main() {
     await evaluate('window.__MARKSI_DEV__.getState().setViewMode("preview")');
   });
 
+  await test("image width attributes, drag write-back, and undo work", async () => {
+    await resetBase();
+    const imageDoc = resolve(fixtureDir, "image-resize.md");
+    await writeFile(
+      imageDoc,
+      [
+        "```markdown",
+        "![inside code](icon.png)",
+        "```",
+        "",
+        "![icon][img]{width=120}",
+        "",
+        "[img]: icon.png",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    await evaluate(
+      `window.__MARKSI_DEV__.openPath(${JSON.stringify(imageDoc)})`,
+    );
+    await waitFor(
+      'window.__MARKSI_DEV__.getState().doc.path === ' +
+        JSON.stringify(imageDoc),
+      10_000,
+    );
+    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+    await waitFor('document.querySelector(".markdown-image-frame img.markdown-image")');
+    await sleep(250);
+    const before = await evaluate(`(() => {
+      const image = document.querySelector(".markdown-image-frame img.markdown-image");
+      return {
+        widthAttribute: image?.getAttribute("width"),
+        width: image?.getBoundingClientRect().width ?? null,
+        handle: Boolean(document.querySelector(".image-resize-handle"))
+      };
+    })()`);
+    assert(before.widthAttribute === "120", "width attribute was not rendered", before);
+    assert(before.handle, "image resize handle missing", before);
+    const handlePoint = await evaluate(`(() => {
+      const box = document.querySelector(".image-resize-handle").getBoundingClientRect();
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    })()`);
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: handlePoint.x,
+      y: handlePoint.y,
+    });
+    await sleep(120);
+    await send("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      x: handlePoint.x,
+      y: handlePoint.y,
+      button: "left",
+      buttons: 1,
+      clickCount: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      x: handlePoint.x + 40,
+      y: handlePoint.y,
+      button: "left",
+      buttons: 1,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      x: handlePoint.x + 40,
+      y: handlePoint.y,
+      button: "left",
+      buttons: 0,
+      clickCount: 1,
+    });
+    await sleep(500);
+    const content = await evaluate(
+      "window.__MARKSI_DEV__.getState().doc.content",
+    );
+    assert(
+      content.includes("![icon][img]{width=160}"),
+      "drag did not write the reference image width",
+      content,
+    );
+    assert(
+      content.includes("![inside code](icon.png)"),
+      "drag modified image syntax inside a code fence",
+      content,
+    );
+    await evaluate(
+      "window.__MARKSI_DEV__.getState().updateSettings({ readOnlyMode: true })",
+    );
+    await waitFor(
+      '!document.querySelector(".image-resize-handle")',
+      5_000,
+    );
+    await evaluate(
+      "window.__MARKSI_DEV__.getState().updateSettings({ readOnlyMode: false })",
+    );
+    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("preview")');
+    await clickSelector(".cm-content");
+    await keyWithCtrl("z", "KeyZ", 90);
+    await sleep(350);
+    const undone = await evaluate(
+      "window.__MARKSI_DEV__.getState().doc.content",
+    );
+    assert(
+      undone.includes("width=120") && !undone.includes("width=160"),
+      "image resize should be undoable without resetting editor history",
+      undone,
+    );
+    await keyWithCtrl("y", "KeyY", 89);
+    await sleep(350);
+    const redone = await evaluate(
+      "window.__MARKSI_DEV__.getState().doc.content",
+    );
+    assert(
+      redone.includes("width=160"),
+      "image resize redo did not restore the new width",
+      redone,
+    );
+  });
+
   await test("recent files reveal per-item close and File > Clear recent files", async () => {
     const saved = await evaluate("window.__MARKSI_DEV__.getState().recent");
     const recentOne = resolve(fixtureDir, "recent-one.md");

@@ -1,4 +1,5 @@
 import MarkdownIt, { type StateBlock, type Token } from "markdown-it";
+import markdownItAttrs from "markdown-it-attrs";
 import DOMPurify from "dompurify";
 import { alert } from "@mdit/plugin-alert";
 import { footnote } from "@mdit/plugin-footnote";
@@ -57,6 +58,9 @@ interface MarkdownEnvironment {
   [key: string | symbol]: unknown;
   imageMode?: "preview" | "export";
   mathOutput?: MathOutput;
+  imageIndex?: number;
+  imageResizeLabel?: string;
+  imageResizable?: boolean;
 }
 
 const ALERT_TITLES: Record<string, string> = {
@@ -78,6 +82,9 @@ md.use(footnote)
   .use(mark)
   .use(sub)
   .use(sup)
+  .use(markdownItAttrs, {
+    allowedAttributes: ["width"],
+  })
   .use(alert, {
     titleRenderer: (tokens, index) => {
       const name = String(tokens[index].markup ?? "").toLowerCase();
@@ -334,6 +341,14 @@ md.renderer.rules.fence = (tokens, index) => {
   ].join("");
 };
 
+function imageDimensionAttribute(token: Token): string {
+  const raw = String(token.attrGet("width") ?? "").trim();
+  if (!raw || !/^\d{1,4}$/.test(raw)) {
+    return "";
+  }
+  return ` width="${raw}"`;
+}
+
 function imagePlaceholder(alt: string, label: string, detail?: string): string {
   return [
     `<span class="image-placeholder" role="img" aria-label="${escapeHtml(alt)}"`,
@@ -350,11 +365,18 @@ function imagePlaceholder(alt: string, label: string, detail?: string): string {
 
 md.renderer.rules.image = (tokens, index, _options, environment) => {
   const token = tokens[index];
+  const env = environment as MarkdownEnvironment | undefined;
+  const imageIndex = env?.imageIndex ?? 0;
+  if (env) {
+    env.imageIndex = imageIndex + 1;
+  }
+
   const raw = String(token.attrGet("src") ?? "").trim();
   const alt = String(token.content.trim() || "Image");
   const title = token.attrGet("title");
   const source = classifyImageSource(raw);
-  const mode = (environment as MarkdownEnvironment | undefined)?.imageMode;
+  const mode = env?.imageMode;
+  const dimensions = imageDimensionAttribute(token);
 
   if (source.kind === "unsafe" || !raw) {
     return imagePlaceholder(alt, "IMG", raw || "No image source");
@@ -364,25 +386,38 @@ md.renderer.rules.image = (tokens, index, _options, environment) => {
     const titleAttribute = title
       ? ` title="${escapeHtml(String(title))}"`
       : "";
-    return `<img src="${escapeHtml(raw)}" alt="${escapeHtml(alt)}"${titleAttribute} loading="lazy" />`;
+    return `<img src="${escapeHtml(raw)}" alt="${escapeHtml(alt)}"${titleAttribute}${dimensions} loading="lazy" />`;
   }
 
   if (source.kind === "remote") {
     return imagePlaceholder(alt, "REMOTE", raw);
   }
 
-  if (source.kind === "data") {
-    return [
-      `<img src="${escapeHtml(raw)}" alt="${escapeHtml(alt)}"`,
-      title ? ` title="${escapeHtml(String(title))}"` : "",
-      ` class="markdown-image" data-marksi-image="true" loading="lazy" />`,
-    ].join("");
-  }
+  const image =
+    source.kind === "data"
+      ? [
+          `<img src="${escapeHtml(raw)}" alt="${escapeHtml(alt)}"`,
+          title ? ` title="${escapeHtml(String(title))}"` : "",
+          `${dimensions} class="markdown-image" data-marksi-image="true" loading="lazy" />`,
+        ].join("")
+      : [
+          `<img data-marksi-src="${escapeHtml(raw)}" alt="${escapeHtml(alt)}"`,
+          title ? ` title="${escapeHtml(String(title))}"` : "",
+          `${dimensions} class="markdown-image is-loading" loading="lazy" />`,
+        ].join("");
+
+  const handle =
+    env?.imageResizable === false
+      ? ""
+      : `<span class="image-resize-handle" role="button" tabindex="0" aria-label="${escapeHtml(
+          env?.imageResizeLabel ?? "Resize image",
+        )}" data-image-index="${imageIndex}"></span>`;
 
   return [
-    `<img data-marksi-src="${escapeHtml(raw)}" alt="${escapeHtml(alt)}"`,
-    title ? ` title="${escapeHtml(String(title))}"` : "",
-    ` class="markdown-image is-loading" loading="lazy" />`,
+    `<span class="markdown-image-frame" data-image-index="${imageIndex}">`,
+    image,
+    handle,
+    "</span>",
   ].join("");
 };
 
@@ -428,6 +463,12 @@ function enhanceTaskLists(root: Document): void {
   });
 }
 
+function removeFootnoteResizeHandles(root: Document): void {
+  root
+    .querySelectorAll(".footnotes .image-resize-handle")
+    .forEach((handle) => handle.remove());
+}
+
 function wrapTables(root: Document): void {
   root.querySelectorAll("table").forEach((table) => {
     if (table.parentElement?.classList.contains("table-scroll")) {
@@ -445,6 +486,8 @@ export function renderMarkdown(
   options: {
     imageMode?: "preview" | "export";
     mathOutput?: MathOutput;
+    imageResizeLabel?: string;
+    imageResizable?: boolean;
   } = {},
 ): string {
   const imageMode = options.imageMode ?? "preview";
@@ -452,6 +495,9 @@ export function renderMarkdown(
     imageMode,
     mathOutput:
       options.mathOutput ?? (imageMode === "export" ? "mathml" : "html"),
+    imageIndex: 0,
+    imageResizeLabel: options.imageResizeLabel ?? "Resize image",
+    imageResizable: options.imageResizable ?? true,
   };
   const rendered = md.render(source, environment);
   const sanitized = DOMPurify.sanitize(rendered, {
@@ -461,6 +507,7 @@ export function renderMarkdown(
       "data-language",
       "data-marksi-src",
       "data-marksi-image",
+      "data-image-index",
       "data-mermaid-source",
       "target",
       "rel",
@@ -473,6 +520,7 @@ export function renderMarkdown(
   });
   const document = new DOMParser().parseFromString(sanitized, "text/html");
   enhanceTaskLists(document);
+  removeFootnoteResizeHandles(document);
   wrapTables(document);
   return document.body.innerHTML;
 }

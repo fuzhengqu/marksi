@@ -11,6 +11,7 @@ import { Toast } from "./components/Toast";
 import { Welcome } from "./components/Welcome";
 import {
   dispatchEditorCommand,
+  dispatchEditorImageResize,
   dispatchEditorInsert,
   dispatchEditorSearch,
   EDITOR_PASTE_IMAGE_EVENT,
@@ -434,6 +435,17 @@ export default function App() {
     const state = useAppStore.getState();
     state.setViewMode(state.viewMode === "source" ? "preview" : "source");
   }, []);
+
+  const handleResizeImage = useCallback(
+    (imageIndex: number, width: number, alt: string) => {
+      const state = useAppStore.getState();
+      if (state.settings.readOnlyMode) {
+        return;
+      }
+      dispatchEditorImageResize({ imageIndex, width, alt });
+    },
+    [],
+  );
 
   const handleFormat = useCallback(
     (command: EditorCommand) => {
@@ -1188,6 +1200,7 @@ export default function App() {
                 workspacePath={workspacePath}
                 gotoLine={gotoLine}
                 theme={theme}
+                onResizeImage={handleResizeImage}
               />
             </Suspense>
           ) : null}

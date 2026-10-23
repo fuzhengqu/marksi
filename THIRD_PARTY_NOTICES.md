@@ -14,6 +14,7 @@ licenses remain in effect.
 | Lezer packages | MIT |
 | Lucide icons | ISC |
 | markdown-it | MIT |
+| markdown-it-attrs | MIT |
 | DOMPurify | MPL-2.0 OR Apache-2.0 |
 | highlight.js | BSD-3-Clause |
 | encoding_rs | Apache-2.0 OR MIT |

@@ -10,8 +10,9 @@ status bar.
 > Status: MVP (M4, M5 in progress). The desktop shell, source editor, editable
 > live preview, reading view, bilingual Chinese/English interface, file
 > open/save, encoding-aware IO, workspace browser, outline, search, themes,
-> extended Markdown, Mermaid diagrams, local image assets, formatting commands,
-> find/replace, HTML/PDF export, writing modes, smart typing, interface zoom,
+> extended Markdown, Mermaid diagrams, local image assets, image resizing,
+> formatting commands, find/replace, HTML/PDF export, writing modes, smart
+> typing, interface zoom,
 > document copy actions, preferences, quick open, workspace full-text search,
 > autosave, crash recovery, and external-change detection are implemented. See
 > `docs/feature-parity.md` for the roadmap.
@@ -33,6 +34,7 @@ status bar.
 - [React 19](https://react.dev/) + TypeScript + Vite
 - [CodeMirror 6](https://codemirror.net/) — editor foundation
 - [markdown-it](https://github.com/markdown-it/markdown-it) + [DOMPurify](https://github.com/cure53/DOMPurify) — sanitized Markdown rendering
+- [markdown-it-attrs](https://github.com/arve0/markdown-it-attrs) — constrained image-width attributes
 - [KaTeX](https://katex.org/) — inline and display math
 - [Mermaid](https://mermaid.js.org/) — lazy-loaded diagrams in preview and export
 - [highlight.js](https://highlightjs.org/) — curated code highlighting
@@ -208,6 +210,20 @@ M5 also adds image context actions:
   images.
 - Local image actions use the resolved asset path; pasted data-URL images keep
   the lightbox action only.
+
+M5 also adds image width resizing:
+
+- Image dimensions use the canonical Markdown form
+  `![alt](image.png){width=320}`. Width is validated as 24–1600 px and height
+  follows the aspect ratio.
+- In reading view, hover or focus a loaded image to reveal its corner handle.
+  Drag horizontally, or use Left/Right from the handle, to resize. The source
+  is updated only when the gesture ends, as one undoable editor transaction.
+- Resizing is disabled in read-only mode, does not appear for footnote images,
+  and is rejected when the source image cannot be identified unambiguously.
+  Fenced code, inline code, YAML front matter, and reference definitions cannot
+  shift the target image.
+- HTML export, rich clipboard HTML, and print preserve the width attribute.
 
 Raw HTML remains escaped and inert, unsafe URLs are rejected, and remote images
 are never fetched by the preview renderer. Math rendering disables KaTeX's

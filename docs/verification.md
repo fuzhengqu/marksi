@@ -60,6 +60,11 @@ A change is deliverable only when all of these are true:
    checked when the task touched files.
 7. Known limitations are recorded rather than presented as verified.
 
+Image resizing is width-only. Explicit height/fit modes, drag resizing in the
+text-first live-preview surface, and image HTML blocks are not implemented or
+claimed. Automated coverage of image sizing uses local fixture assets; native
+image picker and OS file dialogs remain in the manual release checklist.
+
 ## Current automated coverage
 
 The E2E suite currently covers:
@@ -78,12 +83,15 @@ The E2E suite currently covers:
 - Mermaid rendering in reading mode, including SVG sanitization checks.
 - Auto pairing, smart punctuation, and emoji completion.
 - Local image context menu and lightbox action.
+- Image width attributes, reference-style image drag, undo/redo of the resize
+  transaction, code-fence safety, and read-only suppression of resize handles.
 - Recent-file hover remove button and File > Clear recent files.
 - Zoom shortcut and reset behavior.
 - Final cleanup and removal of fixture paths from recent files.
 
 Vitest covers formatting, smart typing, emoji catalogs, i18n, zoom math,
-front-matter parsing, image helpers, quick-open ranking, and analysis helpers.
+front-matter parsing, image helpers, image-source scanning and width clamping,
+minimal text-change calculation, quick-open ranking, and analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic writes, image import and
 data URLs, workspace listing/search, and file timestamps.
 

@@ -3,6 +3,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent,
 } from "react";
 import {
@@ -16,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useT } from "../i18n";
+import { clampImageWidth } from "../lib/imageSize";
 import { directoryName, resolveLocalImagePath } from "../lib/images";
 import { renderMarkdown } from "../lib/markdown";
 import { renderMermaidDiagrams } from "../lib/mermaid";
@@ -35,6 +37,7 @@ interface PreviewPaneProps {
   workspacePath: string | null;
   gotoLine: number | null;
   theme: Theme;
+  onResizeImage: (imageIndex: number, width: number, alt: string) => void;
 }
 
 interface LightboxImage {
@@ -104,7 +107,12 @@ function replaceWithImagePlaceholder(
   detailNode.textContent = detail;
   copy.append(label, detailNode);
   placeholder.append(mark, copy);
-  image.replaceWith(placeholder);
+  const frame = image.closest(".markdown-image-frame");
+  if (frame) {
+    frame.replaceWith(placeholder);
+  } else {
+    image.replaceWith(placeholder);
+  }
 }
 
 export function PreviewPane({
@@ -113,12 +121,19 @@ export function PreviewPane({
   workspacePath,
   gotoLine,
   theme,
+  onResizeImage,
 }: PreviewPaneProps) {
   const t = useT();
   const debouncedContent = useDebouncedValue(content, 90);
+  const readOnlyMode = useAppStore((state) => state.settings.readOnlyMode);
+  const resizeLabel = t("Resize image");
   const html = useMemo(
-    () => renderMarkdown(debouncedContent),
-    [debouncedContent],
+    () =>
+      renderMarkdown(debouncedContent, {
+        imageResizeLabel: resizeLabel,
+        imageResizable: !readOnlyMode,
+      }),
+    [debouncedContent, resizeLabel, readOnlyMode],
   );
   const surfaceRef = useRef<HTMLElement | null>(null);
   const [lightbox, setLightbox] = useState<LightboxImage | null>(null);
@@ -275,6 +290,79 @@ export function PreviewPane({
     setLightbox({ src, alt });
   }
 
+  function handleResizeStart(event: MouseEvent<HTMLElement>): void {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+    const handle = target.closest(".image-resize-handle");
+    if (!(handle instanceof HTMLElement)) {
+      return;
+    }
+    const frame = handle.closest(".markdown-image-frame");
+    const image = frame?.querySelector("img.markdown-image");
+    if (!(image instanceof HTMLImageElement)) {
+      return;
+    }
+    const imageIndex = Number(handle.dataset.imageIndex);
+    if (!Number.isInteger(imageIndex)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    const startX = event.clientX;
+    const startWidth = image.getBoundingClientRect().width;
+    if (startWidth < 1) {
+      return;
+    }
+    let nextWidth = startWidth;
+    const onMove = (moveEvent: globalThis.MouseEvent) => {
+      nextWidth = clampImageWidth(
+        startWidth + moveEvent.clientX - startX,
+      );
+      image.style.width = `${nextWidth}px`;
+      image.style.height = "auto";
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.classList.remove("is-resizing-image");
+      onResizeImage(imageIndex, nextWidth, image.alt);
+    };
+    document.body.classList.add("is-resizing-image");
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
+
+  function handleResizeKey(event: ReactKeyboardEvent<HTMLElement>): void {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+    const handle = target.closest(".image-resize-handle");
+    if (!(handle instanceof HTMLElement)) {
+      return;
+    }
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+      return;
+    }
+    const frame = handle.closest(".markdown-image-frame");
+    const image = frame?.querySelector("img.markdown-image");
+    const imageIndex = Number(handle.dataset.imageIndex);
+    if (!(image instanceof HTMLImageElement) || !Number.isInteger(imageIndex)) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    const direction = event.key === "ArrowLeft" ? -20 : 20;
+    onResizeImage(
+      imageIndex,
+      clampImageWidth(image.getBoundingClientRect().width + direction),
+      image.alt,
+    );
+  }
+
   function copyImagePath(path: string): void {
     setContextMenu(null);
     void import("../lib/clipboardText")
@@ -418,6 +506,8 @@ export function PreviewPane({
         aria-label={t("Rendered document")}
         onClick={handleClick}
         onAuxClick={handleClick}
+        onMouseDown={handleResizeStart}
+        onKeyDown={handleResizeKey}
         onContextMenu={handleContextMenu}
       >
         <article

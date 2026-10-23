@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Compartment, EditorState } from "@codemirror/state";
+import { Annotation, Compartment, EditorState } from "@codemirror/state";
 import { EditorView, placeholder } from "@codemirror/view";
 import { openSearchPanel } from "@codemirror/search";
 import {
   EDITOR_COMMAND_EVENT,
+  EDITOR_IMAGE_RESIZE_EVENT,
   EDITOR_INSERT_EVENT,
   EDITOR_SEARCH_EVENT,
+  type EditorImageResizeRequest,
   type EditorInsertRequest,
 } from "../editor/bridge";
 import { runEditorCommand, type EditorCommand } from "../editor/format";
@@ -15,6 +17,8 @@ import {
 } from "../editor/setup";
 import { livePreview } from "../editor/livePreview";
 import { searchPhrases } from "../i18n";
+import { setImageWidth } from "../lib/imageSize";
+import { minimalTextChange } from "../lib/textChange";
 import { smartTyping } from "../editor/smartTyping";
 import {
   centerSelection,
@@ -50,6 +54,8 @@ function focusSearchField(view: EditorView, replace: boolean): void {
   });
 }
 
+const allowReadOnlyEdit = Annotation.define<boolean>();
+
 function editableExtensions(readOnly: boolean) {
   const extensions = [
     EditorView.editable.of(!readOnly),
@@ -58,7 +64,9 @@ function editableExtensions(readOnly: boolean) {
   if (readOnly) {
     extensions.push(
       EditorState.transactionFilter.of((transaction) =>
-        transaction.docChanged ? [] : transaction,
+        transaction.docChanged && !transaction.annotation(allowReadOnlyEdit)
+          ? []
+          : transaction,
       ),
     );
   }
@@ -375,13 +383,38 @@ export function EditorPane({
       });
       view.focus();
     };
+    const onImageResize = (event: Event) => {
+      const view = viewRef.current;
+      const request = (event as CustomEvent<EditorImageResizeRequest>).detail;
+      if (!view || !request) {
+        return;
+      }
+      const current = view.state.doc.toString();
+      const next = setImageWidth(
+        current,
+        request.imageIndex,
+        request.width,
+        request.alt,
+      );
+      const change = minimalTextChange(current, next);
+      if (!change) {
+        return;
+      }
+      view.dispatch({
+        changes: change,
+        annotations: allowReadOnlyEdit.of(true),
+        scrollIntoView: false,
+      });
+    };
     window.addEventListener(EDITOR_COMMAND_EVENT, onCommand);
     window.addEventListener(EDITOR_SEARCH_EVENT, onSearch);
     window.addEventListener(EDITOR_INSERT_EVENT, onInsert);
+    window.addEventListener(EDITOR_IMAGE_RESIZE_EVENT, onImageResize);
     return () => {
       window.removeEventListener(EDITOR_COMMAND_EVENT, onCommand);
       window.removeEventListener(EDITOR_SEARCH_EVENT, onSearch);
       window.removeEventListener(EDITOR_INSERT_EVENT, onInsert);
+      window.removeEventListener(EDITOR_IMAGE_RESIZE_EVENT, onImageResize);
     };
   }, []);
 
