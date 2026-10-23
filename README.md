@@ -7,10 +7,12 @@ designed around a calm, single-document writing surface: a slim title bar, a
 collapsible file/outline/search sidebar, a centered source editor, and a quiet
 status bar.
 
-> Status: MVP (M2). The desktop shell, source editor, file open/save,
+> Status: MVP (M3). The desktop shell, source editor, file open/save,
 > encoding-aware IO, workspace browser, outline, search, themes, rendered
-> preview, formatting commands, find/replace, and HTML/PDF export are
-> implemented. See `docs/feature-parity.md` for the roadmap.
+> preview, formatting commands, find/replace, HTML/PDF export, preferences,
+> quick open, workspace full-text search, autosave, crash recovery, and
+> external-change detection are implemented. See `docs/feature-parity.md` for
+> the roadmap.
 
 ## Principles
 
@@ -60,9 +62,30 @@ M2 adds the reading and formatting workflow:
   save-as-PDF through the system print dialog.
 - Automatic layout and print styles for light, dark, and narrow windows.
 
+M3 adds the workspace and reliability layer:
+
+- Preferences for theme, editor text size, writing-column width, spell check,
+  opt-in autosave, and the autosave pause. Preferences persist locally and apply
+  immediately.
+- Quick open (`Ctrl+P`) across recent files and the current workspace, with
+  fuzzy ranking, path context, and arrow-key navigation.
+- Workspace full-text search with optional case matching, line/column results,
+  match previews, and open-at-line navigation. The Rust indexer skips hidden
+  folders, dependency/build output, and common VCS folders.
+- Autosave for named documents, disabled by default. Unsaved work is always
+  mirrored to a local recovery draft; after an unexpected exit, MarkSI offers to
+  recover or discard it on the next launch.
+- External-change detection through lightweight modification-time polling.
+  Clean documents reload automatically; dirty documents show a conflict warning
+  and keep the local edits.
+- Spell-check control for the source editor.
+- Workspace indexing, search, and modification-time queries run in Rust instead
+  of scanning the WebView.
+
 Preview images render as labelled placeholders until local asset handling lands
 in M4. Raw HTML is escaped and inert, unsafe URLs are rejected, and remote images
-are never loaded implicitly.
+are never loaded implicitly. Draft recovery stores its snapshot in WebView
+`localStorage` and never transmits document content.
 
 ## Development
 
@@ -109,8 +132,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
 For UI inspection against the running desktop webview, start the app with
 `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` and use
 `node scripts/cdp-eval.mjs "<expression>"` or
-`node scripts/cdp-screenshot.mjs <output.png>`. These helpers are development
-tools only and are not part of the packaged app.
+`node scripts/cdp-screenshot.mjs <output.png>`. If port 9222 is unavailable on
+your machine, choose another port and point the helpers at it with
+`MARKSI_CDP_PORT=9223`. These helpers are development tools only and are not part
+of the packaged app.
 
 ## Project layout
 

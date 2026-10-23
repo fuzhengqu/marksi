@@ -7,7 +7,10 @@ import {
   EDITOR_SEARCH_EVENT,
 } from "../editor/bridge";
 import { runEditorCommand, type EditorCommand } from "../editor/format";
-import { createEditorExtensions } from "../editor/setup";
+import {
+  createEditorExtensions,
+  editorContentAttributes,
+} from "../editor/setup";
 import { useAppStore } from "../store/useAppStore";
 
 interface EditorPaneProps {
@@ -16,6 +19,7 @@ interface EditorPaneProps {
   gotoLine: number | null;
   active: boolean;
   readOnly: boolean;
+  spellcheck: boolean;
 }
 
 function focusSearchField(view: EditorView, replace: boolean): void {
@@ -34,12 +38,15 @@ export function EditorPane({
   gotoLine,
   active,
   readOnly,
+  spellcheck,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   const contentRef = useRef(content);
   const readOnlyRef = useRef(readOnly);
+  const spellcheckRef = useRef(spellcheck);
   const [editableCompartment] = useState(() => new Compartment());
+  const [spellcheckCompartment] = useState(() => new Compartment());
   const callbacksRef = useRef({
     onChange: useAppStore.getState().setContent,
     onCursor: useAppStore.getState().setCursor,
@@ -52,6 +59,10 @@ export function EditorPane({
   useEffect(() => {
     readOnlyRef.current = readOnly;
   }, [readOnly]);
+
+  useEffect(() => {
+    spellcheckRef.current = spellcheck;
+  }, [spellcheck]);
 
   useEffect(() => {
     callbacksRef.current = {
@@ -73,6 +84,9 @@ export function EditorPane({
           onCursor: (position) => callbacksRef.current.onCursor(position),
         }),
         editableCompartment.of(EditorView.editable.of(!readOnlyRef.current)),
+        spellcheckCompartment.of(
+          editorContentAttributes(spellcheckRef.current),
+        ),
       ],
     });
 
@@ -86,7 +100,7 @@ export function EditorPane({
       viewRef.current = null;
       view.destroy();
     };
-  }, [editableCompartment]);
+  }, [editableCompartment, spellcheckCompartment]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -102,6 +116,18 @@ export function EditorPane({
       view.contentDOM.blur();
     }
   }, [editableCompartment, readOnly]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) {
+      return;
+    }
+    view.dispatch({
+      effects: spellcheckCompartment.reconfigure(
+        editorContentAttributes(spellcheck),
+      ),
+    });
+  }, [spellcheck, spellcheckCompartment]);
 
   useEffect(() => {
     const onCommand = (event: Event) => {
@@ -148,12 +174,15 @@ export function EditorPane({
             editableCompartment.of(
               EditorView.editable.of(!readOnlyRef.current),
             ),
+            spellcheckCompartment.of(
+              editorContentAttributes(spellcheckRef.current),
+            ),
           ],
         }),
       );
     }
     contentRef.current = content;
-  }, [content]);
+  }, [content, editableCompartment, spellcheckCompartment]);
 
   useEffect(() => {
     const view = viewRef.current;

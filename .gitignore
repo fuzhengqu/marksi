@@ -36,3 +36,4 @@ test-results/
 
 # Local app data
 *.marksi
+.tmp/

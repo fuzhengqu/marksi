@@ -1,6 +1,9 @@
-import { lazy, Suspense, useCallback, useEffect } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { DraftRecovery } from "./components/DraftRecovery";
 import { EditorPane } from "./components/EditorPane";
 import { MenuOverlay } from "./components/MenuOverlay";
+import { QuickOpen } from "./components/QuickOpen";
+import { SettingsDialog } from "./components/SettingsDialog";
 import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { TitleBar } from "./components/TitleBar";
@@ -8,8 +11,10 @@ import { Toast } from "./components/Toast";
 import { Welcome } from "./components/Welcome";
 import { dispatchEditorCommand, dispatchEditorSearch } from "./editor/bridge";
 import type { EditorCommand } from "./editor/format";
+import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
 import {
   fileName,
+  getFileModifiedMs,
   isTauri,
   listDirectory,
   openDocument,
@@ -19,6 +24,7 @@ import {
   saveHtmlFile,
 } from "./lib/platform";
 import { useAppStore } from "./store/useAppStore";
+import type { AppSettings, DocumentDraft } from "./types";
 
 const PreviewPane = lazy(() =>
   import("./components/PreviewPane").then((module) => ({
@@ -36,6 +42,14 @@ function errorMessage(error: unknown): string {
   return String(error);
 }
 
+function samePath(left: string | null, right: string | null): boolean {
+  if (!left || !right) {
+    return false;
+  }
+  return left.replace(/\\/g, "/").toLowerCase() ===
+    right.replace(/\\/g, "/").toLowerCase();
+}
+
 export default function App() {
   const doc = useAppStore((state) => state.doc);
   const recent = useAppStore((state) => state.recent);
@@ -43,6 +57,10 @@ export default function App() {
   const theme = useAppStore((state) => state.theme);
   const viewMode = useAppStore((state) => state.viewMode);
   const gotoLine = useAppStore((state) => state.gotoLine);
+  const settings = useAppStore((state) => state.settings);
+  const [draftToRecover, setDraftToRecover] =
+    useState<DocumentDraft | null>(() => loadDraft());
+  const savingRef = useRef(false);
 
   const confirmDiscard = useCallback(async () => {
     const current = useAppStore.getState().doc;
@@ -91,7 +109,14 @@ export default function App() {
   }, [confirmDiscard]);
 
   const handleOpenPath = useCallback(
-    async (path: string) => {
+    async (path: string, line?: number) => {
+      const current = useAppStore.getState();
+      if (samePath(current.doc.path, path)) {
+        if (line != null) {
+          current.requestGotoLine(line);
+        }
+        return;
+      }
       if (!(await confirmDiscard())) {
         return;
       }
@@ -101,6 +126,9 @@ export default function App() {
           const payload = await openDocument();
           if (payload) {
             useAppStore.getState().setLoadedDocument(payload);
+            if (line != null) {
+              useAppStore.getState().requestGotoLine(line);
+            }
           }
         } catch (error) {
           state.showToast(errorMessage(error), "error");
@@ -111,6 +139,10 @@ export default function App() {
       try {
         const payload = await readDocument(path);
         useAppStore.getState().setLoadedDocument(payload);
+        if (line != null) {
+          useAppStore.getState().requestGotoLine(line);
+          useAppStore.getState().setViewMode("source");
+        }
       } catch (error) {
         state.showToast(errorMessage(error), "error");
       } finally {
@@ -159,31 +191,46 @@ export default function App() {
     useAppStore.getState().clearWorkspace();
   }, []);
 
-  const saveCurrent = useCallback(async (saveAs: boolean) => {
-    const state = useAppStore.getState();
-    const current = state.doc;
-    try {
-      const meta = await saveDocument(
-        {
-          path: current.path,
-          name: current.name,
-          content: current.content,
-          encoding: current.encoding,
-          lineEnding: current.lineEnding,
-          hasBom: current.hasBom,
-        },
-        saveAs,
-      );
-      if (meta) {
-        useAppStore.getState().markSaved(meta);
-        useAppStore
-          .getState()
-          .showToast(`Saved ${fileName(meta.path)}`, "success");
+  const saveCurrent = useCallback(
+    async (saveAs: boolean, silent = false) => {
+      const state = useAppStore.getState();
+      const current = state.doc;
+      const originalPath = current.path;
+      const content = current.content;
+      savingRef.current = true;
+      try {
+        const meta = await saveDocument(
+          {
+            path: current.path,
+            name: current.name,
+            content,
+            encoding: current.encoding,
+            lineEnding: current.lineEnding,
+            hasBom: current.hasBom,
+          },
+          saveAs,
+        );
+        if (meta) {
+          const latest = useAppStore.getState();
+          const pathChanged =
+            originalPath != null &&
+            latest.doc.path != null &&
+            !samePath(originalPath, latest.doc.path);
+          if (!pathChanged) {
+            latest.markSaved(meta, content);
+            if (!silent) {
+              latest.showToast(`Saved ${fileName(meta.path)}`, "success");
+            }
+          }
+        }
+      } catch (error) {
+        useAppStore.getState().showToast(errorMessage(error), "error");
+      } finally {
+        savingRef.current = false;
       }
-    } catch (error) {
-      useAppStore.getState().showToast(errorMessage(error), "error");
-    }
-  }, []);
+    },
+    [],
+  );
 
   const handleSave = useCallback(() => {
     void saveCurrent(false);
@@ -252,6 +299,189 @@ export default function App() {
     };
     window.setTimeout(printWhenReady, 40);
   }, []);
+
+  async function recoverDraft() {
+    const pending = draftToRecover;
+    if (!pending) {
+      return;
+    }
+    setDraftToRecover(null);
+    clearDraft();
+
+    if (pending.path) {
+      try {
+        const payload = await readDocument(pending.path);
+        const state = useAppStore.getState();
+        state.setLoadedDocument(payload);
+        state.setContent(pending.content);
+        state.setViewMode("source");
+        state.showToast("Draft recovered. Review it, then save.", "success");
+        return;
+      } catch {
+        // The file may have moved; keep the recovered text as a local document.
+      }
+    }
+
+    useAppStore.getState().restoreDraft(pending);
+    useAppStore
+      .getState()
+      .showToast("Recovered unsaved draft. Save it to a file.", "success");
+  }
+
+  function discardDraft() {
+    clearDraft();
+    setDraftToRecover(null);
+  }
+
+  useEffect(() => {
+    if (draftToRecover) {
+      return;
+    }
+    if (!doc.dirty) {
+      clearDraft();
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      const latest = useAppStore.getState().doc;
+      if (!latest.dirty) {
+        clearDraft();
+        return;
+      }
+      saveDraft({
+        path: latest.path,
+        name: latest.name,
+        content: latest.content,
+        savedContent: latest.savedContent,
+        encoding: latest.encoding,
+        lineEnding: latest.lineEnding,
+        hasBom: latest.hasBom,
+        modifiedMs: latest.modifiedMs,
+        updatedAt: Date.now(),
+      });
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [
+    doc.content,
+    doc.dirty,
+    doc.encoding,
+    doc.hasBom,
+    doc.lineEnding,
+    doc.modifiedMs,
+    doc.name,
+    doc.path,
+    doc.savedContent,
+    draftToRecover,
+  ]);
+
+  useEffect(() => {
+    if (
+      !settings.autoSave ||
+      !doc.path ||
+      !doc.dirty ||
+      draftToRecover
+    ) {
+      return;
+    }
+    const path = doc.path;
+    const timer = window.setTimeout(() => {
+      const latest = useAppStore.getState();
+      if (
+        latest.settings.autoSave &&
+        latest.doc.dirty &&
+        samePath(latest.doc.path, path)
+      ) {
+        void saveCurrent(false, true);
+      }
+    }, settings.autoSaveDelayMs);
+    return () => window.clearTimeout(timer);
+  }, [
+    doc.content,
+    doc.dirty,
+    doc.path,
+    draftToRecover,
+    saveCurrent,
+    settings.autoSave,
+    settings.autoSaveDelayMs,
+  ]);
+
+  useEffect(() => {
+    if (!isTauri() || !doc.path) {
+      return;
+    }
+    let cancelled = false;
+    let checking = false;
+    const path = doc.path;
+
+    const check = async () => {
+      if (cancelled || checking || savingRef.current) {
+        return;
+      }
+      const current = useAppStore.getState().doc;
+      if (!samePath(current.path, path)) {
+        return;
+      }
+      checking = true;
+      try {
+        const modified = await getFileModifiedMs(path);
+        if (cancelled || modified == null) {
+          return;
+        }
+        if (current.modifiedMs != null && modified === current.modifiedMs) {
+          return;
+        }
+
+        if (current.dirty) {
+          useAppStore.getState().setModifiedMs(modified);
+          useAppStore
+            .getState()
+            .showToast(
+              "This file changed on disk. Your unsaved edits are still here.",
+              "info",
+            );
+          return;
+        }
+
+        const { ask } = await import("@tauri-apps/plugin-dialog");
+        const reload = await ask("This file changed on disk. Reload it?", {
+          title: "File changed",
+          kind: "info",
+          okLabel: "Reload",
+          cancelLabel: "Keep current",
+        });
+        if (cancelled) {
+          return;
+        }
+        if (!reload) {
+          useAppStore.getState().setModifiedMs(modified);
+          return;
+        }
+        const payload = await readDocument(path);
+        const latest = useAppStore.getState();
+        if (samePath(latest.doc.path, path) && !latest.doc.dirty) {
+          latest.setLoadedDocument(payload);
+          latest.showToast("Reloaded changes from disk.", "info");
+        }
+      } catch {
+        // A missing or locked file should not interrupt editing.
+      } finally {
+        checking = false;
+      }
+    };
+
+    const interval = window.setInterval(() => void check(), 2_500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [doc.path]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const size = Math.min(22, Math.max(14, settings.editorFontSize));
+    const width = Math.min(1_100, Math.max(680, settings.contentWidth));
+    root.style.setProperty("--editor-font-size", `${size}px`);
+    root.style.setProperty("--content-width", `${width}px`);
+  }, [settings.contentWidth, settings.editorFontSize]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -324,6 +554,39 @@ export default function App() {
         return;
       }
       const key = event.key.toLowerCase();
+
+      if (key === "p" && !event.shiftKey) {
+        event.preventDefault();
+        const state = useAppStore.getState();
+        state.setSettingsOpen(false);
+        state.setQuickOpen(true);
+        return;
+      }
+
+      if (key === "," || event.code === "Comma") {
+        event.preventDefault();
+        const state = useAppStore.getState();
+        state.setQuickOpen(false);
+        state.setSettingsOpen(true);
+        return;
+      }
+
+      if (key === "f" && event.shiftKey) {
+        event.preventDefault();
+        const state = useAppStore.getState();
+        state.setQuickOpen(false);
+        state.setSidebarTab("search");
+        if (state.workspace) {
+          state.setSearchScope("workspace");
+        } else {
+          state.setSearchScope("document");
+          state.showToast("Open a folder to search across files.", "info");
+        }
+        window.setTimeout(() => {
+          document.querySelector<HTMLInputElement>(".search-box input")?.focus();
+        }, 0);
+        return;
+      }
 
       if (event.code === "Slash" && !event.shiftKey) {
         event.preventDefault();
@@ -434,6 +697,10 @@ export default function App() {
       format: handleFormat,
       exportHtml: handleExportHtml,
       print: handlePrint,
+      openQuickOpen: () => useAppStore.getState().setQuickOpen(true),
+      openSettings: () => useAppStore.getState().setSettingsOpen(true),
+      setSettings: (patch: Partial<AppSettings>) =>
+        useAppStore.getState().updateSettings(patch),
     };
   }, [
     handleNew,
@@ -456,6 +723,7 @@ export default function App() {
         {sidebarOpen ? (
           <Sidebar
             onOpenFile={(path) => void handleOpenPath(path)}
+            onOpenFileAtLine={(path, line) => void handleOpenPath(path, line)}
             onOpenFolder={() => void handleOpenFolder()}
             onNewFile={handleNew}
             onRefreshWorkspace={() => void handleRefreshWorkspace()}
@@ -469,6 +737,7 @@ export default function App() {
             gotoLine={gotoLine}
             active={viewMode === "source"}
             readOnly={viewMode === "preview"}
+            spellcheck={settings.spellcheck}
           />
           {viewMode === "preview" ? (
             <Suspense
@@ -510,7 +779,28 @@ export default function App() {
         onToggleView={handleToggleView}
         onFormat={handleFormat}
         onCloseWorkspace={handleCloseWorkspace}
+        onQuickOpen={() => useAppStore.getState().setQuickOpen(true)}
+        onSearchWorkspace={() => {
+          const state = useAppStore.getState();
+          state.setSidebarTab("search");
+          if (state.workspace) {
+            state.setSearchScope("workspace");
+          } else {
+            state.setSearchScope("document");
+            state.showToast("Open a folder to search across files.", "info");
+          }
+        }}
+        onOpenSettings={() => useAppStore.getState().setSettingsOpen(true)}
       />
+      <QuickOpen onOpen={(path) => void handleOpenPath(path)} />
+      <SettingsDialog />
+      {draftToRecover ? (
+        <DraftRecovery
+          draft={draftToRecover}
+          onRecover={() => void recoverDraft()}
+          onDiscard={discardDraft}
+        />
+      ) : null}
       <Toast />
     </div>
   );

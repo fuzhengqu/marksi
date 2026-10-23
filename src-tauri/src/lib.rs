@@ -11,6 +11,9 @@ pub fn run() {
             commands::document::write_export,
             commands::document::list_directory,
             commands::document::app_version,
+            commands::workspace::list_workspace_files,
+            commands::workspace::search_workspace,
+            commands::workspace::file_modified_ms,
         ])
         .run(tauri::generate_context!())
         .expect("error while running MarkSI");

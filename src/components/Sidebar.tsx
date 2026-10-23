@@ -15,12 +15,23 @@ import {
   Search,
 } from "lucide-react";
 import { extractOutline } from "../editor/analyze";
-import { fileName, isTauri, listDirectory } from "../lib/platform";
+import {
+  fileName,
+  isTauri,
+  listDirectory,
+  searchWorkspace,
+} from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
-import type { FileEntry, SidebarTab } from "../types";
+import type {
+  FileEntry,
+  SearchScope,
+  SidebarTab,
+  WorkspaceSearchMatch,
+} from "../types";
 
 interface SidebarProps {
   onOpenFile: (path: string) => void;
+  onOpenFileAtLine: (path: string, line: number) => void;
   onOpenFolder: () => void;
   onNewFile: () => void;
   onRefreshWorkspace: () => void;
@@ -34,6 +45,7 @@ const tabs: Array<{ id: SidebarTab; label: string; icon: typeof Folder }> = [
 
 export function Sidebar({
   onOpenFile,
+  onOpenFileAtLine,
   onOpenFolder,
   onNewFile,
   onRefreshWorkspace,
@@ -111,7 +123,9 @@ export function Sidebar({
         {sidebarTab === "search" ? (
           <SearchPanel
             content={doc.content}
+            workspace={workspace}
             onSelect={(line) => requestGotoLine(line)}
+            onOpenFile={onOpenFileAtLine}
           />
         ) : null}
       </div>
@@ -310,51 +324,198 @@ function FileTreeNode({ entry, depth, onOpenFile, onShowToast }: FileTreeNodePro
 
 interface SearchPanelProps {
   content: string;
+  workspace: { path: string; entries: FileEntry[]; loading: boolean } | null;
   onSelect: (line: number) => void;
+  onOpenFile: (path: string, line: number) => void;
 }
 
-function SearchPanel({ content, onSelect }: SearchPanelProps) {
+function SearchPanel({
+  content,
+  workspace,
+  onSelect,
+  onOpenFile,
+}: SearchPanelProps) {
+  const searchScope = useAppStore((state) => state.searchScope);
+  const setSearchScope = useAppStore((state) => state.setSearchScope);
+  const showToast = useAppStore((state) => state.showToast);
   const [term, setTerm] = useState("");
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [workspaceResults, setWorkspaceResults] = useState<
+    WorkspaceSearchMatch[]
+  >([]);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  const results = useMemo(() => {
-    const query = term.trim().toLowerCase();
+  useEffect(() => {
+    if (!workspace && searchScope === "workspace") {
+      setSearchScope("document");
+    }
+  }, [searchScope, setSearchScope, workspace]);
+
+  const documentResults = useMemo(() => {
+    const query = caseSensitive ? term.trim() : term.trim().toLowerCase();
     if (!query) {
       return [];
     }
     return content
       .split(/\r?\n/)
       .map((line, index) => ({ line, number: index + 1 }))
-      .filter((entry) => entry.line.toLowerCase().includes(query))
-      .slice(0, 100);
-  }, [content, term]);
+      .filter((entry) => {
+        const source = caseSensitive ? entry.line : entry.line.toLowerCase();
+        return source.includes(query);
+      })
+      .slice(0, 200);
+  }, [caseSensitive, content, term]);
+
+  useEffect(() => {
+    const query = term.trim();
+    if (
+      searchScope !== "workspace" ||
+      !workspace ||
+      !query ||
+      !isTauri()
+    ) {
+      setWorkspaceResults([]);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    const timer = window.setTimeout(() => {
+      void searchWorkspace(workspace.path, query, caseSensitive)
+        .then((matches) => {
+          if (!cancelled) {
+            setWorkspaceResults(matches);
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            setWorkspaceResults([]);
+            showToast(
+              error instanceof Error ? error.message : String(error),
+              "error",
+            );
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+    }, 180);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [caseSensitive, searchScope, showToast, term, workspace]);
+
+  const hasQuery = term.trim().length > 0;
+  const isWorkspaceSearch = searchScope === "workspace";
+  const resultCount = isWorkspaceSearch
+    ? workspaceResults.length
+    : documentResults.length;
 
   return (
     <div className="panel-scroll">
       <div className="panel-heading">
-        <span>Search in document</span>
+        <span>Search</span>
+        {hasQuery ? <span className="panel-count">{resultCount}</span> : null}
       </div>
+
+      <div className="search-scope" role="group" aria-label="Search scope">
+        {(
+          [
+            { id: "document", label: "Document" },
+            { id: "workspace", label: "Folder" },
+          ] as Array<{ id: SearchScope; label: string }>
+        ).map((scope) => (
+          <button
+            key={scope.id}
+            className={searchScope === scope.id ? "is-active" : ""}
+            onClick={() => setSearchScope(scope.id)}
+            disabled={scope.id === "workspace" && !workspace}
+            title={
+              scope.id === "workspace" && !workspace
+                ? "Open a folder to search it"
+                : undefined
+            }
+          >
+            {scope.label}
+          </button>
+        ))}
+      </div>
+
       <label className="search-box">
         <Search size={14} strokeWidth={1.8} />
         <input
           ref={inputRef}
           value={term}
           onChange={(event) => setTerm(event.target.value)}
-          placeholder="Find text…"
-          aria-label="Search in document"
+          placeholder={
+            isWorkspaceSearch ? "Search this folder…" : "Find in document…"
+          }
+          aria-label={
+            isWorkspaceSearch ? "Search workspace" : "Search in document"
+          }
         />
+        <button
+          type="button"
+          className={`search-case ${caseSensitive ? "is-active" : ""}`}
+          aria-pressed={caseSensitive}
+          title="Match case"
+          onClick={() => setCaseSensitive((value) => !value)}
+        >
+          Aa
+        </button>
       </label>
 
-      {term.trim() ? (
-        results.length === 0 ? (
+      {loading ? (
+        <div className="panel-loading">
+          <Loader2 size={14} className="spin" />
+          <span>Searching folder…</span>
+        </div>
+      ) : null}
+
+      {hasQuery ? (
+        isWorkspaceSearch ? (
+          workspaceResults.length === 0 && !loading ? (
+            <div className="recent-empty">No matches in this folder.</div>
+          ) : (
+            <div className="search-results">
+              {workspaceResults.map((result) => (
+                <button
+                  key={`${result.path}:${result.line}:${result.column}`}
+                  className="search-result search-result-workspace"
+                  onClick={() => onOpenFile(result.path, result.line)}
+                  title={`${result.path}:${result.line}`}
+                >
+                  <span className="search-line">{result.line}</span>
+                  <span className="search-result-copy">
+                    <span className="search-result-heading">
+                      <span>{result.name}</span>
+                      <span className="search-result-path">
+                        {result.relativePath}
+                      </span>
+                    </span>
+                    <span className="search-text">
+                      {result.preview || " "}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )
+        ) : documentResults.length === 0 ? (
           <div className="recent-empty">No matches.</div>
         ) : (
           <div className="search-results">
-            {results.map((result) => (
+            {documentResults.map((result) => (
               <button
                 key={result.number}
                 className="search-result"
@@ -370,7 +531,11 @@ function SearchPanel({ content, onSelect }: SearchPanelProps) {
       ) : (
         <div className="empty-panel compact">
           <Search size={22} strokeWidth={1.3} />
-          <p>Search the current document. Global workspace search arrives in M3.</p>
+          <p>
+            {isWorkspaceSearch
+              ? "Search every Markdown and text file in the open folder."
+              : "Search the current document. Use Ctrl+Shift+F to search the whole folder."}
+          </p>
         </div>
       )}
     </div>

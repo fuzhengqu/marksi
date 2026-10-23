@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type {
+  AppSettings,
   CursorPosition,
+  DocumentDraft,
   DocumentPayload,
   FileEntry,
   FileMeta,
   LineEnding,
   RecentFile,
+  SearchScope,
   SidebarTab,
   Theme,
   ToastMessage,
@@ -26,6 +29,7 @@ interface DocumentState {
   hadErrors: boolean;
   dirty: boolean;
   loading: boolean;
+  modifiedMs: number | null;
 }
 
 interface WorkspaceState {
@@ -46,11 +50,17 @@ interface AppStore {
   cursor: CursorPosition;
   toast: ToastMessage | null;
   gotoLine: number | null;
+  settings: AppSettings;
+  settingsOpen: boolean;
+  quickOpen: boolean;
+  searchScope: SearchScope;
 
   newDocument: () => void;
   setLoadedDocument: (payload: DocumentPayload) => void;
   setContent: (content: string) => void;
-  markSaved: (meta: FileMeta) => void;
+  markSaved: (meta: FileMeta, savedContent?: string) => void;
+  restoreDraft: (draft: DocumentDraft) => void;
+  setModifiedMs: (modifiedMs: number | null) => void;
   setLoading: (loading: boolean) => void;
 
   setSidebarTab: (tab: SidebarTab) => void;
@@ -63,6 +73,11 @@ interface AppStore {
   setCursor: (cursor: CursorPosition) => void;
   requestGotoLine: (line: number) => void;
   clearGotoLine: () => void;
+  setSettingsOpen: (open: boolean) => void;
+  updateSettings: (patch: Partial<AppSettings>) => void;
+  resetSettings: () => void;
+  setQuickOpen: (open: boolean) => void;
+  setSearchScope: (scope: SearchScope) => void;
   showToast: (message: string, tone?: ToastTone) => void;
   dismissToast: () => void;
 
@@ -72,6 +87,14 @@ interface AppStore {
   setWorkspaceLoading: (loading: boolean) => void;
   clearWorkspace: () => void;
 }
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  editorFontSize: 16,
+  contentWidth: 860,
+  spellcheck: true,
+  autoSave: false,
+  autoSaveDelayMs: 1_500,
+};
 
 const emptyDocument: DocumentState = {
   path: null,
@@ -84,6 +107,7 @@ const emptyDocument: DocumentState = {
   hadErrors: false,
   dirty: false,
   loading: false,
+  modifiedMs: null,
 };
 
 function pathKey(path: string): string {
@@ -112,6 +136,10 @@ export const useAppStore = create<AppStore>()(
       cursor: { line: 1, column: 1 },
       toast: null,
       gotoLine: null,
+      settings: { ...DEFAULT_SETTINGS },
+      settingsOpen: false,
+      quickOpen: false,
+      searchScope: "document",
 
       newDocument: () =>
         set({
@@ -141,6 +169,7 @@ export const useAppStore = create<AppStore>()(
               hadErrors: payload.hadErrors,
               dirty: false,
               loading: false,
+              modifiedMs: payload.modifiedMs,
             },
             recent: nextRecent,
             cursor: { line: 1, column: 1 },
@@ -165,21 +194,50 @@ export const useAppStore = create<AppStore>()(
           },
         })),
 
-      markSaved: (meta) =>
-        set((state) => ({
+      markSaved: (meta, savedContent) =>
+        set((state) => {
+          const persistedContent = savedContent ?? state.doc.content;
+          return {
+            doc: {
+              ...state.doc,
+              path: meta.path,
+              name: fileName(meta.path),
+              savedContent: persistedContent,
+              dirty: state.doc.content !== persistedContent,
+              loading: false,
+              modifiedMs: meta.modifiedMs,
+            },
+            recent: [
+              recentEntry(meta.path),
+              ...state.recent.filter(
+                (entry) => pathKey(entry.path) !== pathKey(meta.path),
+              ),
+            ].slice(0, 12),
+          };
+        }),
+
+      restoreDraft: (draft) =>
+        set({
           doc: {
-            ...state.doc,
-            path: meta.path,
-            name: fileName(meta.path),
-            savedContent: state.doc.content,
-            dirty: false,
+            path: draft.path,
+            name: draft.name,
+            content: draft.content,
+            savedContent: draft.savedContent,
+            encoding: draft.encoding,
+            lineEnding: draft.lineEnding,
+            hasBom: draft.hasBom,
+            hadErrors: false,
+            dirty: draft.content !== draft.savedContent,
             loading: false,
+            modifiedMs: draft.modifiedMs,
           },
-          recent: [
-            recentEntry(meta.path),
-            ...state.recent.filter((entry) => pathKey(entry.path) !== pathKey(meta.path)),
-          ].slice(0, 12),
-        })),
+          cursor: { line: 1, column: 1 },
+          viewMode: "source",
+          menuOpen: false,
+        }),
+
+      setModifiedMs: (modifiedMs) =>
+        set((state) => ({ doc: { ...state.doc, modifiedMs } })),
 
       setLoading: (loading) =>
         set((state) => ({ doc: { ...state.doc, loading } })),
@@ -198,6 +256,15 @@ export const useAppStore = create<AppStore>()(
       setCursor: (cursor) => set({ cursor }),
       requestGotoLine: (line) => set({ gotoLine: line }),
       clearGotoLine: () => set({ gotoLine: null }),
+
+      setSettingsOpen: (settingsOpen) => set({ settingsOpen, menuOpen: false }),
+      updateSettings: (patch) =>
+        set((state) => ({
+          settings: { ...state.settings, ...patch },
+        })),
+      resetSettings: () => set({ settings: { ...DEFAULT_SETTINGS } }),
+      setQuickOpen: (quickOpen) => set({ quickOpen, menuOpen: false }),
+      setSearchScope: (searchScope) => set({ searchScope }),
 
       showToast: (message, tone = "info") =>
         set({ toast: { id: Date.now(), message, tone } }),
@@ -236,6 +303,7 @@ export const useAppStore = create<AppStore>()(
         recent: state.recent,
         theme: state.theme,
         sidebarOpen: state.sidebarOpen,
+        settings: state.settings,
       }),
     },
   ),

@@ -1,4 +1,11 @@
-import type { DocumentPayload, FileEntry, FileMeta, LineEnding } from "../types";
+import type {
+  DocumentPayload,
+  FileEntry,
+  FileMeta,
+  LineEnding,
+  WorkspaceFile,
+  WorkspaceSearchMatch,
+} from "../types";
 
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -103,6 +110,43 @@ export async function listDirectory(path: string): Promise<FileEntry[]> {
   }
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<FileEntry[]>("list_directory", { path });
+}
+
+export async function listWorkspaceFiles(
+  root: string,
+  limit = 2_000,
+): Promise<WorkspaceFile[]> {
+  if (!isTauri()) {
+    return [];
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<WorkspaceFile[]>("list_workspace_files", { root, limit });
+}
+
+export async function searchWorkspace(
+  root: string,
+  query: string,
+  caseSensitive = false,
+  maxResults = 200,
+): Promise<WorkspaceSearchMatch[]> {
+  if (!isTauri()) {
+    return [];
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<WorkspaceSearchMatch[]>("search_workspace", {
+    root,
+    query,
+    caseSensitive,
+    maxResults,
+  });
+}
+
+export async function getFileModifiedMs(path: string): Promise<number | null> {
+  if (!isTauri()) {
+    return null;
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<number | null>("file_modified_ms", { path });
 }
 
 export async function saveDocument(

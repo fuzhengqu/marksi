@@ -168,7 +168,7 @@ pub fn app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-fn decode_bytes(bytes: &[u8]) -> (String, &'static Encoding, bool, bool) {
+pub(crate) fn decode_bytes(bytes: &[u8]) -> (String, &'static Encoding, bool, bool) {
     if let Some((encoding, _)) = Encoding::for_bom(bytes) {
         let (decoded, _, had_errors) = encoding.decode(bytes);
         return (decoded.into_owned(), encoding, true, had_errors);
@@ -306,12 +306,13 @@ fn modified_ms(metadata: &fs::Metadata) -> Option<u64> {
         .map(|duration| duration.as_millis() as u64)
 }
 
-fn should_skip(name: &str) -> bool {
+pub(crate) fn should_skip(name: &str) -> bool {
     matches!(
         name,
         ".git"
             | ".hg"
             | ".svn"
+            | ".marksi"
             | "node_modules"
             | "target"
             | ".DS_Store"

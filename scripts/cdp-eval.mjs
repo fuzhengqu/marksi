@@ -15,12 +15,13 @@ if (!expression) {
   process.exit(2);
 }
 
-const targets = await (await fetch("http://127.0.0.1:9222/json")).json();
+const port = process.env.MARKSI_CDP_PORT ?? "9222";
+const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
 const page = targets.find(
   (target) => target.type === "page" && target.url.includes("localhost:1420"),
 );
 if (!page) {
-  console.error("No MarkSI page target found on port 9222.");
+  console.error(`No MarkSI page target found on port ${port}.`);
   process.exit(1);
 }
 

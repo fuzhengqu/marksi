@@ -2023,6 +2023,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "tempfile",
+ "walkdir",
  "windows-sys 0.59.0",
 ]
 

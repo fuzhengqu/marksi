@@ -78,7 +78,7 @@ export const markEditorTheme = EditorView.theme({
   },
   ".cm-scroller": {
     fontFamily: "var(--font-editor)",
-    fontSize: "16px",
+    fontSize: "var(--editor-font-size)",
     lineHeight: "1.72",
     overflow: "auto",
   },

@@ -17,6 +17,8 @@ import {
   Printer,
   Save,
   SaveAll,
+  Search,
+  Settings,
   Strikethrough,
   Sun,
   X,
@@ -36,6 +38,9 @@ interface MenuOverlayProps {
   onToggleView: () => void;
   onFormat: (command: EditorCommand) => void;
   onCloseWorkspace: () => void;
+  onQuickOpen: () => void;
+  onSearchWorkspace: () => void;
+  onOpenSettings: () => void;
 }
 
 export function MenuOverlay({
@@ -49,6 +54,9 @@ export function MenuOverlay({
   onToggleView,
   onFormat,
   onCloseWorkspace,
+  onQuickOpen,
+  onSearchWorkspace,
+  onOpenSettings,
 }: MenuOverlayProps) {
   const open = useAppStore((state) => state.menuOpen);
   const setOpen = useAppStore((state) => state.setMenuOpen);
@@ -105,6 +113,18 @@ export function MenuOverlay({
           label="Open folder…"
           shortcut="Ctrl ⇧ O"
           onClick={() => run(onOpenFolder)}
+        />
+        <MenuItem
+          icon={<Search size={16} strokeWidth={1.8} />}
+          label="Quick open…"
+          shortcut="Ctrl P"
+          onClick={() => run(onQuickOpen)}
+        />
+        <MenuItem
+          icon={<Search size={16} strokeWidth={1.8} />}
+          label="Search in folder…"
+          shortcut="Ctrl ⇧ F"
+          onClick={() => run(onSearchWorkspace)}
         />
         {workspace ? (
           <MenuItem
@@ -203,6 +223,12 @@ export function MenuOverlay({
         />
 
         <div className="menu-separator" />
+        <MenuItem
+          icon={<Settings size={16} strokeWidth={1.8} />}
+          label="Preferences…"
+          shortcut="Ctrl ,"
+          onClick={() => run(onOpenSettings)}
+        />
         <MenuItem
           icon={<Info size={16} strokeWidth={1.8} />}
           label="About MarkSI"

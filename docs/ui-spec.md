@@ -1,4 +1,4 @@
-# MarkSI UI specification (M1)
+# MarkSI UI specification (M3)
 
 ## Layout
 
@@ -23,8 +23,12 @@
 - Sidebar: 270px default, resizable later; tabs Files / Outline / Search.
 - Editor: centered column, max-width 860px; the writing surface is quiet.
 - Status bar: 30px; document facts on the left, counts on the right.
-- No permanent toolbar in the first slice; the floating toolbar arrives with
-  live preview in M2.
+- No permanent toolbar. Formatting and export live in the overlay menu,
+  keyboard shortcuts, and the status bar.
+- Overlays use a dimmed scrim and a centered surface with a strong title,
+  keyboard dismissal, and no nested chrome. Preferences use grouped rows;
+  quick open uses a single search field plus a keyboard-navigable result list;
+  draft recovery uses a read-only preview and two explicit actions.
 
 ## Visual language
 
@@ -49,7 +53,9 @@ its visual assets. The palette, iconography, spacing, and motion are original.
 Typography:
 
 - UI: `Segoe UI Variable`, `Segoe UI`, system-ui, sans-serif.
-- Editor: same family, 16px, line-height 1.7.
+- Editor: same family, 16px by default, line-height 1.7. The preference range
+  is 14–22px.
+- Writing column: 860px by default. The preference range is 680–1100px.
 - Code: `Cascadia Code`, `JetBrains Mono`, Consolas, monospace, 13.5px.
 
 Spacing: 4 / 8 / 12 / 16 / 24 / 32. Radii: 6 / 10 / 14. Motion: 150–220ms
@@ -63,12 +69,25 @@ ease-out; honor `prefers-reduced-motion`.
 - `Ctrl+S`: save.
 - `Ctrl+Shift+S`: save as.
 - `Ctrl+F`: find panel.
-- `Ctrl+B` / `Ctrl+I` / `Ctrl+K`: bold / italic / link (M2).
+- `Ctrl+H`: find and replace.
+- `Ctrl+P`: quick open across recent files and the workspace.
+- `Ctrl+Shift+F`: focus workspace search.
+- `Ctrl+,`: open preferences.
+- `Ctrl+Shift+B`: toggle the sidebar.
+- `Ctrl+/`: toggle source and rendered preview.
+- `Ctrl+B` / `Ctrl+I` / `Ctrl+K`: bold / italic / link.
 - Hamburger opens an overlay menu; Escape closes it.
 - Sidebar tabs are keyboard reachable and preserve state.
 - Unsaved changes are always visible via a dot next to the title.
 - The welcome surface appears only for an empty untitled document; typing
   dismisses it.
+- Preferences apply immediately and are persisted locally. Reset restores the
+  documented defaults.
+- Recovery is always user-confirmed: MarkSI never silently overwrites an
+  unsaved buffer at startup.
+- A clean document reloads when its file changes externally; a dirty document
+  keeps local edits and raises a conflict toast.
+- Toast messages are transient, non-blocking, and never contain document text.
 
 ## Distinctive choices
 

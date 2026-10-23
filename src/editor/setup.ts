@@ -38,6 +38,14 @@ export interface EditorCallbacks {
   onFocus?: () => void;
 }
 
+export function editorContentAttributes(spellcheck: boolean): Extension {
+  return EditorView.contentAttributes.of({
+    spellcheck: String(spellcheck),
+    autocorrect: "off",
+    autocapitalize: "off",
+  });
+}
+
 export function createEditorExtensions(callbacks: EditorCallbacks): Extension[] {
   return [
     history(),
@@ -54,11 +62,6 @@ export function createEditorExtensions(callbacks: EditorCallbacks): Extension[] 
     EditorState.allowMultipleSelections.of(true),
     EditorState.tabSize.of(4),
     EditorView.lineWrapping,
-    EditorView.contentAttributes.of({
-      spellcheck: "true",
-      autocorrect: "off",
-      autocapitalize: "off",
-    }),
     markdown({
       base: markdownLanguage,
       codeLanguages: languages,
