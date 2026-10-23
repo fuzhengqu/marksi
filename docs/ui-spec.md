@@ -107,6 +107,28 @@ ease-out; honor `prefers-reduced-motion`.
 - The lightbox is a viewing surface only; it never edits the Markdown source or
   copies an asset.
 
+## Extended Markdown
+
+- YAML front matter is recognized only at the top of a document and is hidden
+  from preview. The source remains visible and editable in the editor. HTML
+  export reads `title`, `author`, `description`, `keywords`, and `tags` for
+  document metadata.
+- A paragraph containing only `[TOC]` is replaced by a linked contents block
+  built from the document headings. The block updates as headings change, and
+  the placeholder disappears when there are no headings.
+- Footnotes use `[^label]` definitions or inline `^[note]` syntax. Footnote
+  links and backlinks scroll within preview.
+- GitHub alerts use `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`,
+  `> [!WARNING]`, or `> [!CAUTION]`. They render as labeled, theme-aware
+  callouts.
+- Inline `$...$` and display `$$...$$` math render with KaTeX in preview.
+  Display formulas are centered and can scroll horizontally when wide.
+- `==highlight==`, `~subscript~`, and `^superscript^` use the normal text color
+  with subtle themed treatment.
+- Link reference definitions work throughout the document.
+- Raw HTML stays escaped and inert. Unsafe link destinations are not activated,
+  and math rendering does not enable KaTeX HTML or trust extensions.
+
 ## Distinctive choices
 
 - A serif-friendly wordmark and a green-teal accent rather than a blue accent.

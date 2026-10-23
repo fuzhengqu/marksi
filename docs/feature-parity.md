@@ -78,17 +78,21 @@ that design decisions do not paint us into a corner.
 | Tables | done | M2 |
 | Task lists | done | M2 |
 | Strikethrough | done | M2 |
-| Footnotes | todo | M4 |
-| TOC | todo | M4 |
-| YAML front matter | todo | M4 |
-| Inline/block math | todo | M4 |
-| Mermaid diagrams | todo | M4 |
+| Footnotes | done | M4 |
+| TOC | done | M4 |
+| YAML front matter | done | M4 |
+| Inline/block math | done | M4 |
+| Mermaid diagrams | todo | M5 |
 | Code fences with language highlight | done | M2 |
-| GitHub alerts | todo | M4 |
-| Highlight / sub / sup | todo | M4 |
-| Raw HTML preview (sanitized) | todo | M4 |
-| Link reference definitions | todo | M4 |
-| Strict mode toggle | todo | M4 |
+| GitHub alerts | done | M4 |
+| Highlight / sub / sup | done | M4 |
+| Raw HTML preview (sanitized) | deferred | — |
+| Link reference definitions | done | M4 |
+| Strict mode toggle | todo | M5 |
+
+Raw HTML preview remains deferred by design. MarkSI keeps raw HTML escaped and
+inert in both preview and export; enabling it would weaken the current
+sanitization boundary and is not planned unless that safety requirement changes.
 
 ## Images
 

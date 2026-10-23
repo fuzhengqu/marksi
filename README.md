@@ -9,10 +9,10 @@ status bar.
 
 > Status: MVP (M4). The desktop shell, source editor, file open/save,
 > encoding-aware IO, workspace browser, outline, search, themes, rendered
-> preview, formatting commands, find/replace, HTML/PDF export, local image
-> assets, preferences, quick open, workspace full-text search, autosave, crash
-> recovery, and external-change detection are implemented. See
-> `docs/feature-parity.md` for the roadmap.
+> preview, extended Markdown, local image assets, formatting commands,
+> find/replace, HTML/PDF export, preferences, quick open, workspace full-text
+> search, autosave, crash recovery, and external-change detection are
+> implemented. See `docs/feature-parity.md` for the roadmap.
 
 ## Principles
 
@@ -31,6 +31,7 @@ status bar.
 - [React 19](https://react.dev/) + TypeScript + Vite
 - [CodeMirror 6](https://codemirror.net/) — editor foundation
 - [markdown-it](https://github.com/markdown-it/markdown-it) + [DOMPurify](https://github.com/cure53/DOMPurify) — sanitized Markdown rendering
+- [KaTeX](https://katex.org/) — inline and display math
 - [highlight.js](https://highlightjs.org/) — curated code highlighting
 - Rust core for file IO, encoding detection, and platform integration
 
@@ -98,8 +99,28 @@ M4 adds the local image workflow:
 - Missing local images and remote images render as labelled placeholders in
   preview. HTML export keeps relative asset paths and remote URLs.
 
+M4 also adds extended Markdown:
+
+- Footnotes with `[^label]` definitions, inline `^[note]` notes, repeated
+  references, and backlinks.
+- `[TOC]` expands to a linked contents block generated from the document
+  headings. Headings receive stable, duplicate-safe anchors.
+- YAML front matter at the very top of a document is hidden from preview. Its
+  `title`, `author`, `description`, `keywords`, and `tags` fields become
+  metadata in standalone HTML exports.
+- GitHub-style alerts (`> [!NOTE]`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION`)
+  render as labeled callouts.
+- `==highlight==`, `~subscript~`, and `^superscript^` render with theme-aware
+  styles.
+- Inline `$...$` and display `$$...$$` math render through KaTeX. Preview uses
+  KaTeX HTML and bundled fonts; HTML export uses MathML so the exported file
+  does not depend on local font assets.
+- Link reference definitions such as `[label]: https://example.com` work across
+  the document.
+
 Raw HTML remains escaped and inert, unsafe URLs are rejected, and remote images
-are never fetched by the preview renderer. Draft recovery stores its snapshot in
+are never fetched by the preview renderer. Math rendering disables KaTeX's
+trust and HTML-extension features. Draft recovery stores its snapshot in
 WebView `localStorage` and never transmits document content.
 
 ## Development

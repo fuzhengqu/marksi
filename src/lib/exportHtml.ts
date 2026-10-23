@@ -1,4 +1,5 @@
 import { escapeHtml, renderMarkdown } from "./markdown";
+import { extractFrontMatter } from "./frontMatter";
 
 interface ExportDocumentOptions {
   title: string;
@@ -44,6 +45,92 @@ p { margin: 0.85em 0; }
 a { color: #2f6f62; text-decoration: underline; text-underline-offset: 2px; }
 strong { font-weight: 680; }
 del { color: #6f7378; }
+mark {
+  padding: 0.05em 0.18em;
+  border-radius: 3px;
+  background: #fff0a8;
+  color: inherit;
+}
+sub, sup { font-size: 0.75em; line-height: 0; }
+sub { vertical-align: sub; }
+sup { vertical-align: super; }
+.math-error {
+  color: #b8473d;
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+}
+.math-display, .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 1.35em 0;
+  padding: 0.2em 0;
+}
+.math-display { text-align: center; }
+.math-display .katex { display: block; }
+.math-display math {
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+math { font-size: 1.05em; }
+.table-of-contents {
+  margin: 1.5em 0;
+  padding: 14px 18px;
+  border: 1px solid #e4e2dd;
+  border-radius: 9px;
+  background: #f5f3ef;
+}
+.toc-title {
+  margin-bottom: 0.55em;
+  color: #6f7378;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.toc-list { margin: 0; padding: 0; list-style: none; }
+.toc-list li { margin: 0.2em 0; }
+.toc-list a { color: #26282b; text-decoration: none; }
+.toc-list a:hover { color: #2f6f62; text-decoration: underline; }
+.toc-level-2 { padding-left: 1.1em; }
+.toc-level-3 { padding-left: 2.2em; }
+.toc-level-4 { padding-left: 3.3em; }
+.toc-level-5 { padding-left: 4.4em; }
+.toc-level-6 { padding-left: 5.5em; }
+.markdown-alert {
+  margin: 1.35em 0;
+  padding: 12px 16px 0.9em;
+  border-left: 4px solid #3f7fbf;
+  border-radius: 0 8px 8px 0;
+  background: #eef4fb;
+}
+.markdown-alert > :last-child { margin-bottom: 0; }
+.markdown-alert-title {
+  margin: 0 0 0.4em;
+  color: #3f7fbf;
+  font-size: 0.82em;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+.markdown-alert-tip { border-left-color: #3f8a64; background: #eef7f1; }
+.markdown-alert-tip .markdown-alert-title { color: #3f8a64; }
+.markdown-alert-important { border-left-color: #7b64b6; background: #f3effa; }
+.markdown-alert-important .markdown-alert-title { color: #7b64b6; }
+.markdown-alert-warning { border-left-color: #a87a2d; background: #fbf5e8; }
+.markdown-alert-warning .markdown-alert-title { color: #a87a2d; }
+.markdown-alert-caution { border-left-color: #b25050; background: #fbeeee; }
+.markdown-alert-caution .markdown-alert-title { color: #b25050; }
+.footnotes-sep { margin-top: 2.6em; }
+.footnotes {
+  margin-top: 1.4em;
+  color: #6f7378;
+  font-size: 0.9em;
+}
+.footnotes-list { padding-left: 1.5em; }
+.footnote-item { margin: 0.35em 0; }
+.footnote-ref { font-size: 0.72em; line-height: 0; }
+.footnote-ref a { text-decoration: none; }
+.footnote-backref { text-decoration: none; }
 hr { margin: 2.2em 0; border: 0; border-top: 1px solid #e4e2dd; }
 blockquote {
   margin: 1.2em 0;
@@ -171,7 +258,7 @@ tr:nth-child(even) td { background: #faf9f7; }
 @media print {
   body { padding: 0; background: #fff; }
   .markdown-body { max-width: none; }
-  pre, blockquote, table { break-inside: avoid; }
+  pre, blockquote, table, .markdown-alert, .table-of-contents { break-inside: avoid; }
   .code-block, .task-checkbox:checked {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -184,8 +271,32 @@ export function buildStandaloneHtml({
   title,
   content,
 }: ExportDocumentOptions): string {
-  const safeTitle = escapeHtml(title.trim() || "Untitled");
-  const body = renderMarkdown(content, { imageMode: "export" });
+  const frontMatter = extractFrontMatter(content);
+  const metadata = frontMatter?.metadata ?? {};
+  const safeTitle = escapeHtml(
+    (metadata.title || title).trim() || "Untitled",
+  );
+  const metaTags = [
+    metadata.author
+      ? `<meta name="author" content="${escapeHtml(metadata.author)}">`
+      : "",
+    metadata.description
+      ? `<meta name="description" content="${escapeHtml(
+          metadata.description,
+        )}">`
+      : "",
+    metadata.keywords || metadata.tags
+      ? `<meta name="keywords" content="${escapeHtml(
+          metadata.keywords || metadata.tags,
+        )}">`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const body = renderMarkdown(content, {
+    imageMode: "export",
+    mathOutput: "mathml",
+  });
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -193,6 +304,7 @@ export function buildStandaloneHtml({
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="generator" content="MarkSI">
 <title>${safeTitle}</title>
+${metaTags}
 <style>${documentStyles}</style>
 </head>
 <body>

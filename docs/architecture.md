@@ -87,6 +87,31 @@ exported HTML keeps their original URL. Missing local assets also degrade to
 placeholders. The preview lightbox is a frontend-only zoom surface and does not
 modify the document.
 
+## Extended Markdown
+
+`src/lib/markdown.ts` owns the single markdown-it pipeline. Footnote, highlight,
+subscript, superscript, and GitHub-alert behavior comes from small MIT-licensed
+`@mdit` plugins. The pipeline remains HTML-disabled: raw HTML is escaped before
+sanitization, and DOMPurify is the final boundary.
+
+Heading IDs are generated during the core pass from the heading's plain inline
+text, with duplicate suffixes. A later core rule replaces a `[TOC]` paragraph
+with a generated contents block built from those IDs. This keeps heading links
+and the table of contents stable even when headings contain links, code, or
+inline math.
+
+YAML front matter is recognized only at the first line and is hidden from the
+rendered body. `src/lib/frontMatter.ts` extracts a tolerant subset of scalar
+metadata and folded indented values; HTML export uses `title`, `author`,
+`description`, `keywords`, and `tags` for document metadata.
+
+Math runs through KaTeX with trust and HTML extensions disabled. Preview renders
+KaTeX HTML with the bundled KaTeX CSS and fonts. HTML export instead renders
+MathML, wrapped in a centered display block, so a standalone export does not
+depend on local font files. Both output modes pass through DOMPurify with the
+HTML and MathML profiles enabled. Link reference definitions are handled by
+markdown-it itself.
+
 ## Frontend boundaries
 
 - `src/lib/platform.ts` is the only place that calls Tauri APIs for file IO.
@@ -95,6 +120,8 @@ modify the document.
   dependencies and is covered by unit tests.
 - `src/lib/images.ts` owns image classification, path resolution, Markdown
   generation, and filename helpers; it is covered by unit tests.
+- `src/lib/frontMatter.ts` owns front-matter extraction and metadata parsing; it
+  is covered by unit tests.
 - `src/lib/drafts.ts` owns recovery-draft serialization and validation.
 - `src/store/useAppStore.ts` owns document and shell state.
 - `src/editor/` contains editor setup and Markdown analysis helpers.
@@ -137,6 +164,6 @@ document text is never round-tripped through rendered HTML.
 - SQLite session/history store for multi-window restore and local snapshots.
 - Shared export pipeline and Pandoc adapter (Pandoc is invoked externally,
   never bundled).
-- Mermaid/MathJax lazy rendering with a worker for heavy diagrams.
+- Mermaid/PlantUML lazy rendering with a worker for heavy diagrams.
 - Remote image caching and optional uploader integrations.
 - Cross-platform print-to-PDF adapters.
