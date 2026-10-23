@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { extractOutline } from "../editor/analyze";
-import { normalizeLaxHeadings } from "../lib/strictMarkdown";
+import { normalizeLaxMarkdown } from "../lib/strictMarkdown";
 import { useT } from "../i18n";
 import {
   fileName,
@@ -68,7 +68,7 @@ export function Sidebar({
   const outline = useMemo(
     () =>
       extractOutline(
-        strictMode ? doc.content : normalizeLaxHeadings(doc.content),
+        strictMode ? doc.content : normalizeLaxMarkdown(doc.content),
       ),
     [doc.content, strictMode],
   );

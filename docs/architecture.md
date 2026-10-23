@@ -3,9 +3,8 @@
 ## Goals
 
 MarkSI is a local-first Markdown editor for Windows 11 and mainstream Linux
-distributions. The product target is broad functional parity with a mature
-desktop Markdown editor while keeping a distinct visual identity and a clean,
-independently written codebase.
+distributions. The product target is broad Markdown editing coverage while
+keeping a distinct visual identity and a clean, independently written codebase.
 
 ## Layers
 

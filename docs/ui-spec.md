@@ -32,8 +32,8 @@
 
 ## Visual language
 
-MarkSI borrows the calm information architecture of a focused writing app, not
-its visual assets. The palette, iconography, spacing, and motion are original.
+MarkSI uses a content-first, quiet information architecture. Its palette,
+iconography, spacing, and motion are designed for this project.
 
 ### Tokens
 
@@ -96,7 +96,7 @@ ease-out; honor `prefers-reduced-motion`.
   HTML / plain text.
 - `Ctrl+=` / `Ctrl+-` / `Ctrl+0`: zoom the interface in, out, or reset to
   100%.
-- Hamburger reveals an IDEA-style menu bar. File takes over the hamburger’s
+- Hamburger reveals a compact single-row menu bar. File takes over the hamburger’s
   position, followed by Edit, Format, View, and Help; the hamburger is hidden
   while the bar is open. The category row is the only thing shown on first
   click; clicking a category opens its dropdown, and moving across categories
@@ -301,5 +301,4 @@ ease-out; honor `prefers-reduced-motion`.
 - Outline and file tree share a compact, low-contrast rail.
 - The status bar is an information line, not a control strip; actions live in
   the menu and keyboard shortcuts.
-- Original icons from Lucide plus a MarkSI monogram; no icon font copied from
-  another editor.
+- Lucide icons plus a MarkSI monogram; no third-party icon font is bundled.

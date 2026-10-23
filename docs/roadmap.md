@@ -1,25 +1,25 @@
 # MarkSI roadmap and milestone control
 
 This document is the planning source of truth for milestone scope, order, and
-exit criteria. `docs/feature-parity.md` remains the detailed feature inventory.
+exit criteria. `docs/features.md` remains the detailed feature inventory.
 The public security and version policies are enforced by
 `scripts/publication-audit.mjs`.
 
 ## Current snapshot
 
-- Product version: **0.02**
-- Technical version: **0.2.0**
+- Product version: **0.03**
+- Technical version: **0.3.0**
 - Foundation milestones M1 and M3 are complete.
 - M2 core is complete; golden Markdown tests remain open.
 - M4 core is complete, with six planned file/workspace items still open.
-- M5 is in progress with ten completed items and eleven open items.
+- M5 is in progress with eleven completed items and eleven open items.
 - M6 and M7 have not started.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **74 done, 4 wip,
-40 todo, 1 deferred** across 119 items.
+is the source for exact status values. Current raw count: **75 done, 4 wip,
+40 todo, 1 deferred** across 120 items.
 
 ## Milestone definitions
 
@@ -107,13 +107,13 @@ Exit criteria:
 
 Current M5 completion order:
 
-1. Lax list indentation (Markdown correctness).
-2. Image fit controls (complete the image sizing surface).
-3. Export profiles, front matter options, page setup, and custom export command.
-4. Export image.
-5. Optional Pandoc import/export, with external-tool detection and no bundling.
-6. Remote image cache, root URL/path mode, and uploader integration, after the
+1. Image fit controls (complete the image sizing surface).
+2. Export profiles, front matter options, page setup, and custom export command.
+3. Export image.
+4. Optional Pandoc import/export, with external-tool detection and no bundling.
+5. Remote image cache, root URL/path mode, and uploader integration, after the
    network/privacy design is reviewed.
+6. Lax list continuation/quote indentation and remaining fuzz cases.
 
 Remote image and uploader work must not silently enable background network
 requests. They require explicit user action, clear cache behavior, and tests
@@ -148,7 +148,7 @@ Every change follows this order:
 2. Add unit tests for pure logic and Rust tests for filesystem behavior.
 3. Add an E2E check for every touched user-visible flow.
 4. Run the complete gate.
-5. Update `docs/feature-parity.md`, this roadmap if scope changes, and
+5. Update `docs/features.md`, this roadmap if scope changes, and
    `docs/verification.md` when coverage or limitations change.
 6. For a user-visible feature or bugfix release, run
    `npm run version:bump` exactly once. Never skip a version step.

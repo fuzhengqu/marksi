@@ -73,9 +73,9 @@ The E2E suite currently covers:
 - Chinese-first boot directly into the editor, document title, empty prompt,
   focus, and preview default.
 - Sidebar workspace actions and absence of the old footer.
-- IDEA-style menu replacement, category bar, blank-click close, File contents,
+- Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.01` product version.
+- About dialog close behavior and display of the `0.03` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -84,7 +84,7 @@ The E2E suite currently covers:
 - Live-preview editing, hidden inactive markers, and source retention.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions.
-- Strict mode on/off behavior for compact ATX headings, including the Preferences toggle.
+- Strict mode on/off behavior for compact ATX headings and lax nested list marker indentation, including the Preferences toggle.
 - Chinese settings, language switch to English and back.
 - Mermaid rendering in reading mode, including SVG sanitization checks.
 - Auto pairing, smart punctuation, and emoji completion.
@@ -99,8 +99,8 @@ The E2E suite currently covers:
   skipped release steps during the publication audit.
 
 Vitest covers formatting, smart typing, emoji catalogs, i18n, version display
-formatting, zoom math, strict-heading normalization, front-matter parsing,
-save-name extraction/sanitization, image helpers, image-source scanning and
+formatting, zoom math, strict-heading and lax-list normalization, front-matter
+parsing, save-name extraction/sanitization, image helpers, image-source scanning and
 width/height clamping, minimal text-change calculation, quick-open ranking, and
 analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic writes, image import and

@@ -11,7 +11,7 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import { extractFrontMatter } from "./frontMatter";
 import { classifyImageSource } from "./images";
-import { normalizeLaxHeadings } from "./strictMarkdown";
+import { normalizeLaxMarkdown } from "./strictMarkdown";
 import hljs from "highlight.js/lib/core";
 import bash from "highlight.js/lib/languages/bash";
 import c from "highlight.js/lib/languages/c";
@@ -512,7 +512,7 @@ export function renderMarkdown(
     imageResizable: options.imageResizable ?? true,
   };
   const renderingSource =
-    options.strictMode === false ? normalizeLaxHeadings(source) : source;
+    options.strictMode === false ? normalizeLaxMarkdown(source) : source;
   const rendered = md.render(renderingSource, environment);
   const sanitized = DOMPurify.sanitize(rendered, {
     USE_PROFILES: { html: true, mathMl: true },

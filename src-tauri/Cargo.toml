@@ -1,6 +1,6 @@
 [package]
 name = "marksi"
-version = "0.2.0"
+version = "0.3.0"
 description = "MarkSI - a focused Markdown studio for Windows and Linux"
 authors = ["MarkSI contributors"]
 edition = "2021"

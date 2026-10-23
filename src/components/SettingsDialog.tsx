@@ -271,7 +271,7 @@ export function SettingsDialog() {
                 <span>{t("Strict mode")}</span>
                 <small>
                   {t(
-                    "Require whitespace after ATX heading markers. Disable for compact headings such as ###Title.",
+                    "Require whitespace after ATX heading markers and use strict list indentation. Disable for compact headings such as ###Title and lax nested lists.",
                   )}
                 </small>
               </div>

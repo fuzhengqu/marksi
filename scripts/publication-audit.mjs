@@ -242,7 +242,13 @@ for (let index = 0; index + 1 < messageParts.length; index += 2) {
   );
 }
 
-const requiredFiles = ["README.md", "README.en.md", "LICENSE"];
+const requiredFiles = [
+  "README.md",
+  "README.en.md",
+  "SECURITY.md",
+  "CONTRIBUTING.md",
+  "LICENSE",
+];
 for (const file of requiredFiles) {
   if (!tracked.includes(file)) {
     findings.push({ kind: "required file missing", location: file });

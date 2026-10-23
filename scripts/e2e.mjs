@@ -289,7 +289,7 @@ async function main() {
     assert(!state.footer, "sidebar footer must not exist", state);
   });
 
-  await test("IDEA menu replaces the hamburger and restores it on blank click", async () => {
+  await test("compact menu replaces the hamburger and restores it on blank click", async () => {
     await clickSelector(".menu-button");
     const opened = await evaluate(`(() => {
       const button = document.querySelector(".menu-button");
@@ -352,7 +352,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.02"), "About should show version 0.02", state);
+    assert(state.version?.includes("0.03"), "About should show version 0.03", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -587,6 +587,53 @@ async function main() {
     })`);
     assert(lax.setting === false, "strict mode toggle did not update settings", lax);
     assert(lax.heading?.includes("紧凑标题"), "compact heading was not rendered", lax);
+    await resetBase();
+  });
+
+  await test("strict mode toggles lax list indentation", async () => {
+    await resetBase();
+    const source = [
+      "10. 父项",
+      "  1. 子项",
+      "",
+      "```md",
+      "  1. 代码不是列表",
+      "```",
+    ].join("\n");
+    await evaluate(
+      `window.__MARKSI_DEV__.setContent(${JSON.stringify(source)})`,
+    );
+    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+    await waitFor('document.querySelector(".markdown-body > ol")');
+    const strict = await evaluate(`({
+      topItems: document.querySelectorAll(".markdown-body > ol > li").length,
+      nestedItems: document.querySelectorAll(".markdown-body > ol > li > ol > li").length,
+      code: document.querySelector(".markdown-body pre code")?.textContent ?? "",
+      content: window.__MARKSI_DEV__.getState().doc.content
+    })`);
+    assert(strict.topItems === 2, "strict mode should keep two top-level items", strict);
+    assert(strict.nestedItems === 0, "strict mode should not nest the list", strict);
+    assert(strict.code.includes("1. 代码不是列表"), "strict mode changed the code fence", strict);
+    assert(strict.content === source, "rendering must not rewrite the source", strict);
+
+    await evaluate(
+      'window.__MARKSI_DEV__.setSettings({ strictMode: false })',
+    );
+    await waitFor(
+      'document.querySelectorAll(".markdown-body > ol > li > ol > li").length === 1',
+    );
+    const lax = await evaluate(`({
+      topItems: document.querySelectorAll(".markdown-body > ol > li").length,
+      nestedText: document.querySelector(".markdown-body > ol > li > ol > li")?.textContent ?? "",
+      code: document.querySelector(".markdown-body pre code")?.textContent ?? "",
+      content: window.__MARKSI_DEV__.getState().doc.content,
+      setting: window.__MARKSI_DEV__.getState().settings.strictMode
+    })`);
+    assert(lax.setting === false, "strict mode setting should be off", lax);
+    assert(lax.topItems === 1, "lax mode should nest the child item", lax);
+    assert(lax.nestedText.includes("子项"), "nested item text is missing", lax);
+    assert(lax.code.includes("1. 代码不是列表"), "lax mode changed the code fence", lax);
+    assert(lax.content === source, "rendering must not rewrite the source", lax);
     await resetBase();
   });
 

@@ -141,8 +141,8 @@ const ZH: Record<string, string> = {
   Editor: "编辑器",
   Markdown: "Markdown",
   "Strict mode": "严格模式",
-  "Require whitespace after ATX heading markers. Disable for compact headings such as ###Title.":
-    "要求 ATX 标题标记后必须有空格。关闭后可识别 ###标题 这类紧凑标题。",
+  "Require whitespace after ATX heading markers and use strict list indentation. Disable for compact headings such as ###Title and lax nested lists.":
+    "要求 ATX 标题标记后必须有空格，并使用严格列表缩进。关闭后可识别 ###标题 这类紧凑标题和宽松嵌套列表。",
   "Spell check": "拼写检查",
   "Use the operating system dictionary while writing.":
     "写作时使用操作系统词典。",
