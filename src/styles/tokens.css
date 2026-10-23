@@ -1,0 +1,81 @@
+:root {
+  --font-ui: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-editor: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "Cascadia Code", "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  --titlebar-height: 38px;
+  --statusbar-height: 30px;
+  --sidebar-width: 270px;
+  --content-width: 860px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --transition: 160ms ease;
+
+  --bg: #fbfbfa;
+  --bg-elevated: #ffffff;
+  --sidebar-bg: #f3f2ef;
+  --titlebar-bg: #f7f6f3;
+  --fg: #26282b;
+  --fg-muted: #6f7378;
+  --fg-faint: #9b9fa4;
+  --border: #e4e2dd;
+  --border-strong: #d5d2cb;
+  --accent: #2f6f62;
+  --accent-strong: #24594f;
+  --accent-soft: #e5f1ee;
+  --selection: #cfe7e2;
+  --danger: #b8473d;
+  --danger-soft: #f7e8e6;
+  --hover: rgba(35, 38, 41, 0.055);
+  --hover-strong: rgba(35, 38, 41, 0.09);
+  --shadow: 0 14px 40px rgba(35, 36, 38, 0.14), 0 2px 8px rgba(35, 36, 38, 0.07);
+  --shadow-soft: 0 2px 8px rgba(35, 36, 38, 0.08);
+  --scrim: rgba(31, 35, 37, 0.24);
+  --search-match: #f4e6ae;
+  --search-match-selected: #e8ce75;
+  --syntax-code: #4f6f68;
+  --syntax-keyword: #7a4c86;
+  --syntax-string: #587a44;
+  --syntax-number: #a56436;
+  --syntax-type: #346a86;
+  --syntax-function: #2f6f62;
+  --syntax-variable: #5a5f66;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #1d2024;
+  --bg-elevated: #252930;
+  --sidebar-bg: #191c20;
+  --titlebar-bg: #1b1e22;
+  --fg: #e7e9ec;
+  --fg-muted: #9aa0a8;
+  --fg-faint: #6b717a;
+  --border: #30353c;
+  --border-strong: #3c424b;
+  --accent: #78c6b5;
+  --accent-strong: #9ad8ca;
+  --accent-soft: #1f3b36;
+  --selection: #2e5a52;
+  --danger: #f08a80;
+  --danger-soft: #3c2625;
+  --hover: rgba(255, 255, 255, 0.055);
+  --hover-strong: rgba(255, 255, 255, 0.09);
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.22);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.22);
+  --scrim: rgba(0, 0, 0, 0.38);
+  --search-match: #5b4f24;
+  --search-match-selected: #7a672b;
+  --syntax-code: #9ad8ca;
+  --syntax-keyword: #d3a2df;
+  --syntax-string: #a8d08d;
+  --syntax-number: #e0b07f;
+  --syntax-type: #8fc7e8;
+  --syntax-function: #78c6b5;
+  --syntax-variable: #c4c8ce;
+
+  color-scheme: dark;
+}
