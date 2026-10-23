@@ -178,7 +178,7 @@ export function MenuOverlay({
                 setDropdownLeft(
                   Math.max(8, Math.min(box.left, window.innerWidth - 268)),
                 );
-                setActiveSection(active ? null : item.id);
+                setActiveSection(item.id);
               }}
             >
               {t(item.label)}

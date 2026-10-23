@@ -252,9 +252,14 @@ npm run tauri:build
 npm run typecheck
 npm test
 npm run build
+npm run test:e2e
 cargo fmt --check --manifest-path src-tauri/Cargo.toml
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
+
+`npm run test:e2e` requires a running dev app with remote debugging enabled. The
+complete gate, coverage matrix, and known native-dialog limitations are
+documented in [`docs/verification.md`](docs/verification.md).
 
 For UI inspection against the running desktop webview, start the app with
 `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` and use
