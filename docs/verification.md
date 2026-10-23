@@ -84,6 +84,7 @@ The E2E suite currently covers:
 - Live-preview editing, hidden inactive markers, and source retention.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions.
+- Strict mode on/off behavior for compact ATX headings, including the Preferences toggle.
 - Chinese settings, language switch to English and back.
 - Mermaid rendering in reading mode, including SVG sanitization checks.
 - Auto pairing, smart punctuation, and emoji completion.
@@ -98,10 +99,10 @@ The E2E suite currently covers:
   skipped release steps during the publication audit.
 
 Vitest covers formatting, smart typing, emoji catalogs, i18n, version display
-formatting, zoom math, front-matter parsing, save-name
-extraction/sanitization, image helpers, image-source scanning and width/height
-clamping, minimal text-change calculation, quick-open ranking, and analysis
-helpers.
+formatting, zoom math, strict-heading normalization, front-matter parsing,
+save-name extraction/sanitization, image helpers, image-source scanning and
+width/height clamping, minimal text-change calculation, quick-open ranking, and
+analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic writes, image import and
 data URLs, workspace listing/search, and file timestamps.
 

@@ -118,11 +118,13 @@ export function htmlToPlainText(root: ParentNode): string {
 
 export async function buildClipboardDocument(
   source: string,
-  options: { theme?: Theme; diagrams?: boolean } = {},
+  options: { theme?: Theme; diagrams?: boolean; strictMode?: boolean } = {},
 ): Promise<ClipboardDocument> {
+  const strictMode = options.strictMode ?? true;
   let html = renderMarkdown(source, {
     imageMode: "export",
     mathOutput: "mathml",
+    strictMode,
   });
   if (options.diagrams && html.includes('class="mermaid-diagram"')) {
     html = await renderMermaidMarkup(html, options.theme ?? "light");
@@ -130,6 +132,7 @@ export async function buildClipboardDocument(
   const textHtml = renderMarkdown(source, {
     imageMode: "export",
     mathOutput: "html",
+    strictMode,
   });
   const parsedHtml = new DOMParser().parseFromString(html, "text/html");
   const parsedText = new DOMParser().parseFromString(textHtml, "text/html");

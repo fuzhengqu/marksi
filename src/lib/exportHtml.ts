@@ -7,6 +7,7 @@ interface ExportDocumentOptions {
   title: string;
   content: string;
   language?: Language;
+  strictMode?: boolean;
 }
 
 const documentStyles = `
@@ -300,6 +301,7 @@ export async function buildStandaloneHtml({
   title,
   content,
   language = "zh-CN",
+  strictMode = true,
 }: ExportDocumentOptions): Promise<string> {
   const frontMatter = extractFrontMatter(content);
   const metadata = frontMatter?.metadata ?? {};
@@ -327,6 +329,7 @@ export async function buildStandaloneHtml({
     renderMarkdown(content, {
       imageMode: "export",
       mathOutput: "mathml",
+      strictMode,
     }),
     "light",
   );

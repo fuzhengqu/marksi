@@ -352,7 +352,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.01"), "About should show version 0.01", state);
+    assert(state.version?.includes("0.02"), "About should show version 0.02", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -549,6 +549,45 @@ async function main() {
     await sleep(200);
     await clickSelector(".settings-close");
     await waitFor('!document.querySelector(".settings-dialog")');
+  });
+
+  await test("strict mode toggles compact ATX headings", async () => {
+    await resetBase();
+    await evaluate(
+      'window.__MARKSI_DEV__.setContent("###紧凑标题\\n\\n正文")',
+    );
+    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+    await waitFor('document.querySelector(".markdown-body")');
+    const strict = await evaluate(`({
+      heading: document.querySelector(".markdown-body h3")?.textContent ?? null,
+      setting: window.__MARKSI_DEV__.getState().settings.strictMode
+    })`);
+    assert(strict.setting === true, "strict mode should start enabled", strict);
+    assert(strict.heading === null, "strict mode should reject compact headings", strict);
+
+    await evaluate(
+      'window.__MARKSI_DEV__.getState().setSettingsOpen(true)',
+    );
+    await waitFor('document.querySelector(".settings-dialog")');
+    const toggled = await evaluate(`(() => {
+      const toggle = Array.from(document.querySelectorAll('.settings-dialog [role="switch"]'))
+        .find((node) => node.getAttribute("aria-label") === "严格模式");
+      toggle?.click();
+      return Boolean(toggle);
+    })()`);
+    assert(toggled, "strict mode setting toggle is missing");
+    await clickSelector(".settings-close");
+    await waitFor('!document.querySelector(".settings-dialog")');
+    await waitFor(
+      'document.querySelector(".markdown-body h3")?.textContent?.includes("紧凑标题")',
+    );
+    const lax = await evaluate(`({
+      heading: document.querySelector(".markdown-body h3")?.textContent ?? null,
+      setting: window.__MARKSI_DEV__.getState().settings.strictMode
+    })`);
+    assert(lax.setting === false, "strict mode toggle did not update settings", lax);
+    assert(lax.heading?.includes("紧凑标题"), "compact heading was not rendered", lax);
+    await resetBase();
   });
 
   await test("Mermaid diagrams render in reading view without script or foreignObject", async () => {

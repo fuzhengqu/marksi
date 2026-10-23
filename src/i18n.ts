@@ -139,6 +139,10 @@ const ZH: Record<string, string> = {
   "Scale the whole window.": "缩放整个窗口。",
   "Writing column": "写作栏宽度",
   Editor: "编辑器",
+  Markdown: "Markdown",
+  "Strict mode": "严格模式",
+  "Require whitespace after ATX heading markers. Disable for compact headings such as ###Title.":
+    "要求 ATX 标题标记后必须有空格。关闭后可识别 ###标题 这类紧凑标题。",
   "Spell check": "拼写检查",
   "Use the operating system dictionary while writing.":
     "写作时使用操作系统词典。",

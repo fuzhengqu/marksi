@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import {
+  Braces,
   Focus,
   Image as ImageIcon,
   RotateCcw,
@@ -256,6 +257,28 @@ export function SettingsDialog() {
                 label={t("Emoji autocomplete")}
                 checked={settings.emojiAutocomplete}
                 onChange={(value) => update("emojiAutocomplete", value)}
+              />
+            </div>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-heading">
+              <Braces size={15} strokeWidth={1.8} />
+              <span>{t("Markdown")}</span>
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Strict mode")}</span>
+                <small>
+                  {t(
+                    "Require whitespace after ATX heading markers. Disable for compact headings such as ###Title.",
+                  )}
+                </small>
+              </div>
+              <Toggle
+                label={t("Strict mode")}
+                checked={settings.strictMode}
+                onChange={(value) => update("strictMode", value)}
               />
             </div>
           </section>

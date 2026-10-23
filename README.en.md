@@ -151,6 +151,9 @@ M4 also adds extended Markdown:
   does not depend on local font assets.
 - Link reference definitions such as `[label]: https://example.com` work across
   the document.
+- Strict mode is enabled by default and requires whitespace after ATX heading
+  markers. Disable it to accept compact headings such as `###Title`; fenced
+  code, front matter, and source text remain unchanged.
 
 M4 also adds writing modes and document copy actions:
 

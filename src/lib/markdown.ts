@@ -11,6 +11,7 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import { extractFrontMatter } from "./frontMatter";
 import { classifyImageSource } from "./images";
+import { normalizeLaxHeadings } from "./strictMarkdown";
 import hljs from "highlight.js/lib/core";
 import bash from "highlight.js/lib/languages/bash";
 import c from "highlight.js/lib/languages/c";
@@ -496,6 +497,7 @@ export function renderMarkdown(
     imageResizeLabel?: string;
     imageHeightResizeLabel?: string;
     imageResizable?: boolean;
+    strictMode?: boolean;
   } = {},
 ): string {
   const imageMode = options.imageMode ?? "preview";
@@ -509,7 +511,9 @@ export function renderMarkdown(
       options.imageHeightResizeLabel ?? "Resize image height",
     imageResizable: options.imageResizable ?? true,
   };
-  const rendered = md.render(source, environment);
+  const renderingSource =
+    options.strictMode === false ? normalizeLaxHeadings(source) : source;
+  const rendered = md.render(renderingSource, environment);
   const sanitized = DOMPurify.sanitize(rendered, {
     USE_PROFILES: { html: true, mathMl: true },
     ADD_ATTR: [

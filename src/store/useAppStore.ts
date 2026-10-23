@@ -104,6 +104,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoPair: true,
   smartPunctuation: false,
   emojiAutocomplete: true,
+  strictMode: true,
 };
 
 const emptyDocument: DocumentState = {

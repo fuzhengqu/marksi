@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { extractOutline } from "../editor/analyze";
+import { normalizeLaxHeadings } from "../lib/strictMarkdown";
 import { useT } from "../i18n";
 import {
   fileName,
@@ -63,7 +64,14 @@ export function Sidebar({
   const requestGotoLine = useAppStore((state) => state.requestGotoLine);
   const showToast = useAppStore((state) => state.showToast);
 
-  const outline = useMemo(() => extractOutline(doc.content), [doc.content]);
+  const strictMode = useAppStore((state) => state.settings.strictMode);
+  const outline = useMemo(
+    () =>
+      extractOutline(
+        strictMode ? doc.content : normalizeLaxHeadings(doc.content),
+      ),
+    [doc.content, strictMode],
+  );
 
   return (
     <aside className="sidebar">

@@ -91,11 +91,16 @@ that design decisions do not paint us into a corner.
 | Highlight / sub / sup | done | M4 |
 | Raw HTML preview (sanitized) | deferred | — |
 | Link reference definitions | done | M4 |
-| Strict mode toggle | todo | M5 |
+| Strict mode toggle (ATX heading spacing) | done | M5 |
+| Lax list indentation | todo | M5 |
 
 Raw HTML preview remains deferred by design. MarkSI keeps raw HTML escaped and
 inert in both preview and export; enabling it would weaken the current
 sanitization boundary and is not planned unless that safety requirement changes.
+
+Strict mode controls whether ATX heading markers require whitespace. MarkSI
+defaults to strict mode; disabling it also makes compact headings such as
+`###Title` render as headings. Lax list indentation remains future work.
 
 ## Images
 

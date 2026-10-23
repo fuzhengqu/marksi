@@ -108,6 +108,7 @@ export interface AppSettings {
   autoPair: boolean;
   smartPunctuation: boolean;
   emojiAutocomplete: boolean;
+  strictMode: boolean;
 }
 
 export interface DocumentDraft {

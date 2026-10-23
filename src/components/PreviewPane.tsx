@@ -131,6 +131,7 @@ export function PreviewPane({
   const t = useT();
   const debouncedContent = useDebouncedValue(content, 90);
   const readOnlyMode = useAppStore((state) => state.settings.readOnlyMode);
+  const strictMode = useAppStore((state) => state.settings.strictMode);
   const resizeLabel = t("Resize image");
   const heightResizeLabel = t("Resize image height");
   const html = useMemo(
@@ -139,8 +140,15 @@ export function PreviewPane({
         imageResizeLabel: resizeLabel,
         imageHeightResizeLabel: heightResizeLabel,
         imageResizable: !readOnlyMode,
+        strictMode,
       }),
-    [debouncedContent, heightResizeLabel, readOnlyMode, resizeLabel],
+    [
+      debouncedContent,
+      heightResizeLabel,
+      readOnlyMode,
+      resizeLabel,
+      strictMode,
+    ],
   );
   const surfaceRef = useRef<HTMLElement | null>(null);
   const [lightbox, setLightbox] = useState<LightboxImage | null>(null);

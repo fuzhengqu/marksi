@@ -355,6 +355,7 @@ export default function App() {
         title,
         content: state.doc.content,
         language: state.settings.language,
+        strictMode: state.settings.strictMode,
       });
       const meta = await saveHtmlFile(
         htmlExportPath(state.doc.path, state.doc.name),
@@ -397,6 +398,7 @@ export default function App() {
       const documentToCopy = await buildClipboardDocument(content, {
         theme: state.theme,
         diagrams: format === "html",
+        strictMode: state.settings.strictMode,
       });
 
       if (format === "html") {

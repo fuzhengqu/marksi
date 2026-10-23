@@ -161,6 +161,16 @@ ease-out; honor `prefers-reduced-motion`.
 - Writing modes are persisted with the other preferences and restore on the
   next launch.
 
+## Markdown strictness
+
+- Strict mode is on by default and requires whitespace after ATX heading
+  markers (`### Title`). It can be disabled in Preferences > Markdown.
+- With strict mode off, compact headings such as `###Title` render as headings
+  in reading view, export, copy, and the outline. The canonical Markdown source
+  is never rewritten.
+- Fenced code, front matter, and indented code keep their literal markers in
+  both modes.
+
 ## Typing assistance
 
 - Auto pair closes `()`, `[]`, `{}`, quotes, and the Markdown markers `*`, `_`,
