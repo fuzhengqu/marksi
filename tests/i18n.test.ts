@@ -32,6 +32,9 @@ describe("translate", () => {
     expect(translate("zh-CN", "High contrast")).toBe("高对比度");
     expect(translate("zh-CN", "Keyboard shortcuts")).toBe("快捷键");
     expect(translate("zh-CN", "Toggle fullscreen")).toBe("切换全屏");
+    expect(translate("zh-CN", "Remember window size and position")).toBe(
+      "记住窗口大小和位置",
+    );
   });
 
   it("returns the source label for English", () => {

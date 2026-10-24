@@ -558,6 +558,21 @@ export function SettingsDialog() {
             </div>
             <div className="settings-row">
               <div className="settings-copy">
+                <span>{t("Remember window size and position")}</span>
+                <small>
+                  {t(
+                    "Restore the last window bounds when the app starts. Offscreen windows return to the nearest monitor.",
+                  )}
+                </small>
+              </div>
+              <Toggle
+                label={t("Remember window size and position")}
+                checked={settings.rememberWindowFrame}
+                onChange={(value) => update("rememberWindowFrame", value)}
+              />
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
                 <span>{t("Local history")}</span>
                 <small>
                   {t("Keep a capped set of snapshots when you save.")}

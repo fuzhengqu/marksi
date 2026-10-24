@@ -10,6 +10,7 @@ import type {
   WorkspaceFile,
   WorkspaceSearchMatch,
 } from "../types";
+import type { WindowFrame, WorkArea } from "./windowFrame";
 import { APP_SEMVER } from "./version";
 
 export function isTauri(): boolean {
@@ -756,6 +757,59 @@ export async function setAlwaysOnTop(alwaysOnTop: boolean): Promise<void> {
   }
   const { getCurrentWindow } = await import("@tauri-apps/api/window");
   await getCurrentWindow().setAlwaysOnTop(alwaysOnTop);
+}
+
+export async function readWindowFrame(): Promise<WindowFrame> {
+  if (!isTauri()) {
+    throw new Error("Window memory is only available in the desktop app.");
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  const window = getCurrentWindow();
+  const [position, size, maximized] = await Promise.all([
+    window.outerPosition(),
+    window.innerSize(),
+    window.isMaximized(),
+  ]);
+  return {
+    x: position.x,
+    y: position.y,
+    width: size.width,
+    height: size.height,
+    maximized,
+  };
+}
+
+export async function windowWorkAreas(): Promise<WorkArea[]> {
+  if (!isTauri()) {
+    return [];
+  }
+  const { availableMonitors } = await import("@tauri-apps/api/window");
+  const monitors = await availableMonitors();
+  return monitors.map((monitor) => ({
+    x: monitor.workArea.position.x,
+    y: monitor.workArea.position.y,
+    width: monitor.workArea.size.width,
+    height: monitor.workArea.size.height,
+  }));
+}
+
+export async function applyWindowFrame(frame: WindowFrame): Promise<void> {
+  if (!isTauri()) {
+    throw new Error("Window memory is only available in the desktop app.");
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  const { PhysicalPosition, PhysicalSize } = await import(
+    "@tauri-apps/api/dpi"
+  );
+  const window = getCurrentWindow();
+  if (await window.isMaximized()) {
+    await window.unmaximize();
+  }
+  await window.setSize(new PhysicalSize(frame.width, frame.height));
+  await window.setPosition(new PhysicalPosition(frame.x, frame.y));
+  if (frame.maximized) {
+    await window.maximize();
+  }
 }
 
 export async function closeApplication(): Promise<void> {

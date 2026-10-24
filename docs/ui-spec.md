@@ -127,6 +127,9 @@ ease-out; honor `prefers-reduced-motion`.
   in a compact select. The title-bar toggle always switches to the opposite
   resolved light/dark family, leaving System mode when used. System follows the
   OS preference without a restart.
+- Preferences > Files can remember the window size and position. Saved bounds
+  are validated against the current monitors; offscreen windows return to the
+  nearest work area, and disabled memory clears the stored frame.
 - Documents over 500,000 characters show a Large file mode badge in the status
   bar and use the Source label while live-preview decorations are off.
   Preferences > Editor can disable large-file optimizations.

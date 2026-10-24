@@ -389,6 +389,14 @@ success toasts.
   through `@tauri-apps/api/window` with explicit capability grants. Fullscreen
   also has a fixed F11 handler so it works before or without a custom binding;
   always-on-top has no default key and remains a View-menu action.
+- Window frame memory is pure frontend logic: `src/lib/windowFrame.ts` validates
+  saved physical bounds, checks overlap with a monitor work area, and clamps
+  offscreen or oversized frames. Frames store the content-area size and outer
+  position, so restore is stable against Windows shadow borders.
+  `applyWindowFrame` restores normal bounds before maximizing. The app listens
+  to `onResized` and `onMoved`, debounces writes by 400 ms, and stores the last
+  normal bounds with a maximized flag under `marksi.window-frame.v1`. No Rust
+  command or bundled plugin is involved.
 - Startup arguments are parsed in Rust for the first existing supported text
   file; `take_startup_file` returns it once from managed state. The frontend
   opens it only when the editor is blank and no recovery draft is pending.

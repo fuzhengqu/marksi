@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.26"), "About should show version 0.26", state);
+    assert(state.version?.includes("0.27"), "About should show version 0.27", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -856,6 +856,70 @@ async function main() {
     } finally {
       await evaluate(
         "window.__MARKSI_DEV__.setWindowFlags(false, false)",
+      ).catch(() => {});
+      await resetBase();
+    }
+  });
+
+  await test("remembers and restores the window frame", async () => {
+    await resetBase();
+    await evaluate(
+      "window.__MARKSI_DEV__.setSettings({ rememberWindowFrame: false })",
+    );
+    await sleep(250);
+    const first = { x: 120, y: 90, width: 1020, height: 700, maximized: false };
+    const second = { x: 200, y: 120, width: 1120, height: 740, maximized: false };
+    const close = (actual, expected) =>
+      Math.abs(actual.x - expected.x) <= 3 &&
+      Math.abs(actual.y - expected.y) <= 3 &&
+      Math.abs(actual.width - expected.width) <= 3 &&
+      Math.abs(actual.height - expected.height) <= 3;
+
+    try {
+      await evaluate(
+        `window.__MARKSI_DEV__.setWindowFrame(${JSON.stringify(first)})`,
+      );
+      await sleep(500);
+      const savedFrame = await evaluate(
+        "window.__MARKSI_DEV__.saveWindowFrameMemory()",
+      );
+      assert(
+        savedFrame.width >= 900 && savedFrame.height >= 600,
+        "saved window should keep a usable content size",
+        savedFrame,
+      );
+
+      await evaluate(
+        `window.__MARKSI_DEV__.setWindowFrame(${JSON.stringify(second)})`,
+      );
+      await sleep(500);
+      const restored = await evaluate(
+        "window.__MARKSI_DEV__.restoreWindowFrameMemory()",
+      );
+      assert(restored, "saved window frame is missing", restored);
+      const actual = await evaluate("window.__MARKSI_DEV__.windowFrame()");
+      assert(
+        close(actual, savedFrame),
+        "restored window frame should match the saved content bounds",
+        { actual, savedFrame },
+      );
+
+      await evaluate("window.__MARKSI_DEV__.clearWindowFrameMemory()");
+      const cleared = await evaluate(`(() => {
+        const raw = localStorage.getItem("marksi.window-frame.v1");
+        return raw === null;
+      })()`);
+      assert(cleared, "clearing window memory should remove the stored frame");
+    } finally {
+      await evaluate(
+        `window.__MARKSI_DEV__.setWindowFrame({ x: 100, y: 80, width: 1280, height: 840, maximized: false })`,
+      ).catch(() => {});
+      await sleep(600);
+      await evaluate("window.__MARKSI_DEV__.clearWindowFrameMemory()").catch(
+        () => {},
+      );
+      await evaluate(
+        "window.__MARKSI_DEV__.setSettings({ rememberWindowFrame: true })",
       ).catch(() => {});
       await resetBase();
     }

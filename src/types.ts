@@ -172,6 +172,7 @@ export interface AppSettings {
   flatFileList: boolean;
   localHistory: boolean;
   largeFileOptimizations: boolean;
+  rememberWindowFrame: boolean;
   shortcuts: Record<ShortcutId, string>;
 }
 

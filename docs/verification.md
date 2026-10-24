@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.26` product version.
+- About dialog close behavior and display of the `0.27` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,10 +139,14 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 159 ms during the release run.
+  Windows dev WebView opened the fixture in 160 ms during the release run.
 - Window flags: View > Toggle fullscreen and F11 both enter and leave real
   window fullscreen, and Always on top toggles the native flag while the
   in-app state follows it.
+- Window frame memory: set and persist a known window frame, move to different
+  bounds, restore from memory, and compare the real Tauri outer position and
+  size; clearing removes the stored frame. Offscreen and oversized-frame
+  clamping is covered by Vitest rather than by moving the real window offscreen.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -234,8 +238,9 @@ Some operating-system dialogs cannot be driven reliably through CDP alone:
 native open/save/folder/image pickers, print/PDF dialogs, drag-and-drop from the
 OS shell, external browser launches, and the final Quit action. Their underlying
 file and image logic is covered by Rust tests and by dev-hook/E2E flows where
-possible. GitHub Actions currently runs the publication audit only; the full
-Windows/Linux build-and-test CI matrix remains open under M0. The save-name E2E replaces the native dialog boundary and verifies the
+possible. GitHub Actions runs the publication audit and a Windows/Linux
+build-and-test matrix; the real-WebView E2E suite remains local because it needs
+a desktop WebView session. The save-name E2E replaces the native dialog boundary and verifies the
 default filename plus the real write; the exact native dialog text remains a
 manual release check. Before a release build, the native-dialog checklist must still be
 exercised on Windows and Linux. Print/PDF pagination, including CSS margin-box
@@ -262,10 +267,16 @@ filesystem; a missing file or folder stays pinned and reports an error when
 opened. Reopen with encoding offers a curated encoding list rather than
 arbitrary labels; decoding is read-only, and saving into a legacy encoding
 still fails when the text contains characters that encoding cannot represent.
-System appearance follows the WebView's `prefers-color-scheme` value. The E2E
-suite emulates that media feature through CDP; the real Windows/Linux OS theme
-switch remains a manual release check. Fullscreen and always-on-top are native
-window flags queried at startup; the E2E suite verifies the real Tauri window,
+- Window frame memory stores content-area bounds and outer position in local
+  storage and restores them on the next start when enabled. The E2E suite
+  restores within one process; a real application restart, monitor hot-plug,
+  and mixed-DPI multi-monitor layouts remain manual release checks. A saved
+  maximized state is restored by applying normal bounds and then maximizing.
+  Document and workspace session restore are not implemented in this release. System appearance follows the
+WebView's `prefers-color-scheme` value. The E2E suite emulates that media
+feature through CDP; the real Windows/Linux OS theme switch remains a manual
+release check. Fullscreen and always-on-top are native window flags queried at
+startup; the E2E suite verifies the real Tauri window,
 but window-manager behavior such as macOS Spaces or Linux tiling is outside the
 automated gate. Custom shortcuts cover application
 commands only; editor formatting keeps fixed CodeMirror bindings, global
@@ -277,7 +288,7 @@ before release. Large-file mode compares JavaScript string length, so the 500,00
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 159 ms measurement is from one Windows development machine;
+large files. The 160 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

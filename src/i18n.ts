@@ -469,6 +469,9 @@ const ZH: Record<string, string> = {
   "Unsaved changes will be lost after confirmation.":
     "确认后未保存的更改将丢失。",
   "Local history": "本地历史",
+  "Remember window size and position": "记住窗口大小和位置",
+  "Restore the last window bounds when the app starts. Offscreen windows return to the nearest monitor.":
+    "启动时恢复上次的窗口位置和大小；窗口若在屏幕外会移回最近的显示器。",
   "Local history…": "本地历史…",
   "Keep a capped set of snapshots when you save.":
     "保存时保留数量有限的本地快照。",

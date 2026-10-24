@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.26**
-- Technical version: **0.26.0**
+- Product version: **0.27**
+- Technical version: **0.27.0**
 - Foundation milestones M1 and M3 are complete.
 - M2 core is complete; golden Markdown tests remain open.
 - M4 is complete.
@@ -16,13 +16,14 @@ The public security and version policies are enforced by
   uploader integration.
 - M6 has started with system appearance, additional themes, the shortcut
   editor, Windows installer validation, CLI open, file associations, window
-  flags, and the Windows/Linux build-test matrix; M7 has not started.
+  flags, window frame memory, and the Windows/Linux build-test matrix; M7 has
+  not started.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **101 done, 4 wip,
-15 todo, 2 deferred** across 122 items.
+is the source for exact status values. Current raw count: **101 done, 5 wip,
+14 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
 
@@ -120,8 +121,9 @@ Entry criteria:
 - Native-dialog manual checks are documented.
 
 Status: in progress. System appearance, additional themes, the shortcut editor,
-Windows installer validation, CLI open, file associations, and window flags are
-complete; the remaining M6 scope is still open.
+Windows installer validation, CLI open, file associations, window flags, and
+window frame memory are complete; document/workspace session restore and the
+remaining M6 scope are still open.
 
 ### M7 — Performance, accessibility, and internationalization depth
 

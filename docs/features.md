@@ -19,7 +19,7 @@ that design decisions do not paint us into a corner.
 | Native title bar option | todo | M6 |
 | Multiple document windows | todo | M6 |
 | Fullscreen / always on top | done | M6 |
-| Window size/position/session restore | todo | M6 |
+| Window size/position/session restore | wip | M6 |
 | Light / dark appearance | done | M1 |
 | System appearance following | done | M6 |
 | Zoom in/out/reset | done | M4 |
@@ -54,6 +54,11 @@ instance forwarding is not implemented yet.
 View > Toggle fullscreen (F11) switches the native window state, and Always on
 top keeps MarkSI above other windows. Both expose a check mark while active and
 reset to normal window mode when toggled off.
+
+When Remember window size and position is enabled, MarkSI restores the last
+normal window bounds and maximized state at startup. Saved bounds are checked
+against the current monitor work areas; windows that are fully or mostly
+offscreen return to the nearest usable display.
 
 ## Files and workspace
 

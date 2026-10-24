@@ -49,14 +49,14 @@ import {
   pastedImageName,
 } from "./lib/images";
 import {
+  applyWindowFrame,
+  clearHistory,
   fileName,
   getFileModifiedMs,
   importImageAsset,
   isAlwaysOnTop,
   isFullscreen,
   isTauri,
-  setAlwaysOnTop,
-  setFullscreen,
   listDirectory,
   openDocument,
   openFolder,
@@ -66,16 +66,26 @@ import {
   pickPandocImportFile,
   readDocument,
   readDocumentWithEncoding,
+  readWindowFrame,
   recordHistory,
   relocateHistory,
-  clearHistory,
   runExportCommand,
   saveDocument,
   saveHtmlFile,
   saveImageData,
   savePngFile,
+  setAlwaysOnTop,
+  setFullscreen,
   takeStartupFile,
+  windowWorkAreas,
 } from "./lib/platform";
+import {
+  clearWindowFrame,
+  fitWindowFrame,
+  loadWindowFrame,
+  saveWindowFrame,
+  type WindowFrame,
+} from "./lib/windowFrame";
 import { useAppStore } from "./store/useAppStore";
 import type {
   AppSettings,
@@ -144,6 +154,8 @@ export default function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [encodingOpen, setEncodingOpen] = useState(false);
   const savingRef = useRef(false);
+  const windowFrameRef = useRef<WindowFrame | null>(null);
+  const restoringWindowRef = useRef(false);
 
   useEffect(() => {
     document.documentElement.lang = settings.language;
@@ -1239,6 +1251,80 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
+    if (!settings.rememberWindowFrame) {
+      clearWindowFrame();
+      return;
+    }
+    let cancelled = false;
+    let timer = 0;
+    const unlisteners: Array<() => void> = [];
+
+    async function capture() {
+      if (cancelled || restoringWindowRef.current) {
+        return;
+      }
+      try {
+        const frame = await readWindowFrame();
+        if (frame.maximized && windowFrameRef.current) {
+          saveWindowFrame({ ...windowFrameRef.current, maximized: true });
+        } else {
+          windowFrameRef.current = frame;
+          saveWindowFrame(frame);
+        }
+      } catch {
+        // Remembering the window is best-effort.
+      }
+    }
+
+    function schedule() {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => void capture(), 400);
+    }
+
+    async function setup() {
+      restoringWindowRef.current = true;
+      try {
+        const saved = loadWindowFrame();
+        if (saved) {
+          const areas = await windowWorkAreas();
+          const fitted = fitWindowFrame(saved, areas);
+          windowFrameRef.current = { ...fitted, maximized: false };
+          await applyWindowFrame(fitted);
+        } else {
+          windowFrameRef.current = await readWindowFrame();
+        }
+      } catch {
+        // Keep the configured default window when restore fails.
+      } finally {
+        restoringWindowRef.current = false;
+      }
+      if (cancelled) {
+        return;
+      }
+      try {
+        const { getCurrentWindow } = await import("@tauri-apps/api/window");
+        const window = getCurrentWindow();
+        unlisteners.push(
+          await window.onResized(schedule),
+          await window.onMoved(schedule),
+        );
+      } catch {
+        // Geometry listeners are optional.
+      }
+    }
+
+    void setup();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      unlisteners.forEach((unlisten) => unlisten());
+    };
+  }, [settings.rememberWindowFrame]);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = resolvedTheme;
     document.documentElement.style.colorScheme = resolvedTheme;
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -1539,6 +1625,24 @@ export default function App() {
         useAppStore.getState().setFullscreen(fullscreen);
         useAppStore.getState().setAlwaysOnTop(alwaysOnTop);
       },
+      windowFrame: () => readWindowFrame(),
+      setWindowFrame: (frame: WindowFrame) => applyWindowFrame(frame),
+      saveWindowFrameMemory: async () => {
+        const frame = await readWindowFrame();
+        saveWindowFrame(frame);
+        return frame;
+      },
+      restoreWindowFrameMemory: async () => {
+        const saved = loadWindowFrame();
+        if (!saved) {
+          return null;
+        }
+        const areas = await windowWorkAreas();
+        const fitted = fitWindowFrame(saved, areas);
+        await applyWindowFrame(fitted);
+        return fitted;
+      },
+      clearWindowFrameMemory: () => clearWindowFrame(),
       openEncoding: () => setEncodingOpen(true),
       closeEncoding: () => setEncodingOpen(false),
       setSettings: (patch: Partial<AppSettings>) =>
