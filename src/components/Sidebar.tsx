@@ -20,6 +20,7 @@ import {
   fileName,
   isTauri,
   listDirectory,
+  listWorkspaceFiles,
   searchWorkspace,
 } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
@@ -27,6 +28,7 @@ import type {
   FileEntry,
   SearchScope,
   SidebarTab,
+  WorkspaceFile,
   WorkspaceSearchMatch,
 } from "../types";
 
@@ -181,6 +183,9 @@ function FilesPanel({
 }: FilesPanelProps) {
   const t = useT();
   const removeRecent = useAppStore((state) => state.removeRecent);
+  const flatFileList = useAppStore(
+    (state) => state.settings.flatFileList,
+  );
   return (
     <div className="panel-scroll">
       <div className="panel-heading">
@@ -203,6 +208,13 @@ function FilesPanel({
             <Loader2 size={15} className="spin" />
             <span>{t("Reading folder…")}</span>
           </div>
+        ) : flatFileList ? (
+          <FlatFileList
+            workspacePath={workspace.path}
+            refreshKey={workspace.entries}
+            onOpenFile={onOpenFile}
+            onShowToast={onShowToast}
+          />
         ) : workspace.entries.length === 0 ? (
           <div className="empty-panel compact">
             <FolderOpen size={22} strokeWidth={1.3} />
@@ -267,6 +279,98 @@ function FilesPanel({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+interface FlatFileListProps {
+  workspacePath: string;
+  refreshKey: FileEntry[];
+  onOpenFile: (path: string) => void;
+  onShowToast: (message: string, tone?: "info" | "success" | "error") => void;
+}
+
+function FlatFileList({
+  workspacePath,
+  refreshKey,
+  onOpenFile,
+  onShowToast,
+}: FlatFileListProps) {
+  const t = useT();
+  const [files, setFiles] = useState<WorkspaceFile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    void listWorkspaceFiles(workspacePath)
+      .then((entries) => {
+        if (!cancelled) {
+          setFiles(entries);
+        }
+      })
+      .catch((cause) => {
+        if (!cancelled) {
+          const message =
+            cause instanceof Error ? cause.message : String(cause);
+          setFiles([]);
+          setError(message);
+          onShowToast(message, "error");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [onShowToast, refreshKey, workspacePath]);
+
+  if (loading) {
+    return (
+      <div className="panel-loading">
+        <Loader2 size={15} className="spin" />
+        <span>{t("Reading folder…")}</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="empty-panel compact">
+        <FolderOpen size={22} strokeWidth={1.3} />
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (files.length === 0) {
+    return (
+      <div className="empty-panel compact">
+        <FolderOpen size={22} strokeWidth={1.3} />
+        <p>{t("This folder has no visible files.")}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="file-tree flat-file-list">
+      {files.map((file) => (
+        <button
+          key={file.path}
+          className="file-row"
+          onClick={() => onOpenFile(file.path)}
+          title={file.path}
+        >
+          <FileText size={15} strokeWidth={1.7} />
+          <span className="file-name">{file.name}</span>
+          <small className="file-relative">{file.relativePath}</small>
+        </button>
+      ))}
     </div>
   );
 }

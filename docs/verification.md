@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.13` product version.
+- About dialog close behavior and display of the `0.14` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -107,6 +107,9 @@ The E2E suite currently covers:
 - Image root URL: a missing local relative image falls back to the configured
   URL base through the remote cache, and disabling remote loading restores the
   placeholder.
+- Flat file list: a nested workspace fixture shows only folders in tree mode,
+  then exposes top-level and nested files with relative paths when enabled,
+  with no folder rows.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -139,7 +142,7 @@ custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, and analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic text and binary writes,
-image import and data URLs, workspace listing/search, file timestamps,
+image import and data URLs, recursive workspace listing/search, file timestamps,
 custom-command validation, successful/non-zero execution, missing executables,
 working-directory handling, Pandoc argument construction, format allowlisting,
 bounded process-output capture, media path validation, percent-decoded paths,

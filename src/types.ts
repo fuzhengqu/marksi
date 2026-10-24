@@ -136,6 +136,7 @@ export interface AppSettings {
   loadRemoteImages: boolean;
   imageRootPath: string;
   imageRootUrl: string;
+  flatFileList: boolean;
 }
 
 export interface DocumentDraft {

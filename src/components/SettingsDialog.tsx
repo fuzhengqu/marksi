@@ -510,6 +510,21 @@ export function SettingsDialog() {
                 <option value={5000}>{t("5 seconds")}</option>
               </select>
             </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Flat file list")}</span>
+                <small>
+                  {t(
+                    "Show every workspace file without expanding folders.",
+                  )}
+                </small>
+              </div>
+              <Toggle
+                label={t("Flat file list")}
+                checked={settings.flatFileList}
+                onChange={(value) => update("flatFileList", value)}
+              />
+            </div>
             <p className="settings-note">
               {t(
                 "Unsaved drafts are always kept locally for crash recovery. MarkSI never sends document content anywhere.",

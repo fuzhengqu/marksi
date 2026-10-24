@@ -417,6 +417,9 @@ const ZH: Record<string, string> = {
   "Save named documents automatically after a pause.":
     "暂停输入后自动保存已命名文档。",
   "Auto-save pause": "自动保存延迟",
+  "Flat file list": "扁平文件列表",
+  "Show every workspace file without expanding folders.":
+    "不展开文件夹，直接显示工作区中的所有文件。",
   "How long to wait after the last edit.": "最后一次编辑后等待的时间。",
   "0.8 seconds": "0.8 秒",
   "1.5 seconds": "1.5 秒",

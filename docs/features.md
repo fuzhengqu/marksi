@@ -41,7 +41,7 @@ that design decisions do not paint us into a corner.
 | Drag/drop file or folder to open | done | M1 |
 | Unsaved-change close protection | done | M1 |
 | File tree with lazy expansion | done | M1/M3 |
-| Flat file list | todo | M4 |
+| Flat file list | done | M4 |
 | File operations (rename/duplicate/move/delete) | todo | M4 |
 | External change detection | done | M3 |
 | Autosave and draft recovery | done | M3 |
@@ -52,6 +52,10 @@ that design decisions do not paint us into a corner.
 | File encoding reopen | todo | M4 |
 | Large file mode | todo | M4 |
 | File associations / installer integration | todo | M6 |
+
+The optional flat file list recursively scans the open workspace through the
+existing workspace-file command and renders files with their relative paths.
+It never changes folder expansion state in the tree view and is off by default.
 
 ## Editor
 

@@ -350,6 +350,27 @@
   color: var(--fg);
 }
 
+.flat-file-list .file-row {
+  height: auto;
+  min-height: 32px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.flat-file-list .file-name {
+  flex: 0 1 auto;
+}
+
+.flat-file-list .file-relative {
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--fg-faint);
+  font-size: 9.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .file-chevron {
   display: inline-grid;
   flex: 0 0 12px;

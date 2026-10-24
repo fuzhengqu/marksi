@@ -365,7 +365,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.13"), "About should show version 0.13", state);
+    assert(state.version?.includes("0.14"), "About should show version 0.14", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -648,6 +648,61 @@ async function main() {
     assert(lax.code.includes("1. 代码不是列表"), "lax mode changed the code fence", lax);
     assert(lax.content === source, "rendering must not rewrite the source", lax);
     await resetBase();
+  });
+
+  await test("flat file list shows nested workspace files", async () => {
+    await resetBase();
+    const flatDir = resolve(fixtureDir, "flat-workspace");
+    try {
+      await mkdir(resolve(flatDir, "nested"), { recursive: true });
+      await writeFile(resolve(flatDir, "top.md"), "# Top\n", "utf8");
+      await writeFile(
+        resolve(flatDir, "nested", "child.md"),
+        "# Child\n",
+        "utf8",
+      );
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        const entries = await platform.listDirectory(${JSON.stringify(flatDir)});
+        window.__MARKSI_DEV__.getState().setWorkspace(${JSON.stringify(flatDir)}, entries);
+        window.__MARKSI_DEV__.getState().setSidebarTab("files");
+      })()`);
+      await waitFor('document.querySelector(".file-tree .file-row")');
+      const tree = await evaluate(`({
+        flat: Boolean(document.querySelector(".flat-file-list")),
+        child: Boolean(Array.from(document.querySelectorAll(".file-row")).find((node) => node.textContent?.includes("child.md"))),
+        folders: Array.from(document.querySelectorAll(".file-row.is-folder")).length
+      })`);
+      assert(!tree.flat, "flat list should be off by default", tree);
+      assert(!tree.child, "nested file should be hidden before expansion", tree);
+      assert(tree.folders >= 1, "folder row is missing", tree);
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ flatFileList: true })',
+      );
+      await waitFor('document.querySelector(".flat-file-list .file-row")');
+      const flat = await evaluate(`({
+        rows: Array.from(document.querySelectorAll(".flat-file-list .file-row")).map((node) => node.textContent?.trim()),
+        folders: document.querySelectorAll(".flat-file-list .file-row.is-folder").length
+      })`);
+      assert(
+        flat.rows.some((row) => row.includes("top.md")),
+        "flat list is missing top-level files",
+        flat,
+      );
+      assert(
+        flat.rows.some((row) => row.includes("child.md")),
+        "flat list is missing nested files",
+        flat,
+      );
+      assert(flat.folders === 0, "flat list should not render folders", flat);
+    } finally {
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().clearWorkspace()',
+      ).catch(() => {});
+      await rm(flatDir, { recursive: true, force: true });
+      await resetBase();
+    }
   });
 
   await test("lax mode keeps list continuations and quoted lists", async () => {

@@ -354,6 +354,9 @@ success toasts.
   Browser builds use a file input/download fallback.
 - `src/lib/quickOpen.ts` is a pure ranking module; it has no DOM or Tauri
   dependencies and is covered by unit tests.
+- The sidebar tree expands folders through `list_directory`; the optional flat
+  list calls `list_workspace_files` and renders relative paths without folder
+  rows. Both use the same workspace path and file-open flow.
 - `src/lib/images.ts` owns image classification, document/root path and root
   URL resolution, Markdown generation, and filename helpers; it is covered by
   unit tests.

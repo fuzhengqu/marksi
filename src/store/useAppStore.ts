@@ -117,6 +117,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   loadRemoteImages: false,
   imageRootPath: "",
   imageRootUrl: "",
+  flatFileList: false,
 };
 
 const emptyDocument: DocumentState = {
@@ -395,6 +396,10 @@ export const useAppStore = create<AppStore>()(
               saved.settings?.imageRootUrl,
               4096,
             ),
+            flatFileList:
+              typeof saved.settings?.flatFileList === "boolean"
+                ? saved.settings.flatFileList
+                : false,
           },
         };
       },

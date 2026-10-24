@@ -107,6 +107,9 @@ ease-out; honor `prefers-reduced-motion`.
 - Sidebar tabs are keyboard reachable and preserve state. An empty workspace
   shows four actions above Recent files: Open file, Open folder, Quick open,
   and New document. There is no footer action row.
+- Preferences > Files can switch the workspace tree to a flat list. The flat
+  list recursively shows supported files with relative paths and no folder
+  rows; it is off by default and does not alter tree expansion state.
 - Recent rows keep their remove `×` hidden until the row is hovered or the
   button receives keyboard focus. The button removes only that row. File >
   Clear recent files removes the entire list and leaves the empty-state copy.
