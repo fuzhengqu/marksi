@@ -1,3 +1,5 @@
+import type { ShortcutId } from "./lib/shortcuts";
+
 export type LineEnding = "LF" | "CRLF";
 
 export type SidebarTab = "files" | "outline" | "search";
@@ -170,6 +172,7 @@ export interface AppSettings {
   flatFileList: boolean;
   localHistory: boolean;
   largeFileOptimizations: boolean;
+  shortcuts: Record<ShortcutId, string>;
 }
 
 export interface DocumentDraft {

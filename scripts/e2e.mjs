@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.21"), "About should show version 0.21", state);
+    assert(state.version?.includes("0.22"), "About should show version 0.22", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -677,6 +677,125 @@ async function main() {
         contrast,
       );
     } finally {
+      await resetBase();
+    }
+  });
+
+  await test("edits and triggers application shortcuts", async () => {
+    await resetBase();
+    const sendShortcut = async (modifiers, key, code, keyCode) => {
+      await send("Input.dispatchKeyEvent", {
+        type: "keyDown",
+        key,
+        code,
+        windowsVirtualKeyCode: keyCode,
+        nativeVirtualKeyCode: keyCode,
+        modifiers,
+      });
+      await send("Input.dispatchKeyEvent", {
+        type: "keyUp",
+        key,
+        code,
+        windowsVirtualKeyCode: keyCode,
+        nativeVirtualKeyCode: keyCode,
+        modifiers,
+      });
+      await sleep(180);
+    };
+
+    try {
+      await evaluate("window.__MARKSI_DEV__.openSettings()");
+      await waitFor(
+        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"]\')',
+      );
+      await evaluate(
+        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"] .shortcut-record\')?.scrollIntoView({ block: "center" })',
+      );
+      await evaluate(
+        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"] .shortcut-record\')?.click()',
+      );
+      await waitFor(
+        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"] .shortcut-key.is-recording\')',
+      );
+      await sendShortcut(3, "n", "KeyN", 78);
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().settings.shortcuts.toggleSidebar === "Ctrl+Alt+N"',
+      );
+      const rebound = await evaluate(
+        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"] .shortcut-key\')?.textContent',
+      );
+      assert(rebound === "Ctrl+Alt+N", "sidebar shortcut label was not updated", rebound);
+
+      await evaluate(
+        "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
+      );
+      await send("Page.reload", { ignoreCache: false });
+      await waitFor("Boolean(window.__MARKSI_DEV__)", 15_000);
+      await waitFor('document.querySelector(".cm-content")', 10_000);
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().settings.shortcuts.toggleSidebar === "Ctrl+Alt+N"',
+      );
+
+      await evaluate("window.__MARKSI_DEV__.openSettings()");
+      await waitFor(
+        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"]\')',
+      );
+      await evaluate(
+        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"] .shortcut-record\')?.click()',
+      );
+      await waitFor(
+        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"] .shortcut-key.is-recording\')',
+      );
+      await sendShortcut(2, "o", "KeyO", 79);
+      const conflict = await evaluate(
+        'document.querySelector(".shortcut-error")?.textContent ?? ""',
+      );
+      assert(conflict.length > 0, "conflicting shortcut should be rejected", conflict);
+      const unchanged = await evaluate(
+        'window.__MARKSI_DEV__.getState().settings.shortcuts.toggleSidebar',
+      );
+      assert(
+        unchanged === "Ctrl+Alt+N",
+        "conflicting shortcut should not be stored",
+        unchanged,
+      );
+      await press("Escape", "Escape", 27);
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().shortcutRecording === false",
+      );
+      await evaluate(
+        "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().settingsOpen === false",
+      );
+
+      const sidebarBefore = await evaluate(`(() => {
+        const state = window.__MARKSI_DEV__.getState();
+        if (!state.sidebarOpen) {
+          state.toggleSidebar();
+        }
+        return window.__MARKSI_DEV__.getState().sidebarOpen;
+      })()`);
+      assert(sidebarBefore, "sidebar should start open for the shortcut test");
+      await sendShortcut(3, "n", "KeyN", 78);
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().sidebarOpen === false",
+      );
+
+      await evaluate("window.__MARKSI_DEV__.openSettings()");
+      await waitFor('document.querySelector(".reset-shortcuts")');
+      await evaluate(
+        'document.querySelector(".reset-shortcuts")?.scrollIntoView({ block: "center" })',
+      );
+      await evaluate('document.querySelector(".reset-shortcuts")?.click()');
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().settings.shortcuts.toggleSidebar === "Ctrl+Shift+B"',
+      );
+    } finally {
+      await evaluate(
+        "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
+      ).catch(() => {});
       await resetBase();
     }
   });

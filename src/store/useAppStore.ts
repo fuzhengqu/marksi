@@ -11,6 +11,10 @@ import {
   togglePin,
 } from "../lib/pins";
 import {
+  DEFAULT_SHORTCUTS,
+  normalizeShortcuts,
+} from "../lib/shortcuts";
+import {
   nextTheme,
   normalizeTheme,
   systemPrefersDark,
@@ -70,6 +74,7 @@ interface AppStore {
   settings: AppSettings;
   settingsOpen: boolean;
   quickOpen: boolean;
+  shortcutRecording: boolean;
   searchScope: SearchScope;
 
   newDocument: () => void;
@@ -95,6 +100,7 @@ interface AppStore {
   updateSettings: (patch: Partial<AppSettings>) => void;
   resetSettings: () => void;
   setQuickOpen: (open: boolean) => void;
+  setShortcutRecording: (recording: boolean) => void;
   setSearchScope: (scope: SearchScope) => void;
   showToast: (message: string, tone?: ToastTone) => void;
   dismissToast: () => void;
@@ -137,6 +143,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   flatFileList: false,
   localHistory: true,
   largeFileOptimizations: true,
+  shortcuts: { ...DEFAULT_SHORTCUTS },
 };
 
 const emptyDocument: DocumentState = {
@@ -187,6 +194,7 @@ export const useAppStore = create<AppStore>()(
       settings: { ...DEFAULT_SETTINGS },
       settingsOpen: false,
       quickOpen: false,
+      shortcutRecording: false,
       searchScope: "document",
 
       newDocument: () =>
@@ -333,6 +341,7 @@ export const useAppStore = create<AppStore>()(
         })),
       resetSettings: () => set({ settings: { ...DEFAULT_SETTINGS } }),
       setQuickOpen: (quickOpen) => set({ quickOpen, menuOpen: false }),
+      setShortcutRecording: (shortcutRecording) => set({ shortcutRecording }),
       setSearchScope: (searchScope) => set({ searchScope }),
 
       showToast: (message, tone = "info") =>
@@ -492,6 +501,7 @@ export const useAppStore = create<AppStore>()(
               typeof saved.settings?.largeFileOptimizations === "boolean"
                 ? saved.settings.largeFileOptimizations
                 : true,
+            shortcuts: normalizeShortcuts(saved.settings?.shortcuts),
           },
         };
       },

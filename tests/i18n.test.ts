@@ -30,6 +30,7 @@ describe("translate", () => {
     expect(translate("zh-CN", "System")).toBe("跟随系统");
     expect(translate("zh-CN", "Sepia")).toBe("柔和棕褐");
     expect(translate("zh-CN", "High contrast")).toBe("高对比度");
+    expect(translate("zh-CN", "Keyboard shortcuts")).toBe("快捷键");
   });
 
   it("returns the source label for English", () => {

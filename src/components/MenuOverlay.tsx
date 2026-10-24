@@ -49,6 +49,10 @@ import type { CopyFormat } from "../types";
 
 type MenuSection = "file" | "edit" | "format" | "view" | "help";
 
+function bindingLabel(binding: string): string {
+  return binding ? binding.replaceAll("+", " ") : "";
+}
+
 const menuSections: Array<{ id: MenuSection; label: string }> = [
   { id: "file", label: "File" },
   { id: "edit", label: "Edit" },
@@ -220,31 +224,31 @@ export function MenuOverlay({
               <MenuItem
                 icon={<FilePlus2 size={16} strokeWidth={1.8} />}
                 label={t("New document")}
-                shortcut="Ctrl N"
+                shortcut={bindingLabel(settings.shortcuts.new)}
                 onClick={() => run(onNew)}
               />
               <MenuItem
                 icon={<FolderOpen size={16} strokeWidth={1.8} />}
                 label={t("Open file…")}
-                shortcut="Ctrl O"
+                shortcut={bindingLabel(settings.shortcuts.open)}
                 onClick={() => run(onOpen)}
               />
               <MenuItem
                 icon={<FolderOpen size={16} strokeWidth={1.8} />}
                 label={t("Open folder…")}
-                shortcut="Ctrl ⇧ O"
+                shortcut={bindingLabel(settings.shortcuts.openFolder)}
                 onClick={() => run(onOpenFolder)}
               />
               <MenuItem
                 icon={<Search size={16} strokeWidth={1.8} />}
                 label={t("Quick open…")}
-                shortcut="Ctrl P"
+                shortcut={bindingLabel(settings.shortcuts.quickOpen)}
                 onClick={() => run(onQuickOpen)}
               />
               <MenuItem
                 icon={<Search size={16} strokeWidth={1.8} />}
                 label={t("Search in folder…")}
-                shortcut="Ctrl ⇧ F"
+                shortcut={bindingLabel(settings.shortcuts.searchWorkspace)}
                 onClick={() => run(onSearchWorkspace)}
               />
               {workspace ? (
@@ -270,13 +274,13 @@ export function MenuOverlay({
               <MenuItem
                 icon={<Save size={16} strokeWidth={1.8} />}
                 label={t("Save")}
-                shortcut="Ctrl S"
+                shortcut={bindingLabel(settings.shortcuts.save)}
                 onClick={() => run(onSave)}
               />
               <MenuItem
                 icon={<SaveAll size={16} strokeWidth={1.8} />}
                 label={t("Save as…")}
-                shortcut="Ctrl ⇧ S"
+                shortcut={bindingLabel(settings.shortcuts.saveAs)}
                 onClick={() => run(onSaveAs)}
               />
               <MenuItem
@@ -321,7 +325,7 @@ export function MenuOverlay({
               <MenuItem
                 icon={<Settings size={16} strokeWidth={1.8} />}
                 label={t("Preferences…")}
-                shortcut="Ctrl ,"
+                shortcut={bindingLabel(settings.shortcuts.settings)}
                 onClick={() => run(onOpenSettings)}
               />
               <div className="menu-separator" />
@@ -373,7 +377,7 @@ export function MenuOverlay({
               <MenuItem
                 icon={<ImageIcon size={16} strokeWidth={1.8} />}
                 label={t("Image…")}
-                shortcut="Ctrl ⇧ I"
+                shortcut={bindingLabel(settings.shortcuts.insertImage)}
                 disabled={settings.readOnlyMode}
                 onClick={() => run(onInsertImage)}
               />
@@ -393,7 +397,7 @@ export function MenuOverlay({
                 label={
                   viewMode === "source" ? t("Preview mode") : t("Source mode")
                 }
-                shortcut="Ctrl /"
+                shortcut={bindingLabel(settings.shortcuts.toggleView)}
                 onClick={() => run(onToggleView)}
               />
               <MenuItem
@@ -407,7 +411,7 @@ export function MenuOverlay({
               <MenuItem
                 icon={<PanelLeft size={16} strokeWidth={1.8} />}
                 label={t("Toggle sidebar")}
-                shortcut="Ctrl ⇧ B"
+                shortcut={bindingLabel(settings.shortcuts.toggleSidebar)}
                 onClick={() => run(toggleSidebar)}
               />
               <MenuItem
@@ -428,7 +432,7 @@ export function MenuOverlay({
               <MenuItem
                 icon={<Focus size={16} strokeWidth={1.8} />}
                 label={t("Focus mode")}
-                shortcut="Ctrl Alt F"
+                shortcut={bindingLabel(settings.shortcuts.focusMode)}
                 checked={settings.focusMode}
                 onClick={() =>
                   run(() => updateSettings({ focusMode: !settings.focusMode }))
@@ -439,7 +443,7 @@ export function MenuOverlay({
                   <AlignVerticalJustifyCenter size={16} strokeWidth={1.8} />
                 }
                 label={t("Typewriter mode")}
-                shortcut="Ctrl Alt T"
+                shortcut={bindingLabel(settings.shortcuts.typewriterMode)}
                 checked={settings.typewriterMode}
                 onClick={() =>
                   run(() =>
@@ -452,7 +456,7 @@ export function MenuOverlay({
               <MenuItem
                 icon={<Lock size={16} strokeWidth={1.8} />}
                 label={t("Read-only mode")}
-                shortcut="Ctrl Alt R"
+                shortcut={bindingLabel(settings.shortcuts.readOnly)}
                 checked={settings.readOnlyMode}
                 onClick={() =>
                   run(() =>
@@ -464,21 +468,21 @@ export function MenuOverlay({
               <MenuItem
                 icon={<ZoomIn size={16} strokeWidth={1.8} />}
                 label={t("Zoom in")}
-                shortcut="Ctrl +"
+                shortcut={bindingLabel(settings.shortcuts.zoomIn)}
                 disabled={settings.zoomLevel >= ZOOM_MAX - 0.001}
                 onClick={() => run(onZoomIn)}
               />
               <MenuItem
                 icon={<ZoomOut size={16} strokeWidth={1.8} />}
                 label={t("Zoom out")}
-                shortcut="Ctrl -"
+                shortcut={bindingLabel(settings.shortcuts.zoomOut)}
                 disabled={settings.zoomLevel <= ZOOM_MIN + 0.001}
                 onClick={() => run(onZoomOut)}
               />
               <MenuItem
                 icon={<RotateCcw size={16} strokeWidth={1.8} />}
                 label={t("Actual size")}
-                shortcut="Ctrl 0"
+                shortcut={bindingLabel(settings.shortcuts.zoomReset)}
                 disabled={Math.abs(settings.zoomLevel - 1) < 0.001}
                 onClick={() => run(onResetZoom)}
               />
@@ -490,19 +494,19 @@ export function MenuOverlay({
               <MenuItem
                 icon={<Copy size={16} strokeWidth={1.8} />}
                 label={t("Copy as Markdown")}
-                shortcut="Ctrl Alt C"
+                shortcut={bindingLabel(settings.shortcuts.copyMarkdown)}
                 onClick={() => run(() => onCopy("markdown"))}
               />
               <MenuItem
                 icon={<ClipboardType size={16} strokeWidth={1.8} />}
                 label={t("Copy as HTML")}
-                shortcut="Ctrl Alt H"
+                shortcut={bindingLabel(settings.shortcuts.copyHtml)}
                 onClick={() => run(() => onCopy("html"))}
               />
               <MenuItem
                 icon={<FileText size={16} strokeWidth={1.8} />}
                 label={t("Copy as plain text")}
-                shortcut="Ctrl Alt P"
+                shortcut={bindingLabel(settings.shortcuts.copyText)}
                 onClick={() => run(() => onCopy("text"))}
               />
             </>

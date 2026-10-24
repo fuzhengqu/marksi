@@ -363,6 +363,12 @@ success toasts.
   rejects directories and unsupported extensions. The frontend retargets the
   open document and recent entries after rename or move, and resets to a blank
   document after deleting the open file. Overwrites are rejected, not merged.
+- `src/lib/shortcuts.ts` owns the command registry, default bindings, canonical
+  key normalization, validation, conflict lookup, and persisted-map repair.
+  Settings store the map; the app-level key handler resolves an event to one
+  command and dispatches it, while the settings editor captures and records a
+  replacement. Menu labels read the same map. Formatting shortcuts remain in the
+  CodeMirror keymap.
 - `src/lib/theme.ts` resolves System, Light, Dark, Sepia, and High contrast
   modes, with System following `prefers-color-scheme` through a live
   media-query hook. The resolved four-value appearance drives the document

@@ -425,6 +425,22 @@ const ZH: Record<string, string> = {
   "Flat file list": "扁平文件列表",
   "Show every workspace file without expanding folders.":
     "不展开文件夹，直接显示工作区中的所有文件。",
+  "Keyboard shortcuts": "快捷键",
+  Editing: "编辑",
+  "Save as": "另存为",
+  "Find in document": "在文档中查找",
+  "Replace in document": "在文档中替换",
+  "Toggle source and preview": "切换源码与预览",
+  Change: "更改",
+  Unassigned: "未分配",
+  "Press keys…": "请按快捷键…",
+  "Use Ctrl or Alt with another key.":
+    "请同时按 Ctrl 或 Alt 与另一个键。",
+  "Already used by {name}.": "已被“{name}”使用。",
+  "Press Escape to cancel.": "按 Esc 取消。",
+  "Reset shortcuts": "恢复默认快捷键",
+  "Custom shortcuts cover application commands; editor formatting keeps its standard keys.":
+    "自定义快捷键适用于应用命令；编辑器格式快捷键仍使用标准按键。",
   "File actions": "文件操作",
   Pinned: "已固定",
   "Pin to sidebar": "固定到侧栏",

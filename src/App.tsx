@@ -35,6 +35,7 @@ import {
   useSystemDark,
 } from "./lib/theme";
 import { isLargeDocument } from "./lib/largeFile";
+import { shortcutForEvent } from "./lib/shortcuts";
 import { frontMatterTitle } from "./lib/frontMatter";
 import { pandocImportName } from "./lib/pandoc";
 import { resolveSaveName } from "./lib/saveName";
@@ -1240,139 +1241,110 @@ export default function App() {
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      const mod = event.ctrlKey || event.metaKey;
-      if (!mod) {
+      const state = useAppStore.getState();
+      if (state.shortcutRecording) {
         return;
       }
-      const key = event.key.toLowerCase();
-
-      if (!event.altKey) {
-        if (key === "=" || key === "+" || event.code === "NumpadAdd") {
-          event.preventDefault();
-          event.stopPropagation();
-          adjustZoom(1);
-          return;
-        }
-        if (key === "-" || event.code === "NumpadSubtract") {
-          event.preventDefault();
-          event.stopPropagation();
-          adjustZoom(-1);
-          return;
-        }
-        if (key === "0") {
-          event.preventDefault();
-          event.stopPropagation();
-          adjustZoom(0);
-          return;
-        }
-      }
-
-      if (event.altKey && !event.shiftKey) {
-        if (key === "f" || key === "t" || key === "r") {
-          event.preventDefault();
-          event.stopPropagation();
-          const state = useAppStore.getState();
-          if (key === "f") {
-            state.updateSettings({ focusMode: !state.settings.focusMode });
-          } else if (key === "t") {
-            state.updateSettings({
-              typewriterMode: !state.settings.typewriterMode,
-            });
-          } else {
-            state.updateSettings({ readOnlyMode: !state.settings.readOnlyMode });
-          }
-          return;
-        }
-        if (key === "c" || key === "h" || key === "p") {
-          event.preventDefault();
-          event.stopPropagation();
-          void handleCopyDocument(
-            key === "c" ? "markdown" : key === "h" ? "html" : "text",
-          );
-          return;
-        }
-      }
-
-      if (key === "p" && !event.shiftKey) {
-        event.preventDefault();
-        const state = useAppStore.getState();
-        state.setSettingsOpen(false);
-        state.setQuickOpen(true);
+      const command = shortcutForEvent(state.settings.shortcuts, event);
+      if (!command) {
         return;
       }
+      event.preventDefault();
+      event.stopPropagation();
 
-      if (key === "," || event.code === "Comma") {
-        event.preventDefault();
-        const state = useAppStore.getState();
-        state.setQuickOpen(false);
-        state.setSettingsOpen(true);
-        return;
-      }
-
-      if (key === "f" && event.shiftKey) {
-        event.preventDefault();
-        const state = useAppStore.getState();
-        state.setQuickOpen(false);
-        state.setSidebarTab("search");
-        if (state.workspace) {
-          state.setSearchScope("workspace");
-        } else {
-          state.setSearchScope("document");
-          state.showToast(
-            tNow("Open a folder to search across files."),
-            "info",
-          );
-        }
-        window.setTimeout(() => {
-          document.querySelector<HTMLInputElement>(".search-box input")?.focus();
-        }, 0);
-        return;
-      }
-
-      if (event.code === "Slash" && !event.shiftKey) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!event.repeat) {
-          useAppStore.getState().toggleViewMode();
-        }
-        return;
-      }
-
-      if (key === "i" && event.shiftKey) {
-        event.preventDefault();
-        void handleInsertImage();
-      } else if (key === "s") {
-        event.preventDefault();
-        void saveCurrent(event.shiftKey);
-      } else if (key === "o") {
-        event.preventDefault();
-        if (event.shiftKey) {
-          void handleOpenFolder();
-        } else {
+      switch (command) {
+        case "new":
+          void handleNew();
+          break;
+        case "open":
           void handleOpen();
-        }
-      } else if (key === "n") {
-        event.preventDefault();
-        void handleNew();
-      } else if (key === "b" && event.shiftKey) {
-        event.preventDefault();
-        useAppStore.getState().toggleSidebar();
-      } else if (key === "f" && !event.shiftKey) {
-        const state = useAppStore.getState();
-        if (state.viewMode === "reading") {
-          state.setViewMode("preview");
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        window.requestAnimationFrame(() => dispatchEditorSearch(false));
-      } else if (key === "h" && !event.shiftKey) {
-        event.preventDefault();
-        event.stopPropagation();
-        const state = useAppStore.getState();
-        if (state.viewMode === "reading") {
-          state.setViewMode("preview");
-        }
-        window.requestAnimationFrame(() => dispatchEditorSearch(true));
+          break;
+        case "openFolder":
+          void handleOpenFolder();
+          break;
+        case "save":
+          void saveCurrent(false);
+          break;
+        case "saveAs":
+          void saveCurrent(true);
+          break;
+        case "quickOpen":
+          state.setSettingsOpen(false);
+          state.setQuickOpen(true);
+          break;
+        case "searchWorkspace":
+          state.setQuickOpen(false);
+          state.setSidebarTab("search");
+          if (state.workspace) {
+            state.setSearchScope("workspace");
+          } else {
+            state.setSearchScope("document");
+            state.showToast(
+              tNow("Open a folder to search across files."),
+              "info",
+            );
+          }
+          window.setTimeout(() => {
+            document
+              .querySelector<HTMLInputElement>(".search-box input")
+              ?.focus();
+          }, 0);
+          break;
+        case "insertImage":
+          void handleInsertImage();
+          break;
+        case "find":
+        case "replace":
+          if (state.viewMode === "reading") {
+            state.setViewMode("preview");
+          }
+          window.requestAnimationFrame(() =>
+            dispatchEditorSearch(command === "replace"),
+          );
+          break;
+        case "copyMarkdown":
+          void handleCopyDocument("markdown");
+          break;
+        case "copyHtml":
+          void handleCopyDocument("html");
+          break;
+        case "copyText":
+          void handleCopyDocument("text");
+          break;
+        case "toggleSidebar":
+          state.toggleSidebar();
+          break;
+        case "toggleView":
+          if (!event.repeat) {
+            state.toggleViewMode();
+          }
+          break;
+        case "zoomIn":
+          adjustZoom(1);
+          break;
+        case "zoomOut":
+          adjustZoom(-1);
+          break;
+        case "zoomReset":
+          adjustZoom(0);
+          break;
+        case "settings":
+          state.setQuickOpen(false);
+          state.setSettingsOpen(true);
+          break;
+        case "focusMode":
+          state.updateSettings({ focusMode: !state.settings.focusMode });
+          break;
+        case "typewriterMode":
+          state.updateSettings({
+            typewriterMode: !state.settings.typewriterMode,
+          });
+          break;
+        case "readOnly":
+          state.updateSettings({
+            readOnlyMode: !state.settings.readOnlyMode,
+          });
+          break;
       }
     };
     window.addEventListener("keydown", handler, true);

@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.21` product version.
+- About dialog close behavior and display of the `0.22` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -94,6 +94,9 @@ The E2E suite currently covers:
 - Additional themes: selecting Sepia applies its documented background and
   theme-color, and selecting High contrast applies its black/white token pair
   and theme-color.
+- Application shortcuts: rebind Toggle sidebar to Ctrl+Alt+N, verify the label
+  and persistence across a full reload, reject Ctrl+O as a conflict, reset the
+  defaults, and trigger the custom binding to hide the sidebar.
 - Export dialog profile switching, front matter toggles, page setup, and the
   real HTML write. The test replaces only the native save-dialog boundary and
   verifies escaped metadata, localized document info, `@page` size/margins,
@@ -136,7 +139,7 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 170 ms during the release run.
+  Windows dev WebView opened the fixture in 154 ms during the release run.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -216,14 +219,17 @@ arbitrary labels; decoding is read-only, and saving into a legacy encoding
 still fails when the text contains characters that encoding cannot represent.
 System appearance follows the WebView's `prefers-color-scheme` value. The E2E
 suite emulates that media feature through CDP; the real Windows/Linux OS theme
-switch remains a manual release check. Sepia and High contrast are CSS/theme
+switch remains a manual release check. Custom shortcuts cover application
+commands only; editor formatting keeps fixed CodeMirror bindings, global
+OS-level hotkeys are not supported, captured bindings require Ctrl or Meta, and
+duplicate bindings are rejected instead of swapped. Sepia and High contrast are CSS/theme
 token sets and Mermaid palettes, not operating-system high-contrast API
 integration; their visual contrast and platform rendering need a manual review
 before release. Large-file mode compares JavaScript string length, so the 500,000 threshold is
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 170 ms measurement is from one Windows development machine;
+large files. The 154 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

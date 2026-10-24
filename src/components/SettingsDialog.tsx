@@ -4,6 +4,7 @@ import {
   Braces,
   Focus,
   Image as ImageIcon,
+  Keyboard,
   RotateCcw,
   Save,
   Settings,
@@ -19,6 +20,7 @@ import {
 import { ZOOM_MAX, ZOOM_MIN, zoomPercent } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { AppSettings, Language, Theme } from "../types";
+import { ShortcutEditor } from "./ShortcutEditor";
 import { Toggle } from "./Toggle";
 
 export function SettingsDialog() {
@@ -302,6 +304,19 @@ export function SettingsDialog() {
                 }
               />
             </div>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-heading">
+              <Keyboard size={15} strokeWidth={1.8} />
+              <span>{t("Keyboard shortcuts")}</span>
+            </div>
+            <p className="settings-note">
+              {t(
+                "Custom shortcuts cover application commands; editor formatting keeps its standard keys.",
+              )}
+            </p>
+            <ShortcutEditor />
           </section>
 
           <section className="settings-section">

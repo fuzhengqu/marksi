@@ -119,6 +119,10 @@ ease-out; honor `prefers-reduced-motion`.
   Each pinned row opens a file or folder and reveals an unpin button on hover.
   Row menus include Pin to sidebar for files and folders and Unpin when already
   pinned.
+- Preferences > Keyboard shortcuts groups commands with a key badge and Change
+  button. Recording shows the pending keys in the badge; Escape cancels,
+  Backspace/Delete unbinds, conflicts show an inline error, and Reset shortcuts
+  restores defaults.
 - Preferences > Appearance offers System, Light, Dark, Sepia, and High contrast
   in a compact select. The title-bar toggle always switches to the opposite
   resolved light/dark family, leaving System mode when used. System follows the

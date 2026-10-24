@@ -38,6 +38,13 @@ border, search-match, table-stripe, and syntax colors. The status of the title
 toggle always reflects the resolved dark/light family, and the theme selector
 is a compact select in Preferences.
 
+Preferences > Keyboard shortcuts lists application commands by group. Clicking
+Change captures the next Ctrl/Alt combination, rejects conflicts with another
+command, supports Backspace/Delete to unbind, and Escape to cancel. Bindings are
+stored locally, apply immediately, and update the File/View menu labels. Reset
+shortcuts restores the defaults. Editor formatting keys remain on their standard
+CodeMirror bindings.
+
 ## Files and workspace
 
 | Feature | Status | Milestone |
@@ -274,7 +281,7 @@ save the imported document to choose its final location.
 | User CSS/theme folder | todo | M6 |
 | Settings shell | done | M2/M3 |
 | Editor text size and column width | done | M3 |
-| Shortcut editor | todo | M6 |
+| Shortcut editor | done | M6 |
 | Advanced JSON settings | todo | M6 |
 | Chinese default / English language switch | done | M5 |
 | Version display and one-step bump | done | M5 |
