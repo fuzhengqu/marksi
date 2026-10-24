@@ -385,6 +385,9 @@ success toasts.
   user-facing list and keeps the canonical encoding name in the document state
   so the next save uses the same encoder. Display names are normalized in the
   UI without changing the stored label.
+- GitHub Actions runs a Windows/Ubuntu build-and-test matrix (typecheck,
+  Vitest, frontend build, Rust formatting, Rust tests) alongside the separate
+  publication audit. E2E remains local because it needs a real desktop WebView.
 - The Tauri bundle configuration builds MSI and NSIS targets on Windows with
   the current-user NSIS install mode, the project icon set, MIT license, and
   product metadata. Artifacts are written under

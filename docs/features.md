@@ -301,7 +301,7 @@ save the imported document to choose its final location.
 | Auto-update | todo | M6 |
 | Third-party license notices | wip | M0 |
 | Publication audit CI (Linux) | done | M0 |
-| Full build/test CI (Windows + Linux) | todo | M0 |
+| Full build/test CI (Windows + Linux) | done | M0 |
 | E2E tests | done | M0 |
 | Golden Markdown tests | todo | M2 |
 
