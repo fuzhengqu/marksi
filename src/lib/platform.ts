@@ -3,6 +3,8 @@ import type {
   FileEntry,
   FileMeta,
   FileOperationResult,
+  HistoryEntry,
+  HistorySnapshot,
   ImageAsset,
   LineEnding,
   WorkspaceFile,
@@ -298,6 +300,75 @@ export async function deleteWorkspaceFile(
   }
   const { invoke } = await import("@tauri-apps/api/core");
   await invoke("delete_workspace_file", { root, path });
+}
+
+export async function recordHistory(
+  path: string,
+  name: string,
+  content: string,
+  encoding: string,
+  lineEnding: string,
+): Promise<HistoryEntry | null> {
+  if (!isTauri()) {
+    return null;
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<HistoryEntry | null>("record_history", {
+    path,
+    name,
+    content,
+    encoding,
+    lineEnding,
+  });
+}
+
+export async function listHistory(path: string): Promise<HistoryEntry[]> {
+  if (!isTauri()) {
+    return [];
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<HistoryEntry[]>("list_history", { path });
+}
+
+export async function readHistory(
+  path: string,
+  id: string,
+): Promise<HistorySnapshot> {
+  if (!isTauri()) {
+    throw new Error("Local history is only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<HistorySnapshot>("read_history", { path, id });
+}
+
+export async function deleteHistorySnapshot(
+  path: string,
+  id: string,
+): Promise<void> {
+  if (!isTauri()) {
+    throw new Error("Local history is only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  await invoke("delete_history", { path, id });
+}
+
+export async function clearHistory(path: string): Promise<number> {
+  if (!isTauri()) {
+    return 0;
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<number>("clear_history", { path });
+}
+
+export async function relocateHistory(
+  oldPath: string,
+  newPath: string,
+): Promise<number> {
+  if (!isTauri()) {
+    return 0;
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<number>("relocate_history", { oldPath, newPath });
 }
 
 export async function searchWorkspace(

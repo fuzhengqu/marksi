@@ -525,6 +525,19 @@ export function SettingsDialog() {
                 onChange={(value) => update("flatFileList", value)}
               />
             </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Local history")}</span>
+                <small>
+                  {t("Keep a capped set of snapshots when you save.")}
+                </small>
+              </div>
+              <Toggle
+                label={t("Local history")}
+                checked={settings.localHistory}
+                onChange={(value) => update("localHistory", value)}
+              />
+            </div>
             <p className="settings-note">
               {t(
                 "Unsaved drafts are always kept locally for crash recovery. MarkSI never sends document content anywhere.",

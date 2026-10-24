@@ -363,6 +363,13 @@ success toasts.
   rejects directories and unsupported extensions. The frontend retargets the
   open document and recent entries after rename or move, and resets to a blank
   document after deleting the open file. Overwrites are rejected, not merged.
+- Local history stores snapshots under the Tauri application data folder in a
+  folder named by the SHA-256 of the normalized document path. Snapshots are
+  JSON records with atomic writes, a 4 MB per-snapshot limit, a 40-snapshot cap,
+  and content-hash deduplication against the newest record. Rename and move
+  relocate the snapshot folder and rewrite its document binding; delete through
+  the sidebar clears it. Restoring a snapshot only updates the editor buffer, so
+  the user still chooses when to write the file.
 - `src/lib/images.ts` owns image classification, document/root path and root
   URL resolution, Markdown generation, and filename helpers; it is covered by
   unit tests.
@@ -428,8 +435,9 @@ Document commands: `read_document`, `write_document`, `write_export`,
 `pandoc_import`, `remote_image_data_url`, and `clear_remote_image_cache`. Workspace commands:
 `list_workspace_files`, `search_workspace`, `file_modified_ms`,
 `rename_workspace_file`, `duplicate_workspace_file`, `move_workspace_file`, and
-`delete_workspace_file`. Image commands: `import_image_asset`, `save_image_data`,
-and `read_image_data_url`.
+`delete_workspace_file`. History commands: `record_history`, `list_history`,
+`read_history`, `delete_history`, `clear_history`, and `relocate_history`. Image
+commands: `import_image_asset`, `save_image_data`, and `read_image_data_url`.
 
 The frontend uses Tauri's dialog plugin for open/save/folder and image-picker
 dialogs plus native confirmation prompts. Files can also be dropped onto the
@@ -450,7 +458,7 @@ export. The document text is never round-tripped through rendered HTML.
 
 - Native file watcher with debounce, replacing the current mtime poll when a
   platform watcher is available.
-- SQLite session/history store for multi-window restore and local snapshots.
+- SQLite session store for multi-window restore and richer history indexing.
 - PlantUML lazy rendering and a worker for unusually heavy diagrams.
 - Remote image caching and optional uploader integrations.
 - Cross-platform print-to-PDF adapters.

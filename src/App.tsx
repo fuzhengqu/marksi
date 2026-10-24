@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { DraftRecovery } from "./components/DraftRecovery";
 import { EditorPane } from "./components/EditorPane";
 import { ExportDialog } from "./components/ExportDialog";
+import { HistoryDialog } from "./components/HistoryDialog";
 import { MenuOverlay } from "./components/MenuOverlay";
 import { PandocDialog } from "./components/PandocDialog";
 import { QuickOpen } from "./components/QuickOpen";
@@ -51,6 +52,9 @@ import {
   pickImageFile,
   pickPandocImportFile,
   readDocument,
+  recordHistory,
+  relocateHistory,
+  clearHistory,
   runExportCommand,
   saveDocument,
   saveHtmlFile,
@@ -72,6 +76,20 @@ const PreviewPane = lazy(() =>
     default: module.PreviewPane,
   })),
 );
+
+async function captureHistory(
+  path: string,
+  previous: string,
+  content: string,
+  encoding: string,
+  lineEnding: string,
+): Promise<void> {
+  const name = fileName(path);
+  if (previous && previous !== content) {
+    await recordHistory(path, name, previous, encoding, lineEnding);
+  }
+  await recordHistory(path, name, content, encoding, lineEnding);
+}
 
 function errorMessage(error: unknown): string {
   if (typeof error === "string") {
@@ -104,6 +122,7 @@ export default function App() {
     useState<DocumentDraft | null>(() => loadDraft());
   const [exportOpen, setExportOpen] = useState(false);
   const [pandocOpen, setPandocOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const savingRef = useRef(false);
 
   useEffect(() => {
@@ -303,6 +322,11 @@ export default function App() {
       const state = useAppStore.getState();
       if (oldPath) {
         state.applyFileOperation(oldPath, newPath);
+        if (newPath) {
+          void relocateHistory(oldPath, newPath).catch(() => {});
+        } else {
+          void clearHistory(oldPath).catch(() => {});
+        }
       }
       if (state.workspace) {
         void handleRefreshWorkspace();
@@ -350,6 +374,17 @@ export default function App() {
                 "success",
               );
             }
+          }
+          if (latest.settings.localHistory) {
+            void captureHistory(
+              meta.path,
+              current.savedContent,
+              content,
+              current.encoding,
+              current.lineEnding,
+            ).catch(() => {
+              // History is best-effort and must never block a save.
+            });
           }
         }
       } catch (error) {
@@ -1373,6 +1408,8 @@ export default function App() {
       print: handlePrint,
       openQuickOpen: () => useAppStore.getState().setQuickOpen(true),
       openSettings: () => useAppStore.getState().setSettingsOpen(true),
+      openHistory: () => setHistoryOpen(true),
+      closeHistory: () => setHistoryOpen(false),
       setSettings: (patch: Partial<AppSettings>) =>
         useAppStore.getState().updateSettings(patch),
     };
@@ -1471,6 +1508,7 @@ export default function App() {
         onOpenFolder={() => void handleOpenFolder()}
         onSave={handleSave}
         onSaveAs={handleSaveAs}
+        onOpenHistory={() => setHistoryOpen(true)}
         onExport={handleOpenExport}
         onExportImage={() => void handleExportImage()}
         onPandocExport={handleOpenPandoc}
@@ -1514,6 +1552,10 @@ export default function App() {
         open={pandocOpen}
         hasContent={Boolean(doc.content.trim())}
         onClose={() => setPandocOpen(false)}
+      />
+      <HistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
       />
       {draftToRecover ? (
         <DraftRecovery

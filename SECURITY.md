@@ -26,7 +26,9 @@ opt-in external-process features: only configure executables that you trust.
 Pandoc is not bundled and may fetch remote resources referenced by the document.
 Remote image caching is also opt-in and off by default; it validates schemes,
 credentials, hosts, private addresses, response size, and image type, does not
-follow redirects, and never uploads images.
+follow redirects, and never uploads images. Local history snapshots are stored
+as plaintext in the application data folder, capped and never uploaded; protect
+access to your user profile accordingly.
 
 ## Supported versions
 

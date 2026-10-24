@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.15` product version.
+- About dialog close behavior and display of the `0.16` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -114,7 +114,12 @@ The E2E suite currently covers:
   then rename preserves content and retargets the open document, duplicate
   creates numbered copies, move relocates a file into an existing folder,
   delete removes a file, and deleting the open document returns the editor to
-  a clean blank state.
+  a clean blank state. Renaming a document with history moves its snapshots to
+  the new path.
+- Local history: saving a changed document records the previous and current
+  text, the dialog lists both, restoring the older snapshot changes only the
+  editor and leaves it dirty, and clearing removes every snapshot for that
+  document.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -147,7 +152,9 @@ custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, and analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic text and binary writes,
-workspace file rename/duplicate/move/delete with path and collision validation,
+local-history recording/deduplication/retention, path-hash isolation, snapshot
+relocation and clearing, workspace file rename/duplicate/move/delete with path
+and collision validation,
 image import and data URLs, recursive workspace listing/search, file timestamps,
 custom-command validation, successful/non-zero execution, missing executables,
 working-directory handling, Pandoc argument construction, format allowlisting,
@@ -179,7 +186,12 @@ Workspace file actions are limited to supported text files inside the open
 workspace. Delete is permanent rather than a move to the operating-system trash,
 so the confirmation dialog is the only safeguard; there is no operation journal
 or undo. Rename, move, and duplicate reject collisions instead of overwriting.
-Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
+Local history stores plaintext snapshots in the application data folder, capped
+at 40 snapshots and 4 MB each per document. It is local-only but not encrypted,
+so anyone with access to the user profile can read it. Snapshots for a document
+are migrated on rename or move inside MarkSI and cleared when MarkSI deletes the
+file; files moved or deleted outside MarkSI leave orphaned history because there
+is no global purge UI yet. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the
 manual DOCX/EPUB check. Image uploader integration is not implemented; the

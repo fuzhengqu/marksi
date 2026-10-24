@@ -421,6 +421,33 @@ const ZH: Record<string, string> = {
   "Show every workspace file without expanding folders.":
     "不展开文件夹，直接显示工作区中的所有文件。",
   "File actions": "文件操作",
+  "Local history": "本地历史",
+  "Local history…": "本地历史…",
+  "Keep a capped set of snapshots when you save.":
+    "保存时保留数量有限的本地快照。",
+  "This document has no file yet.": "此文档尚未保存为文件。",
+  "Open a saved document to view its local history.":
+    "打开已保存的文档后可查看本地历史。",
+  "No saved versions yet.": "尚无已保存的版本。",
+  "Save the document to create a local snapshot.":
+    "保存文档后会创建本地快照。",
+  "Loading history…": "正在加载历史…",
+  "Empty document": "空文档",
+  "Choose a saved version to preview it.":
+    "选择一个已保存版本进行预览。",
+  "Restore this version": "恢复此版本",
+  "Delete snapshot": "删除快照",
+  "Snapshot deleted.": "快照已删除。",
+  "Local history cleared.": "本地历史已清除。",
+  "Clear all": "全部清除",
+  "Confirm clear": "确认清除",
+  "All saved versions for this document will be removed.":
+    "将删除此文档的所有已保存版本。",
+  "Snapshots stay in this app's local data folder. They are never uploaded.":
+    "快照仅保存在本应用的本地数据目录中，绝不上传。",
+  "Restored a saved version. Save to keep it.":
+    "已恢复保存的版本；保存后才会写入文件。",
+  "Read-only mode is on.": "只读模式已开启。",
   Rename: "重命名",
   Duplicate: "创建副本",
   "Move to folder…": "移动到文件夹…",

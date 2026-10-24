@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.15"), "About should show version 0.15", state);
+    assert(state.version?.includes("0.16"), "About should show version 0.16", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -785,6 +785,17 @@ async function main() {
         'window.__MARKSI_DEV__.getState().doc.path?.toLowerCase().endsWith("rename-me.md")',
         10_000,
       );
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        await platform.clearHistory(${JSON.stringify(renameFile)});
+        await platform.recordHistory(
+          ${JSON.stringify(renameFile)},
+          "rename-me.md",
+          "# Rename\\n\\nBody.\\n",
+          "UTF-8",
+          "LF"
+        );
+      })()`);
 
       await openRowAction("rename-me.md", "rename");
       await setDialogInput("../escape.md");
@@ -813,6 +824,22 @@ async function main() {
         renamed.content.includes("# Rename"),
         "rename should preserve document content",
         renamed,
+      );
+      let relocatedHistory = 0;
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        relocatedHistory = await evaluate(`(async () => {
+          const platform = await import("/src/lib/platform.ts");
+          return (await platform.listHistory(${JSON.stringify(renamedFile)})).length;
+        })()`);
+        if (relocatedHistory > 0) {
+          break;
+        }
+        await sleep(120);
+      }
+      assert(
+        relocatedHistory > 0,
+        "rename should move local history to the new path",
+        relocatedHistory,
       );
 
       await openRowAction("renamed.md", "duplicate");
@@ -885,7 +912,123 @@ async function main() {
       await evaluate(
         'window.__MARKSI_DEV__.getState().clearWorkspace()',
       ).catch(() => {});
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        await platform.clearHistory(${JSON.stringify(renameFile)});
+        await platform.clearHistory(${JSON.stringify(renamedFile)});
+      })()`).catch(() => {});
       await rm(root, { recursive: true, force: true });
+      await resetBase();
+    }
+  });
+
+  await test("local history records, previews, restores, and clears saved versions", async () => {
+    await resetBase();
+    const historyFile = resolve(fixtureDir, "history-note.md");
+    const original = "# Version one\n\nOriginal body.\n";
+
+    try {
+      await writeFile(historyFile, original, "utf8");
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        await platform.clearHistory(${JSON.stringify(historyFile)});
+        await window.__MARKSI_DEV__.openPath(${JSON.stringify(historyFile)});
+      })()`);
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.path?.toLowerCase().endsWith("history-note.md")',
+        10_000,
+      );
+      await sleep(250);
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setContent("# Version two\\n\\nChanged body.\\n")',
+      );
+      await evaluate("window.__MARKSI_DEV__.save()");
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.dirty === false",
+        10_000,
+      );
+
+      let historyCount = 0;
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        historyCount = await evaluate(`(async () => {
+          const platform = await import("/src/lib/platform.ts");
+          return (await platform.listHistory(${JSON.stringify(historyFile)})).length;
+        })()`);
+        if (historyCount >= 2) {
+          break;
+        }
+        await sleep(150);
+      }
+      assert(
+        historyCount >= 2,
+        "saving should record the previous and current version",
+        historyCount,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.openHistory()");
+      await waitFor('document.querySelectorAll(".history-item").length >= 2');
+      const previews = await evaluate(
+        'Array.from(document.querySelectorAll(".history-item-preview")).map((node) => node.textContent ?? "")',
+      );
+      assert(
+        previews.some((text) => text.includes("Changed body")),
+        "history should include the newest saved text",
+        previews,
+      );
+      assert(
+        previews.some((text) => text.includes("Original body")),
+        "history should include the previous saved text",
+        previews,
+      );
+
+      await evaluate(`(() => {
+        const items = document.querySelectorAll(".history-item");
+        items[items.length - 1]?.click();
+      })()`);
+      await waitFor(
+        'document.querySelector(".history-content")?.textContent.includes("Original body")',
+      );
+      await waitFor(
+        'document.querySelector(".history-restore") && !document.querySelector(".history-restore").disabled',
+      );
+      await evaluate('document.querySelector(".history-restore")?.click()');
+      await waitFor('!document.querySelector(".history-dialog")');
+      const restored = await evaluate(`({
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        dirty: window.__MARKSI_DEV__.getState().doc.dirty
+      })`);
+      assert(
+        restored.content === original,
+        "restore should load the selected snapshot without touching disk",
+        restored,
+      );
+      assert(restored.dirty, "restored content should be unsaved", restored);
+
+      await evaluate("window.__MARKSI_DEV__.openHistory()");
+      await waitFor('document.querySelectorAll(".history-item").length >= 2');
+      await evaluate('document.querySelector(".history-clear")?.click()');
+      await waitFor(
+        'document.querySelector(".history-clear")?.classList.contains("button-danger")',
+      );
+      await evaluate('document.querySelector(".history-clear")?.click()');
+      await waitFor('document.querySelector(".history-empty")');
+      const cleared = await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        return (await platform.listHistory(${JSON.stringify(historyFile)})).length;
+      })()`);
+      assert(cleared === 0, "clearing should remove every snapshot", cleared);
+
+      await sleep(200);
+      await press("Escape", "Escape", 27);
+      await waitFor('!document.querySelector(".history-dialog")');
+    } finally {
+      await evaluate("window.__MARKSI_DEV__.closeHistory?.()").catch(() => {});
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        await platform.clearHistory(${JSON.stringify(historyFile)});
+      })()`).catch(() => {});
+      await rm(historyFile, { force: true });
       await resetBase();
     }
   });

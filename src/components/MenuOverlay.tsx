@@ -15,6 +15,7 @@ import {
   Focus,
   FolderOpen,
   FolderX,
+  History,
   Image as ImageIcon,
   Info,
   Italic,
@@ -61,6 +62,7 @@ interface MenuOverlayProps {
   onOpenFolder: () => void;
   onSave: () => void;
   onSaveAs: () => void;
+  onOpenHistory: () => void;
   onExport: () => void;
   onExportImage: () => void;
   onPandocExport: () => void;
@@ -85,6 +87,7 @@ export function MenuOverlay({
   onOpenFolder,
   onSave,
   onSaveAs,
+  onOpenHistory,
   onExport,
   onExportImage,
   onPandocExport,
@@ -108,6 +111,7 @@ export function MenuOverlay({
   const theme = useAppStore((state) => state.theme);
   const viewMode = useAppStore((state) => state.viewMode);
   const workspace = useAppStore((state) => state.workspace);
+  const docPath = useAppStore((state) => state.doc.path);
   const recent = useAppStore((state) => state.recent);
   const settings = useAppStore((state) => state.settings);
   const toggleTheme = useAppStore((state) => state.toggleTheme);
@@ -271,6 +275,12 @@ export function MenuOverlay({
                 label={t("Save as…")}
                 shortcut="Ctrl ⇧ S"
                 onClick={() => run(onSaveAs)}
+              />
+              <MenuItem
+                icon={<History size={16} strokeWidth={1.8} />}
+                label={t("Local history…")}
+                disabled={!docPath}
+                onClick={() => run(onOpenHistory)}
               />
               <div className="menu-separator" />
               <MenuItem

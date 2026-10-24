@@ -119,6 +119,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   imageRootPath: "",
   imageRootUrl: "",
   flatFileList: false,
+  localHistory: true,
 };
 
 const emptyDocument: DocumentState = {
@@ -442,6 +443,10 @@ export const useAppStore = create<AppStore>()(
               typeof saved.settings?.flatFileList === "boolean"
                 ? saved.settings.flatFileList
                 : false,
+            localHistory:
+              typeof saved.settings?.localHistory === "boolean"
+                ? saved.settings.localHistory
+                : true,
           },
         };
       },

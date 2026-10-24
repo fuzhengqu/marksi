@@ -89,6 +89,24 @@ export interface ToastMessage {
   tone: ToastTone;
 }
 
+export interface HistoryEntry {
+  id: string;
+  name: string;
+  savedAt: number;
+  size: number;
+  encoding: string;
+  lineEnding: LineEnding;
+  preview: string;
+}
+
+export interface HistorySnapshot {
+  id: string;
+  savedAt: number;
+  encoding: string;
+  lineEnding: LineEnding;
+  content: string;
+}
+
 export interface FileOperationResult {
   path: string;
   name: string;
@@ -144,6 +162,7 @@ export interface AppSettings {
   imageRootPath: string;
   imageRootUrl: string;
   flatFileList: boolean;
+  localHistory: boolean;
 }
 
 export interface DocumentDraft {

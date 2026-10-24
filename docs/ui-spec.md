@@ -115,6 +115,10 @@ ease-out; honor `prefers-reduced-motion`.
   small form dialog, duplicate confirms the copy, and delete requires an
   explicit destructive confirmation that also warns when the open document will
   close. These overlays use the shared modal scrim and close with Escape.
+- File > Local history opens a two-pane dialog: saved versions on the left,
+  a read-only preview and restore/delete actions on the right. Clearing requires
+  a second confirmation. The footer states that snapshots stay in the local app
+  data folder and are never uploaded.
 - Recent rows keep their remove `×` hidden until the row is hovered or the
   button receives keyboard focus. The button removes only that row. File >
   Clear recent files removes the entire list and leaves the empty-state copy.

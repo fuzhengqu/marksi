@@ -45,7 +45,7 @@ that design decisions do not paint us into a corner.
 | File operations (rename/duplicate/move/delete) | done | M4 |
 | External change detection | done | M3 |
 | Autosave and draft recovery | done | M3 |
-| Local history / snapshots | todo | M4 |
+| Local history / snapshots | done | M4 |
 | Quick open | done | M3 |
 | Pinned locations | todo | M4 |
 | Workspace full-text search | done | M3 |
@@ -63,6 +63,14 @@ unexpected overwrites, reserved names, and unsupported extensions, and update
 the open document path and recent entries after a rename or move. Delete is
 permanent and requires confirmation; it closes the open document when that file
 is removed.
+
+Local history keeps up to 40 snapshots per saved document in the application
+data folder. A save records the previous and current text when they differ;
+identical snapshots are skipped and each snapshot is limited to 4 MB. File >
+Local history previews, restores, deletes, and clears saved versions. Restoring
+only places the text in the editor as an unsaved change. Rename and move migrate
+the document's snapshots, and deleting a workspace file removes them through the
+sidebar. Snapshots are plaintext and never leave the device.
 
 ## Editor
 
