@@ -3,6 +3,7 @@ import { Eye, Lock, PenLine } from "lucide-react";
 import { getTextStats } from "../editor/analyze";
 import { useT } from "../i18n";
 import { encodingDisplayName } from "../lib/encodings";
+import { isLargeDocument } from "../lib/largeFile";
 import { useAppStore } from "../store/useAppStore";
 
 export function StatusBar() {
@@ -11,6 +12,11 @@ export function StatusBar() {
   const cursor = useAppStore((state) => state.cursor);
   const viewMode = useAppStore((state) => state.viewMode);
   const readOnlyMode = useAppStore((state) => state.settings.readOnlyMode);
+  const largeFile = useAppStore(
+    (state) =>
+      state.settings.largeFileOptimizations &&
+      isLargeDocument(state.doc.content),
+  );
   const toggleViewMode = useAppStore((state) => state.toggleViewMode);
   const setViewMode = useAppStore((state) => state.setViewMode);
   const stats = useMemo(() => getTextStats(doc.content), [doc.content]);
@@ -20,11 +26,23 @@ export function StatusBar() {
       <div className="status-left">
         <span className="status-mode">
           {viewMode === "preview"
-            ? t("Live preview")
+            ? largeFile
+              ? t("Source")
+              : t("Live preview")
             : viewMode === "reading"
               ? t("Reading")
               : "Markdown"}
         </span>
+        {largeFile ? (
+          <span
+            className="status-large-file"
+            title={t(
+              "Live preview decorations, spell check, and emoji suggestions are off for documents over 500,000 characters.",
+            )}
+          >
+            {t("Large file mode")}
+          </span>
+        ) : null}
         <span className="status-divider" aria-hidden="true" />
         {readOnlyMode ? (
           <span

@@ -29,6 +29,7 @@ import {
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
 import { encodingDisplayName } from "./lib/encodings";
 import { buildPageCss, normalizeExportOptions } from "./lib/exportOptions";
+import { isLargeDocument } from "./lib/largeFile";
 import { frontMatterTitle } from "./lib/frontMatter";
 import { pandocImportName } from "./lib/pandoc";
 import { resolveSaveName } from "./lib/saveName";
@@ -120,6 +121,8 @@ export default function App() {
   const viewMode = useAppStore((state) => state.viewMode);
   const gotoLine = useAppStore((state) => state.gotoLine);
   const settings = useAppStore((state) => state.settings);
+  const largeFile =
+    settings.largeFileOptimizations && isLargeDocument(doc.content);
   const workspacePath = useAppStore((state) => state.workspace?.path ?? null);
   const [draftToRecover, setDraftToRecover] =
     useState<DocumentDraft | null>(() => loadDraft());
@@ -1490,7 +1493,10 @@ export default function App() {
   ]);
 
   return (
-    <div className={`app-shell ${sidebarOpen ? "has-sidebar" : ""}`}>
+    <div
+      className={`app-shell ${sidebarOpen ? "has-sidebar" : ""}`}
+      data-large-file={largeFile ? "true" : undefined}
+    >
       <TitleBar />
       <div className="workspace-shell">
         {sidebarOpen ? (
@@ -1520,11 +1526,11 @@ export default function App() {
             readOnly={viewMode === "reading" || settings.readOnlyMode}
             focusMode={settings.focusMode}
             typewriterMode={settings.typewriterMode}
-            spellcheck={settings.spellcheck}
+            spellcheck={settings.spellcheck && !largeFile}
             autoPair={settings.autoPair}
             smartPunctuation={settings.smartPunctuation}
-            emojiAutocomplete={settings.emojiAutocomplete}
-            livePreviewMode={viewMode === "preview"}
+            emojiAutocomplete={settings.emojiAutocomplete && !largeFile}
+            livePreviewMode={viewMode === "preview" && !largeFile}
             language={settings.language}
           />
           {viewMode === "reading" ? (

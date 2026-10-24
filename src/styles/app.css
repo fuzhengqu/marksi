@@ -2254,6 +2254,17 @@ body.is-resizing-image[data-resize-axis="height"] * {
   color: var(--danger);
 }
 
+.status-large-file {
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg-muted);
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .status-readonly {
   display: inline-flex;
   align-items: center;

@@ -7,11 +7,11 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.18**
-- Technical version: **0.18.0**
+- Product version: **0.19**
+- Technical version: **0.19.0**
 - Foundation milestones M1 and M3 are complete.
 - M2 core is complete; golden Markdown tests remain open.
-- M4 core is complete, with one planned file/workspace item still open.
+- M4 is complete.
 - M5 is complete with twenty-three done items and one explicitly deferred
   uploader integration.
 - M6 and M7 have not started.
@@ -19,8 +19,8 @@ The public security and version policies are enforced by
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **92 done, 4 wip,
-24 todo, 2 deferred** across 122 items.
+is the source for exact status values. Current raw count: **93 done, 4 wip,
+23 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
 
@@ -81,11 +81,7 @@ Exit criteria:
 - File operations have E2E coverage through the WebView where possible.
 - Large-file behavior is measurable and documented.
 
-Current gaps (tracked as M4 debt, not mixed into M5):
-
-1. Large-file mode.
-
-M4 debt is scheduled after M5 scope is closed, before M6 release work begins.
+M4 is closed. All file/workspace debt is done, and M6 release work can begin.
 
 ### M5 — Advanced Markdown, images, and export
 
@@ -103,7 +99,7 @@ Exit criteria:
 
 M5 is complete except for uploader integration, which is deferred until a
 separate credentials and third-party network review. The next milestone work is
-M6 platform/release engineering and the remaining M4 file/workspace debt.
+M6 platform/release engineering.
 
 Remote image and uploader work must not silently enable background network
 requests. They require explicit user action, clear cache behavior, and tests

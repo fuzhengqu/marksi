@@ -286,6 +286,23 @@ export function SettingsDialog() {
                 onChange={(value) => update("emojiAutocomplete", value)}
               />
             </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Large-file optimizations")}</span>
+                <small>
+                  {t(
+                    "Documents over 500,000 characters disable live preview decorations, spell check, and emoji suggestions.",
+                  )}
+                </small>
+              </div>
+              <Toggle
+                label={t("Large-file optimizations")}
+                checked={settings.largeFileOptimizations}
+                onChange={(value) =>
+                  update("largeFileOptimizations", value)
+                }
+              />
+            </div>
           </section>
 
           <section className="settings-section">

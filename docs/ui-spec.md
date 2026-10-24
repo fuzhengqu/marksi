@@ -119,6 +119,9 @@ ease-out; honor `prefers-reduced-motion`.
   Each pinned row opens a file or folder and reveals an unpin button on hover.
   Row menus include Pin to sidebar for files and folders and Unpin when already
   pinned.
+- Documents over 500,000 characters show a Large file mode badge in the status
+  bar and use the Source label while live-preview decorations are off.
+  Preferences > Editor can disable large-file optimizations.
 - File > Reopen with encoding opens a radio list of supported encodings, with
   the current encoding marked and a warning when the document is dirty. The
   action decodes only; saving remains a separate user action.

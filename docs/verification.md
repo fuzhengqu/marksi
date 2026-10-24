@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.18` product version.
+- About dialog close behavior and display of the `0.19` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -127,6 +127,10 @@ The E2E suite currently covers:
 - Explicit encoding reopen: a GB18030 fixture is reopened as UTF-8 (wrong text,
   file bytes unchanged) and then as GB18030 (correct Chinese text, clean
   document); an edit saved afterwards keeps the exact GB18030 bytes.
+- Large-file mode: a fixture over 500,000 characters opens with the status
+  badge, no live-preview decorations, and the Source label; disabling the
+  preference restores live preview, and re-enabling it restores the mode. The
+  Windows dev WebView opened the fixture in 157 ms during the release run.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -204,7 +208,12 @@ filesystem; a missing file or folder stays pinned and reports an error when
 opened. Reopen with encoding offers a curated encoding list rather than
 arbitrary labels; decoding is read-only, and saving into a legacy encoding
 still fails when the text contains characters that encoding cannot represent.
-Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
+Large-file mode compares JavaScript string length, so the 500,000 threshold is
+in UTF-16 code units rather than bytes. It reduces editing decorations, spell
+check, and emoji suggestions only; reading-view rendering, export, search, and
+outline extraction still process the full document and may be slow for very
+large files. The 157 ms measurement is from one Windows development machine;
+Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the
 manual DOCX/EPUB check. Image uploader integration is not implemented; the

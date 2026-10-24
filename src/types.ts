@@ -169,6 +169,7 @@ export interface AppSettings {
   imageRootUrl: string;
   flatFileList: boolean;
   localHistory: boolean;
+  largeFileOptimizations: boolean;
 }
 
 export interface DocumentDraft {

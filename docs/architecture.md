@@ -363,6 +363,11 @@ success toasts.
   rejects directories and unsupported extensions. The frontend retargets the
   open document and recent entries after rename or move, and resets to a blank
   document after deleting the open file. Overwrites are rejected, not merged.
+- `src/lib/largeFile.ts` is a pure threshold helper. The app disables the
+  editor's live-preview decorations, spell check, and emoji suggestions when
+  the document reaches 500,000 characters and the preference is enabled. The
+  status bar exposes the mode; the preference restores the normal editor
+  without changing the document text.
 - `read_document_with_encoding` resolves labels through encoding_rs, reports a
   matching BOM, and decodes without writing. The frontend offers a fixed
   user-facing list and keeps the canonical encoding name in the document state

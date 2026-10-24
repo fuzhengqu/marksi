@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.18"), "About should show version 0.18", state);
+    assert(state.version?.includes("0.19"), "About should show version 0.19", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1260,6 +1260,63 @@ async function main() {
         const platform = await import("/src/lib/platform.ts");
         await platform.clearHistory(${JSON.stringify(file)});
       })()`).catch(() => {});
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
+  await test("large documents switch to large-file mode", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "large-document.md");
+    const content =
+      "# Large document\n\n" +
+      "A paragraph with enough words to make a realistic large file.\n\n".repeat(
+        14_000,
+      );
+
+    try {
+      await writeFile(file, content, "utf8");
+      const started = Date.now();
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.path?.toLowerCase().endsWith("large-document.md")',
+        15_000,
+      );
+      const elapsed = Date.now() - started;
+      console.log(`      large file opened in ${elapsed} ms`);
+
+      await waitFor('document.querySelector(".app-shell[data-large-file=\'true\']")');
+      const state = await evaluate(`({
+        viewMode: window.__MARKSI_DEV__.getState().viewMode,
+        length: window.__MARKSI_DEV__.getState().doc.content.length,
+        live: Boolean(document.querySelector(".cm-live-preview")),
+        badge: document.querySelector(".status-large-file")?.textContent ?? ""
+      })`);
+      assert(state.length >= 500_000, "fixture should exceed the threshold", state);
+      assert(state.viewMode === "preview", "large file should keep the selected view", state);
+      assert(!state.live, "live preview decorations should be off", state);
+      assert(state.badge.length > 0, "large-file status badge is missing", state);
+      assert(elapsed < 15_000, "large file took too long to open", elapsed);
+
+      await evaluate(
+        "window.__MARKSI_DEV__.setSettings({ largeFileOptimizations: false })",
+      );
+      await waitFor(
+        '!document.querySelector(".app-shell[data-large-file]")',
+      );
+      await waitFor('document.querySelector(".cm-live-preview")');
+      const disabled = await evaluate(
+        'document.querySelector(".status-large-file") === null',
+      );
+      assert(disabled, "disabling optimizations should remove the badge");
+
+      await evaluate(
+        "window.__MARKSI_DEV__.setSettings({ largeFileOptimizations: true })",
+      );
+      await waitFor('document.querySelector(".app-shell[data-large-file=\'true\']")');
+    } finally {
       await rm(file, { force: true });
       await resetBase();
     }

@@ -50,7 +50,7 @@ that design decisions do not paint us into a corner.
 | Pinned locations | done | M4 |
 | Workspace full-text search | done | M3 |
 | File encoding reopen | done | M4 |
-| Large file mode | todo | M4 |
+| Large file mode | done | M4 |
 | File associations / installer integration | todo | M6 |
 
 The optional flat file list recursively scans the open workspace through the
@@ -84,6 +84,12 @@ Windows-1252, or ISO-8859-1. Reopening never writes the file; it replaces the
 editor buffer with a clean document that keeps the selected encoding for the
 next save. Existing BOMs are reported, and unrepresentable characters are still
 rejected on save.
+
+Large-file mode activates at 500,000 characters when enabled in Preferences.
+It turns off live-preview decorations, spell check, and emoji suggestions while
+keeping source editing and the view toggle available. The status bar shows a
+Large file mode badge and labels the editing view as Source. Reading view and
+export remain available but are not optimized by this mode.
 
 ## Editor
 

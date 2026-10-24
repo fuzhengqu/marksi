@@ -426,6 +426,12 @@ const ZH: Record<string, string> = {
   "Unpin from sidebar": "取消固定",
   "Pinned to sidebar.": "已固定到侧栏。",
   "Unpinned from sidebar.": "已取消固定。",
+  "Large file mode": "大文件模式",
+  "Large-file optimizations": "大文件优化",
+  "Documents over 500,000 characters disable live preview decorations, spell check, and emoji suggestions.":
+    "超过 50 万字符的文档将关闭实时预览装饰、拼写检查和 Emoji 建议。",
+  "Live preview decorations, spell check, and emoji suggestions are off for documents over 500,000 characters.":
+    "超过 50 万字符的文档已关闭实时预览装饰、拼写检查和 Emoji 建议。",
   "Reopen with encoding…": "按编码重新打开…",
   "Reopen with encoding": "按编码重新打开",
   "Choose how to decode this file. Reopening does not write the file.":
