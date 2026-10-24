@@ -397,6 +397,12 @@ success toasts.
   to `onResized` and `onMoved`, debounces writes by 400 ms, and stores the last
   normal bounds with a maximized flag under `marksi.window-frame.v1`. No Rust
   command or bundled plugin is involved.
+- Session memory is path-only. `src/lib/session.ts` normalizes the saved document
+  path, workspace path, and view mode, and decides whether startup is eligible.
+  Boot fails closed: page reloads skip restore, a recovered draft wins, and a
+  command-line file wins. After the one-shot boot, document/workspace/view
+  changes are debounced into `marksi.session.v1`, and `beforeunload` writes the
+  same record synchronously. Disabling the preference clears the record.
 - Startup arguments are parsed in Rust for the first existing supported text
   file; `take_startup_file` returns it once from managed state. The frontend
   opens it only when the editor is blank and no recovery draft is pending.

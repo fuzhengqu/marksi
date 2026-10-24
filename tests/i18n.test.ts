@@ -35,6 +35,7 @@ describe("translate", () => {
     expect(translate("zh-CN", "Remember window size and position")).toBe(
       "记住窗口大小和位置",
     );
+    expect(translate("zh-CN", "Restore last session")).toBe("恢复上次会话");
   });
 
   it("returns the source label for English", () => {

@@ -173,6 +173,7 @@ export interface AppSettings {
   localHistory: boolean;
   largeFileOptimizations: boolean;
   rememberWindowFrame: boolean;
+  restoreSession: boolean;
   shortcuts: Record<ShortcutId, string>;
 }
 

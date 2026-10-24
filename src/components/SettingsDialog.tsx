@@ -573,6 +573,21 @@ export function SettingsDialog() {
             </div>
             <div className="settings-row">
               <div className="settings-copy">
+                <span>{t("Restore last session")}</span>
+                <small>
+                  {t(
+                    "Reopen the last document and folder at startup. A recovered draft or command-line file takes precedence.",
+                  )}
+                </small>
+              </div>
+              <Toggle
+                label={t("Restore last session")}
+                checked={settings.restoreSession}
+                onChange={(value) => update("restoreSession", value)}
+              />
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
                 <span>{t("Local history")}</span>
                 <small>
                   {t("Keep a capped set of snapshots when you save.")}

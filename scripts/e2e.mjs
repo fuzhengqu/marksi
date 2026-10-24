@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.27"), "About should show version 0.27", state);
+    assert(state.version?.includes("0.28"), "About should show version 0.28", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -921,6 +921,110 @@ async function main() {
       await evaluate(
         "window.__MARKSI_DEV__.setSettings({ rememberWindowFrame: true })",
       ).catch(() => {});
+      await resetBase();
+    }
+  });
+
+  await test("restores the last document and workspace session", async () => {
+    await resetBase();
+    const root = resolve(fixtureDir, "session-workspace");
+    const file = resolve(root, "session-note.md");
+    const child = resolve(root, "child.md");
+
+    try {
+      await mkdir(root, { recursive: true });
+      await writeFile(file, "# Session\n\nRestored body.\n", "utf8");
+      await writeFile(child, "# Child\n", "utf8");
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        const root = ${JSON.stringify(root)};
+        const entries = await platform.listDirectory(root);
+        window.__MARKSI_DEV__.getState().setWorkspace(root, entries);
+        await window.__MARKSI_DEV__.openPath(${JSON.stringify(file)});
+      })()`);
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.path?.toLowerCase().endsWith("session-note.md")',
+        10_000,
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setViewMode("source")',
+      );
+      await sleep(700);
+
+      const saved = await evaluate(
+        "window.__MARKSI_DEV__.savedSession()",
+      );
+      assert(
+        saved?.documentPath?.toLowerCase().endsWith("session-note.md"),
+        "session should remember the open document",
+        saved,
+      );
+      assert(
+        saved?.workspacePath?.toLowerCase() === root.toLowerCase(),
+        "session should remember the workspace",
+        saved,
+      );
+      assert(saved?.viewMode === "source", "session should remember the view", saved);
+
+      await evaluate(`(() => {
+        const state = window.__MARKSI_DEV__.getState();
+        state.newDocument();
+        state.clearWorkspace();
+      })()`);
+      await evaluate("window.__MARKSI_DEV__.restoreSavedSession()");
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.path?.toLowerCase().endsWith("session-note.md")',
+        10_000,
+      );
+      await waitFor(
+        `window.__MARKSI_DEV__.getState().workspace?.path?.toLowerCase() === ${JSON.stringify(root.toLowerCase())}`,
+        10_000,
+      );
+      const restored = await evaluate(`({
+        viewMode: window.__MARKSI_DEV__.getState().viewMode,
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        files: Array.from(document.querySelectorAll(".file-name")).map((node) => node.textContent)
+      })`);
+      assert(
+        restored.viewMode === "source",
+        "restored session should keep the view mode",
+        restored,
+      );
+      assert(
+        restored.content.includes("Restored body"),
+        "restored session should reopen the document content",
+        restored,
+      );
+      assert(
+        restored.files.includes("child.md"),
+        "restored session should reopen the workspace",
+        restored,
+      );
+
+      await evaluate(
+        "window.__MARKSI_DEV__.setSettings({ restoreSession: false })",
+      );
+      await sleep(600);
+      const cleared = await evaluate(`(() => {
+        const raw = localStorage.getItem("marksi.session.v1");
+        return raw === null;
+      })()`);
+      assert(cleared, "disabling session restore should clear stored data");
+    } finally {
+      await evaluate(
+        "window.__MARKSI_DEV__.setSettings({ restoreSession: false })",
+      ).catch(() => {});
+      await sleep(500);
+      await evaluate("window.__MARKSI_DEV__.clearSessionMemory()").catch(
+        () => {},
+      );
+      await evaluate(
+        "window.__MARKSI_DEV__.getState().clearWorkspace()",
+      ).catch(() => {});
+      await evaluate(
+        "window.__MARKSI_DEV__.getState().newDocument()",
+      ).catch(() => {});
+      await rm(root, { recursive: true, force: true });
       await resetBase();
     }
   });

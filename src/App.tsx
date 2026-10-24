@@ -39,6 +39,14 @@ import { shortcutForEvent } from "./lib/shortcuts";
 import { frontMatterTitle } from "./lib/frontMatter";
 import { pandocImportName } from "./lib/pandoc";
 import { resolveSaveName } from "./lib/saveName";
+import {
+  clearSession,
+  loadSession,
+  navigationType,
+  saveSession,
+  shouldRestoreSession,
+  type SessionSnapshot,
+} from "./lib/session";
 import { tNow, useT } from "./i18n";
 import { clampZoom, stepZoom } from "./lib/zoom";
 import {
@@ -153,7 +161,9 @@ export default function App() {
   const [pandocOpen, setPandocOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [encodingOpen, setEncodingOpen] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
   const savingRef = useRef(false);
+  const bootStartedRef = useRef(false);
   const windowFrameRef = useRef<WindowFrame | null>(null);
   const restoringWindowRef = useRef(false);
 
@@ -311,28 +321,91 @@ export default function App() {
     [confirmDiscard],
   );
 
+  const applySavedSession = useCallback(
+    async (saved: SessionSnapshot): Promise<boolean> => {
+      let restored = false;
+      if (saved.workspacePath) {
+        try {
+          const entries = await listDirectory(saved.workspacePath);
+          useAppStore.getState().setWorkspace(saved.workspacePath, entries);
+          restored = true;
+        } catch {
+          // A missing folder must not block the document or the rest of startup.
+        }
+      }
+      if (saved.documentPath) {
+        try {
+          const payload = await readDocument(saved.documentPath);
+          const state = useAppStore.getState();
+          state.setLoadedDocument(payload);
+          state.setViewMode(saved.viewMode);
+          restored = true;
+        } catch {
+          // A missing or unreadable document is skipped.
+        }
+      }
+      return restored;
+    },
+    [],
+  );
+
   useEffect(() => {
-    if (!isTauri() || draftToRecover) {
+    if (!isTauri() || draftToRecover || bootStartedRef.current) {
       return;
     }
-    let cancelled = false;
-    void takeStartupFile()
-      .then((path) => {
-        if (cancelled || !path) {
-          return;
-        }
-        const state = useAppStore.getState();
-        if (!state.doc.path && !state.doc.dirty && !state.doc.content) {
-          void handleOpenPath(path);
-        }
-      })
-      .catch(() => {
-        // A bad command-line path should not block startup.
+    bootStartedRef.current = true;
+    void (async () => {
+      let startupPath: string | null = null;
+      try {
+        startupPath = await takeStartupFile();
+      } catch {
+        // A broken command line must not block startup.
+      }
+      const state = useAppStore.getState();
+      const hasOpenDocument = Boolean(
+        state.doc.path || state.doc.content || state.doc.dirty,
+      );
+      if (startupPath && !hasOpenDocument) {
+        await handleOpenPath(startupPath);
+        setSessionReady(true);
+        return;
+      }
+      const saved = loadSession();
+      if (
+        saved &&
+        shouldRestoreSession({
+          enabled: state.settings.restoreSession,
+          navigationType: navigationType(),
+          hasDraft: false,
+          hasStartupFile: Boolean(startupPath),
+          hasOpenDocument,
+        })
+      ) {
+        await applySavedSession(saved);
+      }
+      setSessionReady(true);
+    })().catch(() => {
+      setSessionReady(true);
+    });
+  }, [applySavedSession, draftToRecover, handleOpenPath]);
+
+  useEffect(() => {
+    if (!isTauri() || !sessionReady) {
+      return;
+    }
+    if (!settings.restoreSession) {
+      clearSession();
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      saveSession({
+        documentPath: doc.path,
+        workspacePath: workspacePath ?? null,
+        viewMode,
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [draftToRecover, handleOpenPath]);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [doc.path, sessionReady, settings.restoreSession, viewMode, workspacePath]);
 
   const handleToggleFullscreen = useCallback(async () => {
     try {
@@ -1337,7 +1410,15 @@ export default function App() {
 
   useEffect(() => {
     const handler = (event: BeforeUnloadEvent) => {
-      if (useAppStore.getState().doc.dirty) {
+      const state = useAppStore.getState();
+      if (state.settings.restoreSession) {
+        saveSession({
+          documentPath: state.doc.path,
+          workspacePath: state.workspace?.path ?? null,
+          viewMode: state.viewMode,
+        });
+      }
+      if (state.doc.dirty) {
         event.preventDefault();
         event.returnValue = "";
       }
@@ -1643,6 +1724,12 @@ export default function App() {
         return fitted;
       },
       clearWindowFrameMemory: () => clearWindowFrame(),
+      savedSession: () => loadSession(),
+      restoreSavedSession: async () => {
+        const saved = loadSession();
+        return saved ? applySavedSession(saved) : false;
+      },
+      clearSessionMemory: () => clearSession(),
       openEncoding: () => setEncodingOpen(true),
       closeEncoding: () => setEncodingOpen(false),
       setSettings: (patch: Partial<AppSettings>) =>
@@ -1656,6 +1743,7 @@ export default function App() {
     handleOpenPath,
     handleToggleFullscreen,
     handleToggleAlwaysOnTop,
+    applySavedSession,
     handleSave,
     handleSaveAs,
     handleCloseWorkspace,

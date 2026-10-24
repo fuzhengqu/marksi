@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.27` product version.
+- About dialog close behavior and display of the `0.28` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -145,8 +145,12 @@ The E2E suite currently covers:
   in-app state follows it.
 - Window frame memory: set and persist a known window frame, move to different
   bounds, restore from memory, and compare the real Tauri outer position and
-  size; clearing removes the stored frame. Offscreen and oversized-frame
+  content size; clearing removes the stored frame. Offscreen and oversized-frame
   clamping is covered by Vitest rather than by moving the real window offscreen.
+- Session memory: open a document, attach its workspace folder, switch to source
+  view, and wait for the path-only session record; clear the editor and restore
+  the session, then verify the document content, workspace file list, and view
+  mode. Disabling Restore last session clears the stored record.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -268,11 +272,18 @@ opened. Reopen with encoding offers a curated encoding list rather than
 arbitrary labels; decoding is read-only, and saving into a legacy encoding
 still fails when the text contains characters that encoding cannot represent.
 - Window frame memory stores content-area bounds and outer position in local
-  storage and restores them on the next start when enabled. The E2E suite
-  restores within one process; a real application restart, monitor hot-plug,
-  and mixed-DPI multi-monitor layouts remain manual release checks. A saved
-  maximized state is restored by applying normal bounds and then maximizing.
-  Document and workspace session restore are not implemented in this release. System appearance follows the
+  storage and restores them on the next start when enabled. The automated E2E
+  restores within one process. A manual graceful restart check set the window
+  to 1100x720 at (150, 120), closed through the title-bar Close button, and
+  confirmed the same frame after restart. Monitor hot-plug and mixed-DPI
+  multi-monitor layouts remain manual release checks. A saved maximized state is
+  restored by applying normal bounds and then maximizing.
+- Session memory stores paths and a view mode in local storage, never document
+  content. A manual graceful restart check reopened `session-restart.md` with
+  its workspace folder and source view. Missing session paths are skipped
+  independently so an unavailable folder does not hide an existing document.
+  Force-terminating the process can lose recent WebView storage writes; use the
+  normal Close action, which flushes them. System appearance follows the
 WebView's `prefers-color-scheme` value. The E2E suite emulates that media
 feature through CDP; the real Windows/Linux OS theme switch remains a manual
 release check. Fullscreen and always-on-top are native window flags queried at

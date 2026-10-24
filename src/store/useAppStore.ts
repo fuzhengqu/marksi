@@ -148,6 +148,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   localHistory: true,
   largeFileOptimizations: true,
   rememberWindowFrame: true,
+  restoreSession: true,
   shortcuts: { ...DEFAULT_SHORTCUTS },
 };
 
@@ -514,6 +515,10 @@ export const useAppStore = create<AppStore>()(
             rememberWindowFrame:
               typeof saved.settings?.rememberWindowFrame === "boolean"
                 ? saved.settings.rememberWindowFrame
+                : true,
+            restoreSession:
+              typeof saved.settings?.restoreSession === "boolean"
+                ? saved.settings.restoreSession
                 : true,
             shortcuts: normalizeShortcuts(saved.settings?.shortcuts),
           },

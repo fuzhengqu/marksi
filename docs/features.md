@@ -19,7 +19,7 @@ that design decisions do not paint us into a corner.
 | Native title bar option | todo | M6 |
 | Multiple document windows | todo | M6 |
 | Fullscreen / always on top | done | M6 |
-| Window size/position/session restore | wip | M6 |
+| Window size/position/session restore | done | M6 |
 | Light / dark appearance | done | M1 |
 | System appearance following | done | M6 |
 | Zoom in/out/reset | done | M4 |
@@ -59,6 +59,11 @@ When Remember window size and position is enabled, MarkSI restores the last
 normal window bounds and maximized state at startup. Saved bounds are checked
 against the current monitor work areas; windows that are fully or mostly
 offscreen return to the nearest usable display.
+
+When Restore last session is enabled, the last document and workspace folder
+reopen at startup with the previous view mode. Only file paths are stored, never
+document content. A pending recovered draft or a command-line file takes
+precedence, and missing paths are skipped.
 
 ## Files and workspace
 

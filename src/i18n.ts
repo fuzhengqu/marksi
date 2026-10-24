@@ -470,6 +470,9 @@ const ZH: Record<string, string> = {
     "确认后未保存的更改将丢失。",
   "Local history": "本地历史",
   "Remember window size and position": "记住窗口大小和位置",
+  "Restore last session": "恢复上次会话",
+  "Reopen the last document and folder at startup. A recovered draft or command-line file takes precedence.":
+    "启动时重新打开上次的文档和文件夹；待恢复的草稿或命令行文件优先。",
   "Restore the last window bounds when the app starts. Offscreen windows return to the nearest monitor.":
     "启动时恢复上次的窗口位置和大小；窗口若在屏幕外会移回最近的显示器。",
   "Local history…": "本地历史…",

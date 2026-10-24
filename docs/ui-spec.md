@@ -130,6 +130,9 @@ ease-out; honor `prefers-reduced-motion`.
 - Preferences > Files can remember the window size and position. Saved bounds
   are validated against the current monitors; offscreen windows return to the
   nearest work area, and disabled memory clears the stored frame.
+- Preferences > Files can restore the last document and workspace at startup.
+  Only paths and the view mode are stored; a recovered draft or command-line
+  file takes precedence.
 - Documents over 500,000 characters show a Large file mode badge in the status
   bar and use the Source label while live-preview decorations are off.
   Preferences > Editor can disable large-file optimizations.
