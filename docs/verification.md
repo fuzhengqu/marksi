@@ -226,15 +226,25 @@ tree produced six entries for historical MSI and NSIS artifacts, including
 
 `.github/workflows/release-package.yml` builds unsigned bundles on
 `windows-latest` and `ubuntu-latest` when dispatched manually or when a `v*` tag
-is pushed, writes `SHA256SUMS.txt`, and uploads the bundle tree for 14 days. The
-first run completed for both platforms and produced `MarkSI_0.31.0_amd64.deb`,
-`MarkSI-0.31.0-1.x86_64.rpm`, and `MarkSI_0.31.0_amd64.AppImage`. It also exposed
-two packaging defects: deb staging `control.tar.gz`/`data.tar.gz` files were
-included in checksums, and uploading the whole bundle tree included the AppImage
-`AppDir` staging directory, which cannot be extracted reliably on Windows. The
-checksum extension list and upload globs were narrowed to final installer files;
-the workflow is re-run for 0.32. The workflow does not sign, publish a release,
-or install the artifacts.
+is pushed, writes `SHA256SUMS.txt`, and uploads only final installers and the
+checksum file for 14 days. The 0.32 run completed for both platforms and produced:
+
+- `MarkSI_0.32.0_x64_en-US.msi` (6.88 MiB), SHA256
+  `577E3170C3F99C0DE0676B50F08229FA4AA80A2EA359E6D6B7CAD213C70E237C`
+- `MarkSI_0.32.0_x64-setup.exe` (5.60 MiB), SHA256
+  `657F7E1CAE34F8D8E7D2738F667301445CE2F82EE64F47DBD37048C597979703`
+- `MarkSI_0.32.0_amd64.deb` (8.10 MiB), SHA256
+  `97E56EDCE571A5D7B2279A24B3C1424BB62468A1F03913C6A0E9859B5707BC32`
+- `MarkSI-0.32.0-1.x86_64.rpm` (8.10 MiB), SHA256
+  `65A7ADB9FF31ED53A8D8F77F714C850BE22F410CD2A9B63D50AB2D5028F0D4E1`
+- `MarkSI_0.32.0_amd64.AppImage` (82.81 MiB), SHA256
+  `4C2FD3F3BE8B1B644F2F7577C92F0410C8296E0DDABB2CF399DD5DEB10CB4C83`
+
+The downloaded artifacts were re-hashed locally; all five matched their
+`SHA256SUMS.txt` entries, and the archive contained no AppImage `AppDir` tree or
+deb staging tarballs. The first 0.31 packaging run exposed those two upload and
+checksum defects, which were fixed before 0.32. The workflow does not sign,
+publish a release, or install the artifacts.
 
 ## Continuous integration
 
