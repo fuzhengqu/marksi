@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.31` product version.
+- About dialog close behavior and display of the `0.32` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,7 +139,7 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 158 ms during the release run.
+  Windows dev WebView opened the fixture in 160 ms during the release run.
 - Window flags: View > Toggle fullscreen and F11 both enter and leave real
   window fullscreen, and Always on top toggles the native flag while the
   in-app state follows it.
@@ -227,7 +227,14 @@ tree produced six entries for historical MSI and NSIS artifacts, including
 `.github/workflows/release-package.yml` builds unsigned bundles on
 `windows-latest` and `ubuntu-latest` when dispatched manually or when a `v*` tag
 is pushed, writes `SHA256SUMS.txt`, and uploads the bundle tree for 14 days. The
-workflow does not sign, publish a release, or install the artifacts.
+first run completed for both platforms and produced `MarkSI_0.31.0_amd64.deb`,
+`MarkSI-0.31.0-1.x86_64.rpm`, and `MarkSI_0.31.0_amd64.AppImage`. It also exposed
+two packaging defects: deb staging `control.tar.gz`/`data.tar.gz` files were
+included in checksums, and uploading the whole bundle tree included the AppImage
+`AppDir` staging directory, which cannot be extracted reliably on Windows. The
+checksum extension list and upload globs were narrowed to final installer files;
+the workflow is re-run for 0.32. The workflow does not sign, publish a release,
+or install the artifacts.
 
 ## Continuous integration
 
@@ -326,7 +333,7 @@ before release. Large-file mode compares JavaScript string length, so the 500,00
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 158 ms measurement is from one Windows development machine;
+large files. The 160 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

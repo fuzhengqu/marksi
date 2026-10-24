@@ -10,7 +10,6 @@ const BUNDLE_EXTENSIONS = [
   ".rpm",
   ".appimage",
   ".dmg",
-  ".tar.gz",
 ];
 
 export async function collectBundleFiles(root) {

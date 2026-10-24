@@ -63,8 +63,10 @@ declarations so a theme cannot trigger network loads.
 `npm run release:checksums` scans `src-tauri/target/release/bundle` recursively
 and writes `SHA256SUMS.txt` with uppercase SHA-256 digests and relative paths.
 The Release packages workflow builds unsigned Windows and Linux artifacts on
-manual dispatch or version tags, writes the same checksum file, and uploads the
-bundles for inspection. Code signing is not configured.
+manual dispatch or version tags, writes the same checksum file, and uploads only
+final installers (MSI, NSIS, deb, rpm, AppImage). It produced deb, rpm, and
+AppImage packages on Ubuntu and MSI/NSIS packages on Windows. Code signing is
+not configured.
 
 The release executable accepts one supported Markdown/text path as its first
 non-flag argument and opens it at startup. Windows installers register Markdown
@@ -336,7 +338,7 @@ save the imported document to choose its final location.
 | Feature | Status | Milestone |
 |---|---|---|
 | Windows 11 installer (NSIS/MSI) | done | M6 |
-| Linux deb/rpm/AppImage | wip | M6 |
+| Linux deb/rpm/AppImage | done | M6 |
 | Flatpak packaging | todo | M7 |
 | Signed releases / checksums | wip | M6 |
 | Auto-update | todo | M6 |

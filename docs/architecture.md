@@ -417,8 +417,9 @@ success toasts.
 - `scripts/checksums.mjs` recursively collects installer extensions, hashes each
   file with uppercase SHA-256, and writes relative paths to `SHA256SUMS.txt`.
   The Release packages workflow runs it for Windows and Linux after
-  `tauri:build`, then uploads the unsigned bundles and checksums. Signing is
-  intentionally absent because no certificate is bundled or configured.
+  `tauri:build`, then uploads only final installers and the checksum file.
+  Signing is intentionally absent because no certificate is bundled or
+  configured.
 - Startup arguments are parsed in Rust for the first existing supported text
   file; `take_startup_file` returns it once from managed state. The frontend
   opens it only when the editor is blank and no recovery draft is pending.
