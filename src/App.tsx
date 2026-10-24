@@ -70,6 +70,7 @@ import {
   saveHtmlFile,
   saveImageData,
   savePngFile,
+  takeStartupFile,
 } from "./lib/platform";
 import { useAppStore } from "./store/useAppStore";
 import type {
@@ -293,6 +294,29 @@ export default function App() {
     },
     [confirmDiscard],
   );
+
+  useEffect(() => {
+    if (!isTauri() || draftToRecover) {
+      return;
+    }
+    let cancelled = false;
+    void takeStartupFile()
+      .then((path) => {
+        if (cancelled || !path) {
+          return;
+        }
+        const state = useAppStore.getState();
+        if (!state.doc.path && !state.doc.dirty && !state.doc.content) {
+          void handleOpenPath(path);
+        }
+      })
+      .catch(() => {
+        // A bad command-line path should not block startup.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [draftToRecover, handleOpenPath]);
 
   const handleReopenWithEncoding = useCallback(
     async (encoding: string): Promise<boolean> => {

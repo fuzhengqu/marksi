@@ -385,6 +385,11 @@ success toasts.
   user-facing list and keeps the canonical encoding name in the document state
   so the next save uses the same encoder. Display names are normalized in the
   UI without changing the stored label.
+- Startup arguments are parsed in Rust for the first existing supported text
+  file; `take_startup_file` returns it once from managed state. The frontend
+  opens it only when the editor is blank and no recovery draft is pending.
+  The bundle config registers Markdown extensions. Single-instance forwarding
+  is not implemented, so each file launch creates a new process.
 - GitHub Actions runs a Windows/Ubuntu build-and-test matrix (typecheck,
   Vitest, frontend build, Rust formatting, Rust tests) alongside the separate
   publication audit. E2E remains local because it needs a real desktop WebView.

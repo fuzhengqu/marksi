@@ -25,7 +25,7 @@ that design decisions do not paint us into a corner.
 | Zoom in/out/reset | done | M4 |
 | Windows 11 snap layouts support | todo | M6 |
 | Single instance / file forwarding | todo | M6 |
-| CLI file open | todo | M6 |
+| CLI file open | done | M6 |
 
 System theme mode follows `prefers-color-scheme` live, including while the app
 is open. Preferences and the title-bar toggle can still force Light or Dark;
@@ -44,6 +44,12 @@ command, supports Backspace/Delete to unbind, and Escape to cancel. Bindings are
 stored locally, apply immediately, and update the File/View menu labels. Reset
 shortcuts restores the defaults. Editor formatting keys remain on their standard
 CodeMirror bindings.
+
+The release executable accepts one supported Markdown/text path as its first
+non-flag argument and opens it at startup. Windows installers register Markdown
+extensions (`md`, `markdown`, `mdown`, `mkd`, `mdwn`, `mmd`, `mdx`) with the
+application. A second instance is still launched for each file because single
+instance forwarding is not implemented yet.
 
 ## Files and workspace
 
@@ -69,7 +75,7 @@ CodeMirror bindings.
 | Workspace full-text search | done | M3 |
 | File encoding reopen | done | M4 |
 | Large file mode | done | M4 |
-| File associations / installer integration | todo | M6 |
+| File associations / installer integration | done | M6 |
 
 The optional flat file list recursively scans the open workspace through the
 existing workspace-file command and renders files with their relative paths.

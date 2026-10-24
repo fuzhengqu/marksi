@@ -60,6 +60,8 @@ npm run tauri:build
 
 Windows 构建会在 `src-tauri/target/release/bundle/` 下生成 MSI 和 NSIS
 安装程序。它们目前未做代码签名，Windows 可能显示 SmartScreen 提示。
+安装后可通过文件关联双击 Markdown 文件，或在命令行运行
+`marksi path\to\note.md` 打开文件。
 
 ## 开发
 

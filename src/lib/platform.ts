@@ -114,6 +114,14 @@ async function browserDocument(file: File): Promise<DocumentPayload> {
   };
 }
 
+export async function takeStartupFile(): Promise<string | null> {
+  if (!isTauri()) {
+    return null;
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<string | null>("take_startup_file");
+}
+
 export async function openDocument(): Promise<DocumentPayload | null> {
   if (!isTauri()) {
     const file = await pickBrowserFile();

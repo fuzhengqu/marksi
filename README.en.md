@@ -69,7 +69,9 @@ npm run tauri:build
 
 On Windows this writes MSI and NSIS installers under
 `src-tauri/target/release/bundle/`. The artifacts are currently unsigned, so
-Windows may show a SmartScreen warning.
+Windows may show a SmartScreen warning. After installation, open Markdown files
+through the registered file association or run
+`marksi path\to\note.md` from a terminal.
 
 ## Development
 

@@ -7,22 +7,22 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.24**
-- Technical version: **0.24.0**
+- Product version: **0.25**
+- Technical version: **0.25.0**
 - Foundation milestones M1 and M3 are complete.
 - M2 core is complete; golden Markdown tests remain open.
 - M4 is complete.
 - M5 is complete with twenty-three done items and one explicitly deferred
   uploader integration.
 - M6 has started with system appearance, additional themes, the shortcut
-  editor, and Windows installer validation; Windows/Linux build-test CI is in
-  place; M7 has not started.
+  editor, Windows installer validation, CLI open, file associations, and the
+  Windows/Linux build-test matrix; M7 has not started.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **98 done, 4 wip,
-18 todo, 2 deferred** across 122 items.
+is the source for exact status values. Current raw count: **100 done, 4 wip,
+16 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
 
