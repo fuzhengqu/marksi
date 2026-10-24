@@ -22,6 +22,7 @@ describe("translate", () => {
     expect(translate("zh-CN", "Image root path")).toBe("图片根路径");
     expect(translate("zh-CN", "Image root URL")).toBe("图片根 URL");
     expect(translate("zh-CN", "Flat file list")).toBe("扁平文件列表");
+    expect(translate("zh-CN", "File actions")).toBe("文件操作");
   });
 
   it("returns the source label for English", () => {

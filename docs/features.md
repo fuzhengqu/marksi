@@ -42,7 +42,7 @@ that design decisions do not paint us into a corner.
 | Unsaved-change close protection | done | M1 |
 | File tree with lazy expansion | done | M1/M3 |
 | Flat file list | done | M4 |
-| File operations (rename/duplicate/move/delete) | todo | M4 |
+| File operations (rename/duplicate/move/delete) | done | M4 |
 | External change detection | done | M3 |
 | Autosave and draft recovery | done | M3 |
 | Local history / snapshots | todo | M4 |
@@ -56,6 +56,13 @@ that design decisions do not paint us into a corner.
 The optional flat file list recursively scans the open workspace through the
 existing workspace-file command and renders files with their relative paths.
 It never changes folder expansion state in the tree view and is off by default.
+
+Supported workspace files expose an action menu for rename, duplicate, move,
+and delete. Operations stay inside the open workspace, reject traversal,
+unexpected overwrites, reserved names, and unsupported extensions, and update
+the open document path and recent entries after a rename or move. Delete is
+permanent and requires confirmation; it closes the open document when that file
+is removed.
 
 ## Editor
 

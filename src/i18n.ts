@@ -420,6 +420,47 @@ const ZH: Record<string, string> = {
   "Flat file list": "扁平文件列表",
   "Show every workspace file without expanding folders.":
     "不展开文件夹，直接显示工作区中的所有文件。",
+  "File actions": "文件操作",
+  Rename: "重命名",
+  Duplicate: "创建副本",
+  "Move to folder…": "移动到文件夹…",
+  Delete: "删除",
+  "Rename file": "重命名文件",
+  "Duplicate file": "创建文件副本",
+  "Move file": "移动文件",
+  "Delete file": "删除文件",
+  "New name": "新名称",
+  "Destination folder": "目标文件夹",
+  "Leave empty for the workspace root": "留空表示工作区根目录",
+  "Use a supported Markdown or text file extension.":
+    "请使用受支持的 Markdown 或文本文件扩展名。",
+  "Relative to the workspace root. Leave empty for the root.":
+    "相对于工作区根目录；留空表示根目录。",
+  "A copy of “{name}” will be created in the same folder.":
+    "将在同一文件夹中创建“{name}”的副本。",
+  "Delete “{name}”? This cannot be undone.":
+    "删除“{name}”？此操作无法撤销。",
+  "The open document will close and unsaved changes will be lost.":
+    "当前文档将关闭，未保存的更改将丢失。",
+  "The open document will close.": "当前文档将关闭。",
+  "Renamed to {name}": "已重命名为 {name}",
+  "Created {name}": "已创建 {name}",
+  "Moved to {name}": "已移动到 {name}",
+  "Deleted {name}": "已删除 {name}",
+  "Create copy": "创建副本",
+  Move: "移动",
+  "Working…": "正在处理…",
+  "Enter a file name.": "请输入文件名。",
+  "File names cannot exceed 200 characters.":
+    "文件名不能超过 200 个字符。",
+  "File names cannot contain / or \\.": "文件名不能包含 / 或 \\。",
+  'File names cannot contain control characters or < > : " | ? *.':
+    '文件名不能包含控制字符或 < > : " | ? *。',
+  "File names cannot end with a dot or a space.":
+    "文件名不能以点或空格结尾。",
+  "That file name is reserved by the operating system.":
+    "该文件名被操作系统保留。",
+  "Choose a folder inside the workspace.": "请选择工作区内的文件夹。",
   "How long to wait after the last edit.": "最后一次编辑后等待的时间。",
   "0.8 seconds": "0.8 秒",
   "1.5 seconds": "1.5 秒",

@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.14` product version.
+- About dialog close behavior and display of the `0.15` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -110,6 +110,11 @@ The E2E suite currently covers:
 - Flat file list: a nested workspace fixture shows only folders in tree mode,
   then exposes top-level and nested files with relative paths when enabled,
   with no folder rows.
+- Workspace file actions: an invalid rename is blocked without touching disk;
+  then rename preserves content and retargets the open document, duplicate
+  creates numbered copies, move relocates a file into an existing folder,
+  delete removes a file, and deleting the open document returns the editor to
+  a clean blank state.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -142,6 +147,7 @@ custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, and analysis helpers.
 Rust tests cover encoding/BOM/CRLF round trips, atomic text and binary writes,
+workspace file rename/duplicate/move/delete with path and collision validation,
 image import and data URLs, recursive workspace listing/search, file timestamps,
 custom-command validation, successful/non-zero execution, missing executables,
 working-directory handling, Pandoc argument construction, format allowlisting,
@@ -169,6 +175,10 @@ the launched process; child processes it starts may outlive it and are outside
 MarkSI's control. Only configure trusted executables. PNG capture depends on the
 WebView canvas/SVG pipeline; documents that exceed the readable canvas scale are
 rejected, and very large documents should be checked manually before release.
+Workspace file actions are limited to supported text files inside the open
+workspace. Delete is permanent rather than a move to the operating-system trash,
+so the confirmation dialog is the only safeguard; there is no operation journal
+or undo. Rename, move, and duplicate reject collisions instead of overwriting.
 Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

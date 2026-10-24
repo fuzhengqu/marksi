@@ -179,7 +179,7 @@ fn is_skipped_dir(entry: &DirEntry) -> bool {
         && should_skip(&entry.file_name().to_string_lossy())
 }
 
-fn is_text_file(path: &Path) -> bool {
+pub(crate) fn is_text_file(path: &Path) -> bool {
     path.extension()
         .and_then(|extension| extension.to_str())
         .is_some_and(|extension| {

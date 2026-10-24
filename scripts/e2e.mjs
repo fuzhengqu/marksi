@@ -117,6 +117,19 @@ async function waitFor(expression, timeout = 12_000) {
   throw new Error(`Timed out waiting for: ${expression}`);
 }
 
+async function waitForFile(path, exists = true, timeout = 8_000) {
+  const started = Date.now();
+  while (Date.now() - started < timeout) {
+    if (existsSync(path) === exists) {
+      return true;
+    }
+    await sleep(120);
+  }
+  throw new Error(
+    `Timed out waiting for ${path} to ${exists ? "exist" : "disappear"}`,
+  );
+}
+
 async function screenshot(name) {
   try {
     await mkdir(resolve(".tmp"), { recursive: true });
@@ -365,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.14"), "About should show version 0.14", state);
+    assert(state.version?.includes("0.15"), "About should show version 0.15", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -701,6 +714,178 @@ async function main() {
         'window.__MARKSI_DEV__.getState().clearWorkspace()',
       ).catch(() => {});
       await rm(flatDir, { recursive: true, force: true });
+      await resetBase();
+    }
+  });
+
+  await test("file actions rename, duplicate, move, and delete workspace files", async () => {
+    await resetBase();
+    const root = resolve(fixtureDir, "file-ops-workspace");
+    const renameFile = resolve(root, "rename-me.md");
+    const renamedFile = resolve(root, "renamed.md");
+    const copyFile = resolve(root, "renamed copy.md");
+    const moveFile = resolve(root, "move-me.md");
+    const movedFile = resolve(root, "target", "move-me.md");
+    const deleteFile = resolve(root, "delete-me.md");
+
+    try {
+      await mkdir(resolve(root, "target"), { recursive: true });
+      await writeFile(renameFile, "# Rename\n\nBody.\n", "utf8");
+      await writeFile(moveFile, "# Move\n", "utf8");
+      await writeFile(deleteFile, "# Delete\n", "utf8");
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        const entries = await platform.listDirectory(${JSON.stringify(root)});
+        window.__MARKSI_DEV__.getState().setWorkspace(${JSON.stringify(root)}, entries);
+      })()`);
+      await waitFor('document.querySelector(".file-tree .file-row")');
+
+      async function openRowAction(name, action) {
+        const opened = await evaluate(`(() => {
+          const wrap = Array.from(document.querySelectorAll(".file-row-wrap"))
+            .find((node) => node.querySelector(".file-name")?.textContent === ${JSON.stringify(name)});
+          if (!wrap) return false;
+          wrap.querySelector(".file-row-actions")?.click();
+          return true;
+        })()`);
+        assert(opened, `row action button missing for ${name}`);
+        await waitFor('document.querySelector(".file-actions-menu")');
+        const chosen = await evaluate(`(() => {
+          const button = document.querySelector('.file-actions-menu [data-action="${action}"]');
+          button?.click();
+          return Boolean(button);
+        })()`);
+        assert(chosen, `file action missing: ${action}`);
+        await waitFor('document.querySelector(".file-op-dialog")');
+      }
+
+      async function setDialogInput(value) {
+        await evaluate(`(() => {
+          const input = document.querySelector(".file-op-input");
+          const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+          setter.call(input, ${JSON.stringify(value)});
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        })()`);
+        await sleep(120);
+      }
+
+      async function confirmDialog() {
+        await evaluate('document.querySelector(".file-op-confirm")?.click()');
+        await waitFor('!document.querySelector(".file-op-dialog")', 8_000);
+      }
+
+      const opened = await evaluate(`(() => {
+        const row = Array.from(document.querySelectorAll(".file-row"))
+          .find((node) => node.querySelector(".file-name")?.textContent === "rename-me.md");
+        row?.click();
+        return Boolean(row);
+      })()`);
+      assert(opened, "workspace file row is missing");
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.path?.toLowerCase().endsWith("rename-me.md")',
+        10_000,
+      );
+
+      await openRowAction("rename-me.md", "rename");
+      await setDialogInput("../escape.md");
+      const invalid = await evaluate(`({
+        error: document.querySelector(".file-op-error")?.textContent ?? "",
+        disabled: document.querySelector(".file-op-confirm")?.disabled ?? false
+      })`);
+      assert(invalid.error.length > 0, "invalid rename should show an error", invalid);
+      assert(invalid.disabled, "invalid rename should be blocked", invalid);
+      assert(existsSync(renameFile), "invalid rename must not touch the file");
+
+      await setDialogInput("renamed.md");
+      await confirmDialog();
+      await waitForFile(renamedFile);
+      assert(!existsSync(renameFile), "old name should be gone after rename");
+      const renamed = await evaluate(`({
+        path: window.__MARKSI_DEV__.getState().doc.path,
+        content: window.__MARKSI_DEV__.getState().doc.content
+      })`);
+      assert(
+        renamed.path?.toLowerCase().endsWith("renamed.md"),
+        "active document should follow the renamed file",
+        renamed,
+      );
+      assert(
+        renamed.content.includes("# Rename"),
+        "rename should preserve document content",
+        renamed,
+      );
+
+      await openRowAction("renamed.md", "duplicate");
+      await confirmDialog();
+      await waitForFile(copyFile);
+      assert(
+        (await readFile(copyFile, "utf8")).includes("# Rename"),
+        "duplicate should copy file content",
+      );
+      const afterCopy = await evaluate(
+        'window.__MARKSI_DEV__.getState().doc.path',
+      );
+      assert(
+        afterCopy?.toLowerCase().endsWith("renamed.md"),
+        "duplicate should not retarget the open document",
+        afterCopy,
+      );
+
+      await openRowAction("move-me.md", "move");
+      await setDialogInput("target");
+      await confirmDialog();
+      await waitForFile(movedFile);
+      assert(!existsSync(moveFile), "source should be gone after move");
+      assert(
+        (await readFile(movedFile, "utf8")).includes("# Move"),
+        "move should preserve file content",
+      );
+
+      await openRowAction("delete-me.md", "delete");
+      const deleteText = await evaluate(
+        'document.querySelector(".file-op-copy")?.textContent ?? ""',
+      );
+      assert(
+        deleteText.includes("delete-me.md"),
+        "delete confirmation should name the file",
+        deleteText,
+      );
+      await confirmDialog();
+      await waitForFile(deleteFile, false);
+
+      await openRowAction("renamed.md", "delete");
+      const warning = await evaluate(
+        'document.querySelector(".file-op-warning")?.textContent ?? ""',
+      );
+      assert(
+        warning.length > 0,
+        "deleting the open document should warn about closing it",
+        warning,
+      );
+      await confirmDialog();
+      await waitForFile(renamedFile, false);
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.path === null',
+        8_000,
+      );
+      const blank = await evaluate(`({
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        dirty: window.__MARKSI_DEV__.getState().doc.dirty,
+        placeholder: document.querySelector(".cm-placeholder")?.textContent ?? ""
+      })`);
+      assert(
+        blank.content === "" && !blank.dirty && blank.placeholder.length > 0,
+        "deleting the open document should return to a blank preview",
+        blank,
+      );
+    } finally {
+      await evaluate(
+        'document.querySelector(".file-op-cancel")?.click()',
+      ).catch(() => {});
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().clearWorkspace()',
+      ).catch(() => {});
+      await rm(root, { recursive: true, force: true });
       await resetBase();
     }
   });

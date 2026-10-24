@@ -357,6 +357,12 @@ success toasts.
 - The sidebar tree expands folders through `list_directory`; the optional flat
   list calls `list_workspace_files` and renders relative paths without folder
   rows. Both use the same workspace path and file-open flow.
+- Workspace file mutations are canonical-path checked in Rust against the open
+  workspace root before touching disk. Rename and move use the filesystem's
+  atomic rename, duplicate reserves a new file before copying bytes, and delete
+  rejects directories and unsupported extensions. The frontend retargets the
+  open document and recent entries after rename or move, and resets to a blank
+  document after deleting the open file. Overwrites are rejected, not merged.
 - `src/lib/images.ts` owns image classification, document/root path and root
   URL resolution, Markdown generation, and filename helpers; it is covered by
   unit tests.
@@ -420,8 +426,10 @@ Document commands: `read_document`, `write_document`, `write_export`,
 `write_export_binary`, `list_directory`, `app_version`,
 `run_export_command`, `pandoc_version`, `pandoc_export`,
 `pandoc_import`, `remote_image_data_url`, and `clear_remote_image_cache`. Workspace commands:
-`list_workspace_files`, `search_workspace`, and `file_modified_ms`. Image
-commands: `import_image_asset`, `save_image_data`, and `read_image_data_url`.
+`list_workspace_files`, `search_workspace`, `file_modified_ms`,
+`rename_workspace_file`, `duplicate_workspace_file`, `move_workspace_file`, and
+`delete_workspace_file`. Image commands: `import_image_asset`, `save_image_data`,
+and `read_image_data_url`.
 
 The frontend uses Tauri's dialog plugin for open/save/folder and image-picker
 dialogs plus native confirmation prompts. Files can also be dropped onto the

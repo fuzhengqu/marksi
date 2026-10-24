@@ -89,6 +89,13 @@ export interface ToastMessage {
   tone: ToastTone;
 }
 
+export interface FileOperationResult {
+  path: string;
+  name: string;
+  size: number;
+  modifiedMs: number | null;
+}
+
 export interface WorkspaceFile {
   name: string;
   path: string;

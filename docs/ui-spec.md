@@ -110,6 +110,11 @@ ease-out; honor `prefers-reduced-motion`.
 - Preferences > Files can switch the workspace tree to a flat list. The flat
   list recursively shows supported files with relative paths and no folder
   rows; it is off by default and does not alter tree expansion state.
+- Supported workspace files expose a keyboard-focusable action button. Its menu
+  offers Rename, Duplicate, Move to folder, and Delete. Rename and move use a
+  small form dialog, duplicate confirms the copy, and delete requires an
+  explicit destructive confirmation that also warns when the open document will
+  close. These overlays use the shared modal scrim and close with Escape.
 - Recent rows keep their remove `×` hidden until the row is hovered or the
   button receives keyboard focus. The button removes only that row. File >
   Clear recent files removes the entire list and leaves the empty-state copy.

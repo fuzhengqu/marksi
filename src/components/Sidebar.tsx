@@ -1,28 +1,52 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import {
   ChevronDown,
   ChevronRight,
+  Copy,
   File,
   FileText,
   Folder,
+  FolderInput,
   FolderOpen,
   Heading,
   List,
   Loader2,
+  MoreHorizontal,
+  Pencil,
   RefreshCw,
   Search,
+  Trash2,
   X,
 } from "lucide-react";
 import { extractOutline } from "../editor/analyze";
 import { normalizeLaxMarkdown } from "../lib/strictMarkdown";
 import { useT } from "../i18n";
 import {
+  deleteWorkspaceFile,
+  duplicateWorkspaceFile,
   fileName,
   isTauri,
   listDirectory,
   listWorkspaceFiles,
+  moveWorkspaceFile,
+  renameWorkspaceFile,
   searchWorkspace,
 } from "../lib/platform";
+import {
+  isSupportedTextFile,
+  normalizeRelativeFolder,
+  relativeFolder,
+  sameFilePath,
+  validateFileName,
+  type FileOperationKind,
+  type FileOperationTarget,
+} from "../lib/fileOps";
 import { useAppStore } from "../store/useAppStore";
 import type {
   FileEntry,
@@ -40,6 +64,10 @@ interface SidebarProps {
   onNewFile: () => void;
   onQuickOpen: () => void;
   onRefreshWorkspace: () => void;
+  onFilesChanged: (
+    oldPath: string | null,
+    newPath: string | null,
+  ) => void;
 }
 
 const tabs: Array<{ id: SidebarTab; label: string; icon: typeof Folder }> = [
@@ -56,6 +84,7 @@ export function Sidebar({
   onNewFile,
   onQuickOpen,
   onRefreshWorkspace,
+  onFilesChanged,
 }: SidebarProps) {
   const t = useT();
   const doc = useAppStore((state) => state.doc);
@@ -106,6 +135,7 @@ export function Sidebar({
             onOpenFolder={onOpenFolder}
             onQuickOpen={onQuickOpen}
             onRefreshWorkspace={onRefreshWorkspace}
+            onFilesChanged={onFilesChanged}
             onShowToast={showToast}
             recent={recent}
             workspace={workspace}
@@ -167,6 +197,10 @@ interface FilesPanelProps {
   onOpenFolder: () => void;
   onQuickOpen: () => void;
   onRefreshWorkspace: () => void;
+  onFilesChanged: (
+    oldPath: string | null,
+    newPath: string | null,
+  ) => void;
   onShowToast: (message: string, tone?: "info" | "success" | "error") => void;
 }
 
@@ -179,6 +213,7 @@ function FilesPanel({
   onOpenFolder,
   onQuickOpen,
   onRefreshWorkspace,
+  onFilesChanged,
   onShowToast,
 }: FilesPanelProps) {
   const t = useT();
@@ -186,6 +221,66 @@ function FilesPanel({
   const flatFileList = useAppStore(
     (state) => state.settings.flatFileList,
   );
+  const [operation, setOperation] = useState<{
+    kind: FileOperationKind;
+    entry: FileOperationTarget;
+  } | null>(null);
+  const [menu, setMenu] = useState<FileOperationTarget | null>(null);
+  const [treeVersion, setTreeVersion] = useState(0);
+
+  useEffect(() => {
+    if (!menu) {
+      return;
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      if (
+        target.closest(".file-actions-menu") ||
+        target.closest(".file-row-actions")
+      ) {
+        return;
+      }
+      setMenu(null);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenu(null);
+      }
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menu]);
+
+  function toggleMenu(entry: FileOperationTarget): void {
+    setMenu((current) =>
+      current?.path === entry.path ? null : entry,
+    );
+  }
+
+  function chooseAction(
+    kind: FileOperationKind,
+    entry: FileOperationTarget,
+  ): void {
+    setMenu(null);
+    setOperation({ kind, entry });
+  }
+
+  function completeOperation(
+    oldPath: string | null,
+    newPath: string | null,
+  ): void {
+    setOperation(null);
+    setTreeVersion((value) => value + 1);
+    onFilesChanged(oldPath, newPath);
+  }
+
   return (
     <div className="panel-scroll">
       <div className="panel-heading">
@@ -210,10 +305,14 @@ function FilesPanel({
           </div>
         ) : flatFileList ? (
           <FlatFileList
+            key={`flat-${treeVersion}`}
             workspacePath={workspace.path}
             refreshKey={workspace.entries}
+            activeMenuPath={menu?.path ?? null}
             onOpenFile={onOpenFile}
             onShowToast={onShowToast}
+            onToggleMenu={toggleMenu}
+            onChooseAction={chooseAction}
           />
         ) : workspace.entries.length === 0 ? (
           <div className="empty-panel compact">
@@ -221,14 +320,17 @@ function FilesPanel({
             <p>{t("This folder has no visible files.")}</p>
           </div>
         ) : (
-          <div className="file-tree">
+          <div className="file-tree" key={`tree-${treeVersion}`}>
             {workspace.entries.map((entry) => (
               <FileTreeNode
                 key={entry.path}
                 entry={entry}
                 depth={0}
+                activeMenuPath={menu?.path ?? null}
                 onOpenFile={onOpenFile}
                 onShowToast={onShowToast}
+                onToggleMenu={toggleMenu}
+                onChooseAction={chooseAction}
               />
             ))}
           </div>
@@ -279,6 +381,17 @@ function FilesPanel({
           )}
         </div>
       )}
+
+      {operation && workspace ? (
+        <FileOperationDialog
+          key={`${operation.kind}-${operation.entry.path}`}
+          operation={operation}
+          workspacePath={workspace.path}
+          onClose={() => setOperation(null)}
+          onComplete={completeOperation}
+          onShowToast={onShowToast}
+        />
+      ) : null}
     </div>
   );
 }
@@ -286,15 +399,24 @@ function FilesPanel({
 interface FlatFileListProps {
   workspacePath: string;
   refreshKey: FileEntry[];
+  activeMenuPath: string | null;
   onOpenFile: (path: string) => void;
   onShowToast: (message: string, tone?: "info" | "success" | "error") => void;
+  onToggleMenu: (entry: FileOperationTarget) => void;
+  onChooseAction: (
+    kind: FileOperationKind,
+    entry: FileOperationTarget,
+  ) => void;
 }
 
 function FlatFileList({
   workspacePath,
   refreshKey,
+  activeMenuPath,
   onOpenFile,
   onShowToast,
+  onToggleMenu,
+  onChooseAction,
 }: FlatFileListProps) {
   const t = useT();
   const [files, setFiles] = useState<WorkspaceFile[]>([]);
@@ -360,16 +482,30 @@ function FlatFileList({
   return (
     <div className="file-tree flat-file-list">
       {files.map((file) => (
-        <button
-          key={file.path}
-          className="file-row"
-          onClick={() => onOpenFile(file.path)}
-          title={file.path}
-        >
-          <FileText size={15} strokeWidth={1.7} />
-          <span className="file-name">{file.name}</span>
-          <small className="file-relative">{file.relativePath}</small>
-        </button>
+        <div key={file.path} className="file-row-wrap">
+          <button
+            className="file-row"
+            onClick={() => onOpenFile(file.path)}
+            title={file.path}
+          >
+            <FileText size={15} strokeWidth={1.7} />
+            <span className="file-name">{file.name}</span>
+            <small className="file-relative">{file.relativePath}</small>
+          </button>
+          <button
+            className="file-row-actions"
+            aria-label={t("File actions")}
+            aria-haspopup="menu"
+            aria-expanded={activeMenuPath === file.path}
+            title={t("File actions")}
+            onClick={() => onToggleMenu(file)}
+          >
+            <MoreHorizontal size={14} strokeWidth={1.9} />
+          </button>
+          {activeMenuPath === file.path ? (
+            <FileActionsMenu target={file} onChoose={onChooseAction} />
+          ) : null}
+        </div>
       ))}
     </div>
   );
@@ -378,11 +514,25 @@ function FlatFileList({
 interface FileTreeNodeProps {
   entry: FileEntry;
   depth: number;
+  activeMenuPath: string | null;
   onOpenFile: (path: string) => void;
   onShowToast: (message: string, tone?: "info" | "success" | "error") => void;
+  onToggleMenu: (entry: FileOperationTarget) => void;
+  onChooseAction: (
+    kind: FileOperationKind,
+    entry: FileOperationTarget,
+  ) => void;
 }
 
-function FileTreeNode({ entry, depth, onOpenFile, onShowToast }: FileTreeNodeProps) {
+function FileTreeNode({
+  entry,
+  depth,
+  activeMenuPath,
+  onOpenFile,
+  onShowToast,
+  onToggleMenu,
+  onChooseAction,
+}: FileTreeNodeProps) {
   const t = useT();
   const [expanded, setExpanded] = useState(false);
   const [children, setChildren] = useState<FileEntry[] | null>(null);
@@ -417,37 +567,54 @@ function FileTreeNode({ entry, depth, onOpenFile, onShowToast }: FileTreeNodePro
   const isMarkdown = /\.(md|markdown|mdown|mkd|mdwn|mmd)$/i.test(entry.name);
 
   return (
-    <div>
-      <button
-        className={`file-row ${entry.isDir ? "is-folder" : ""}`}
-        style={{ paddingLeft: indent }}
-        onClick={() => void toggle()}
-        title={entry.path}
-      >
-        <span className="file-chevron">
+    <div className="file-node">
+      <div className="file-row-wrap">
+        <button
+          className={`file-row ${entry.isDir ? "is-folder" : ""}`}
+          style={{ paddingLeft: indent }}
+          onClick={() => void toggle()}
+          title={entry.path}
+        >
+          <span className="file-chevron">
+            {entry.isDir ? (
+              loading ? (
+                <Loader2 size={12} className="spin" />
+              ) : expanded ? (
+                <ChevronDown size={13} />
+              ) : (
+                <ChevronRight size={13} />
+              )
+            ) : null}
+          </span>
           {entry.isDir ? (
-            loading ? (
-              <Loader2 size={12} className="spin" />
-            ) : expanded ? (
-              <ChevronDown size={13} />
+            expanded ? (
+              <FolderOpen size={15} strokeWidth={1.7} />
             ) : (
-              <ChevronRight size={13} />
+              <Folder size={15} strokeWidth={1.7} />
             )
-          ) : null}
-        </span>
-        {entry.isDir ? (
-          expanded ? (
-            <FolderOpen size={15} strokeWidth={1.7} />
+          ) : isMarkdown ? (
+            <FileText size={15} strokeWidth={1.7} />
           ) : (
-            <Folder size={15} strokeWidth={1.7} />
-          )
-        ) : isMarkdown ? (
-          <FileText size={15} strokeWidth={1.7} />
-        ) : (
-          <File size={15} strokeWidth={1.7} />
-        )}
-        <span className="file-name">{entry.name}</span>
-      </button>
+            <File size={15} strokeWidth={1.7} />
+          )}
+          <span className="file-name">{entry.name}</span>
+        </button>
+        {!entry.isDir && isSupportedTextFile(entry.name) ? (
+          <button
+            className="file-row-actions"
+            aria-label={t("File actions")}
+            aria-haspopup="menu"
+            aria-expanded={activeMenuPath === entry.path}
+            title={t("File actions")}
+            onClick={() => onToggleMenu(entry)}
+          >
+            <MoreHorizontal size={14} strokeWidth={1.9} />
+          </button>
+        ) : null}
+        {activeMenuPath === entry.path ? (
+          <FileActionsMenu target={entry} onChoose={onChooseAction} />
+        ) : null}
+      </div>
 
       {entry.isDir && expanded && children
         ? children.map((child) => (
@@ -455,11 +622,322 @@ function FileTreeNode({ entry, depth, onOpenFile, onShowToast }: FileTreeNodePro
               key={child.path}
               entry={child}
               depth={depth + 1}
+              activeMenuPath={activeMenuPath}
               onOpenFile={onOpenFile}
               onShowToast={onShowToast}
+              onToggleMenu={onToggleMenu}
+              onChooseAction={onChooseAction}
             />
           ))
         : null}
+    </div>
+  );
+}
+
+function FileActionsMenu({
+  target,
+  onChoose,
+}: {
+  target: FileOperationTarget;
+  onChoose: (
+    kind: FileOperationKind,
+    entry: FileOperationTarget,
+  ) => void;
+}) {
+  const t = useT();
+  const actions: Array<{
+    kind: FileOperationKind;
+    label: string;
+    icon: typeof Pencil;
+    danger?: boolean;
+  }> = [
+    { kind: "rename", label: "Rename", icon: Pencil },
+    { kind: "duplicate", label: "Duplicate", icon: Copy },
+    { kind: "move", label: "Move to folder…", icon: FolderInput },
+    { kind: "delete", label: "Delete", icon: Trash2, danger: true },
+  ];
+  return (
+    <div className="file-actions-menu" role="menu" aria-label={t("File actions")}>
+      <div className="file-actions-title">{target.name}</div>
+      {actions.map(({ kind, label, icon: Icon, danger }) => (
+        <button
+          key={kind}
+          type="button"
+          role="menuitem"
+          className={`file-action ${danger ? "is-danger" : ""}`}
+          data-action={kind}
+          onClick={() => onChoose(kind, target)}
+        >
+          <Icon size={14} strokeWidth={1.8} />
+          <span>{t(label)}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FileOperationDialog({
+  operation,
+  workspacePath,
+  onClose,
+  onComplete,
+  onShowToast,
+}: {
+  operation: { kind: FileOperationKind; entry: FileOperationTarget };
+  workspacePath: string;
+  onClose: () => void;
+  onComplete: (oldPath: string | null, newPath: string | null) => void;
+  onShowToast: (message: string, tone?: "info" | "success" | "error") => void;
+}) {
+  const t = useT();
+  const { kind, entry } = operation;
+  const docPath = useAppStore((state) => state.doc.path);
+  const docDirty = useAppStore((state) => state.doc.dirty);
+  const [value, setValue] = useState(() => {
+    if (kind === "rename") {
+      return entry.name;
+    }
+    if (kind === "move") {
+      return relativeFolder(workspacePath, entry.path);
+    }
+    return "";
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const cancelRef = useRef<HTMLButtonElement | null>(null);
+
+  const validation =
+    kind === "rename"
+      ? validateFileName(value)
+      : kind === "move" && normalizeRelativeFolder(value) === null
+        ? "Choose a folder inside the workspace."
+        : null;
+  const deletingOpenDocument =
+    kind === "delete" && sameFilePath(docPath, entry.path);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (kind === "delete") {
+        cancelRef.current?.focus();
+      } else {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    }, 20);
+    return () => window.clearTimeout(timer);
+  }, [kind]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !busy) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [busy, onClose]);
+
+  async function submit(event: FormEvent): Promise<void> {
+    event.preventDefault();
+    if (busy || validation) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      if (kind === "delete") {
+        await deleteWorkspaceFile(workspacePath, entry.path);
+        onShowToast(t("Deleted {name}", { name: entry.name }), "success");
+        onComplete(entry.path, null);
+        return;
+      }
+
+      let result;
+      if (kind === "rename") {
+        result = await renameWorkspaceFile(
+          workspacePath,
+          entry.path,
+          value.trim(),
+        );
+        onShowToast(
+          t("Renamed to {name}", { name: result.name }),
+          "success",
+        );
+      } else if (kind === "duplicate") {
+        result = await duplicateWorkspaceFile(workspacePath, entry.path);
+        onShowToast(t("Created {name}", { name: result.name }), "success");
+      } else {
+        const folder = normalizeRelativeFolder(value);
+        result = await moveWorkspaceFile(
+          workspacePath,
+          entry.path,
+          folder ?? "",
+        );
+        onShowToast(t("Moved to {name}", { name: result.name }), "success");
+      }
+
+      onComplete(
+        kind === "duplicate" ? null : entry.path,
+        result.path,
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const title =
+    kind === "rename"
+      ? "Rename file"
+      : kind === "duplicate"
+        ? "Duplicate file"
+        : kind === "move"
+          ? "Move file"
+          : "Delete file";
+  const Icon =
+    kind === "rename"
+      ? Pencil
+      : kind === "duplicate"
+        ? Copy
+        : kind === "move"
+          ? FolderInput
+          : Trash2;
+
+  return (
+    <div
+      className="modal-scrim file-op-scrim"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !busy) {
+          onClose();
+        }
+      }}
+    >
+      <form
+        className="file-op-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="file-op-title"
+        onSubmit={(event) => void submit(event)}
+      >
+        <header className="file-op-header">
+          <span
+            className={`settings-mark ${kind === "delete" ? "is-danger" : ""}`}
+            aria-hidden="true"
+          >
+            <Icon size={17} strokeWidth={1.8} />
+          </span>
+          <div className="file-op-heading">
+            <h2 id="file-op-title">{t(title)}</h2>
+            <p title={entry.path}>{entry.path}</p>
+          </div>
+          <button
+            type="button"
+            className="modal-close"
+            onClick={onClose}
+            disabled={busy}
+            title={t("Close")}
+            aria-label={t("Close")}
+          >
+            <X size={16} strokeWidth={1.8} />
+          </button>
+        </header>
+
+        <div className="file-op-body">
+          {kind === "rename" || kind === "move" ? (
+            <label className="file-op-field">
+              <span>
+                {kind === "rename"
+                  ? t("New name")
+                  : t("Destination folder")}
+              </span>
+              <input
+                ref={inputRef}
+                className="file-op-input"
+                value={value}
+                onChange={(event) => setValue(event.target.value)}
+                placeholder={
+                  kind === "rename" ? "note.md" : t("Leave empty for the workspace root")
+                }
+                spellCheck={false}
+                disabled={busy}
+              />
+              <small>
+                {kind === "rename"
+                  ? t("Use a supported Markdown or text file extension.")
+                  : t(
+                      "Relative to the workspace root. Leave empty for the root.",
+                    )}
+              </small>
+            </label>
+          ) : null}
+
+          {kind === "duplicate" ? (
+            <p className="file-op-copy">
+              {t("A copy of “{name}” will be created in the same folder.", {
+                name: entry.name,
+              })}
+            </p>
+          ) : null}
+
+          {kind === "delete" ? (
+            <div className="file-op-copy">
+              <p>
+                {t("Delete “{name}”? This cannot be undone.", {
+                  name: entry.name,
+                })}
+              </p>
+              {deletingOpenDocument ? (
+                <p className="file-op-warning">
+                  {docDirty
+                    ? t(
+                        "The open document will close and unsaved changes will be lost.",
+                      )
+                    : t("The open document will close.")}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {validation && kind === "rename" ? (
+            <p className="file-op-error">{t(validation)}</p>
+          ) : null}
+          {validation && kind === "move" ? (
+            <p className="file-op-error">{t(validation)}</p>
+          ) : null}
+          {error ? <p className="file-op-error">{error}</p> : null}
+        </div>
+
+        <footer className="file-op-footer">
+          <button
+            ref={cancelRef}
+            type="button"
+            className="button button-quiet file-op-cancel"
+            onClick={onClose}
+            disabled={busy}
+          >
+            {t("Cancel")}
+          </button>
+          <button
+            type="submit"
+            className={`button file-op-confirm ${
+              kind === "delete" ? "button-danger" : "button-primary"
+            }`}
+            disabled={busy || Boolean(validation)}
+          >
+            {busy
+              ? t("Working…")
+              : kind === "rename"
+                ? t("Rename")
+                : kind === "duplicate"
+                  ? t("Create copy")
+                  : kind === "move"
+                    ? t("Move")
+                    : t("Delete")}
+          </button>
+        </footer>
+      </form>
     </div>
   );
 }

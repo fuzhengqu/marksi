@@ -298,6 +298,19 @@ export default function App() {
     }
   }, []);
 
+  const handleFilesChanged = useCallback(
+    (oldPath: string | null, newPath: string | null) => {
+      const state = useAppStore.getState();
+      if (oldPath) {
+        state.applyFileOperation(oldPath, newPath);
+      }
+      if (state.workspace) {
+        void handleRefreshWorkspace();
+      }
+    },
+    [handleRefreshWorkspace],
+  );
+
   const handleCloseWorkspace = useCallback(() => {
     useAppStore.getState().clearWorkspace();
   }, []);
@@ -1399,6 +1412,7 @@ export default function App() {
             onNewFile={handleNew}
             onQuickOpen={() => useAppStore.getState().setQuickOpen(true)}
             onRefreshWorkspace={() => void handleRefreshWorkspace()}
+            onFilesChanged={handleFilesChanged}
           />
         ) : null}
 

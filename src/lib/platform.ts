@@ -2,6 +2,7 @@ import type {
   DocumentPayload,
   FileEntry,
   FileMeta,
+  FileOperationResult,
   ImageAsset,
   LineEnding,
   WorkspaceFile,
@@ -243,6 +244,60 @@ export async function listWorkspaceFiles(
   }
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<WorkspaceFile[]>("list_workspace_files", { root, limit });
+}
+
+export async function renameWorkspaceFile(
+  root: string,
+  path: string,
+  newName: string,
+): Promise<FileOperationResult> {
+  if (!isTauri()) {
+    throw new Error("File operations are only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<FileOperationResult>("rename_workspace_file", {
+    root,
+    path,
+    newName,
+  });
+}
+
+export async function duplicateWorkspaceFile(
+  root: string,
+  path: string,
+): Promise<FileOperationResult> {
+  if (!isTauri()) {
+    throw new Error("File operations are only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<FileOperationResult>("duplicate_workspace_file", { root, path });
+}
+
+export async function moveWorkspaceFile(
+  root: string,
+  path: string,
+  targetFolder: string,
+): Promise<FileOperationResult> {
+  if (!isTauri()) {
+    throw new Error("File operations are only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<FileOperationResult>("move_workspace_file", {
+    root,
+    path,
+    targetFolder,
+  });
+}
+
+export async function deleteWorkspaceFile(
+  root: string,
+  path: string,
+): Promise<void> {
+  if (!isTauri()) {
+    throw new Error("File operations are only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  await invoke("delete_workspace_file", { root, path });
 }
 
 export async function searchWorkspace(

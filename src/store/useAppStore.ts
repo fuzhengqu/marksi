@@ -89,6 +89,7 @@ interface AppStore {
   addRecent: (path: string) => void;
   removeRecent: (path: string) => void;
   clearRecent: () => void;
+  applyFileOperation: (oldPath: string, newPath: string | null) => void;
   setWorkspace: (path: string, entries: FileEntry[]) => void;
   setWorkspaceLoading: (loading: boolean) => void;
   clearWorkspace: () => void;
@@ -333,6 +334,47 @@ export const useAppStore = create<AppStore>()(
         })),
 
       clearRecent: () => set({ recent: [] }),
+
+      applyFileOperation: (oldPath, newPath) =>
+        set((state) => {
+          const oldKey = pathKey(oldPath);
+          const active =
+            state.doc.path != null && pathKey(state.doc.path) === oldKey;
+          const recent = newPath
+            ? state.recent.map((entry) =>
+                pathKey(entry.path) === oldKey
+                  ? { ...entry, path: newPath, name: fileName(newPath) }
+                  : entry,
+              )
+            : state.recent.filter(
+                (entry) => pathKey(entry.path) !== oldKey,
+              );
+
+          if (active && newPath) {
+            return {
+              doc: {
+                ...state.doc,
+                path: newPath,
+                name: fileName(newPath),
+              },
+              recent,
+            };
+          }
+          if (active) {
+            return {
+              doc: {
+                ...emptyDocument,
+                name:
+                  state.settings.language === "zh-CN"
+                    ? "未命名.md"
+                    : "Untitled.md",
+              },
+              recent,
+              cursor: { line: 1, column: 1 },
+            };
+          }
+          return { recent };
+        }),
 
       setWorkspace: (path, entries) =>
         set({
