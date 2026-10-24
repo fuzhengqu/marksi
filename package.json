@@ -1,7 +1,7 @@
 {
   "name": "marksi",
   "private": true,
-  "version": "0.30.0",
+  "version": "0.31.0",
   "description": "MarkSI - a focused Markdown studio for Windows and Linux",
   "type": "module",
   "license": "MIT",
@@ -15,6 +15,7 @@
     "test": "vitest run",
     "test:e2e": "node scripts/e2e.mjs",
     "audit:public": "node scripts/publication-audit.mjs",
+    "release:checksums": "node scripts/checksums.mjs",
     "version:bump": "node scripts/bump-version.mjs",
     "typecheck": "tsc --noEmit"
   },

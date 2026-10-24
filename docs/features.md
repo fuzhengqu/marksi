@@ -60,6 +60,12 @@ picks up edits without a restart. Before applying, MarkSI removes `@import`
 rules, every non-data `url()`, quoted absolute URLs, and legacy script-capable
 declarations so a theme cannot trigger network loads.
 
+`npm run release:checksums` scans `src-tauri/target/release/bundle` recursively
+and writes `SHA256SUMS.txt` with uppercase SHA-256 digests and relative paths.
+The Release packages workflow builds unsigned Windows and Linux artifacts on
+manual dispatch or version tags, writes the same checksum file, and uploads the
+bundles for inspection. Code signing is not configured.
+
 The release executable accepts one supported Markdown/text path as its first
 non-flag argument and opens it at startup. Windows installers register Markdown
 extensions (`md`, `markdown`, `mdown`, `mkd`, `mdwn`, `mmd`, `mdx`) with the
@@ -330,9 +336,9 @@ save the imported document to choose its final location.
 | Feature | Status | Milestone |
 |---|---|---|
 | Windows 11 installer (NSIS/MSI) | done | M6 |
-| Linux deb/rpm/AppImage | todo | M6 |
+| Linux deb/rpm/AppImage | wip | M6 |
 | Flatpak packaging | todo | M7 |
-| Signed releases / checksums | todo | M6 |
+| Signed releases / checksums | wip | M6 |
 | Auto-update | todo | M6 |
 | Third-party license notices | wip | M0 |
 | Publication audit CI (Linux) | done | M0 |
