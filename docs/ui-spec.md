@@ -130,6 +130,9 @@ ease-out; honor `prefers-reduced-motion`.
 - Preferences > Files can remember the window size and position. Saved bounds
   are validated against the current monitors; offscreen windows return to the
   nearest work area, and disabled memory clears the stored frame.
+- Preferences > Appearance can pick a local CSS theme from the app data themes
+  folder, reload the list, or open the folder. Applying a theme is immediate and
+  a missing file removes the injected style.
 - Preferences > Advanced expands a JSON editor seeded from the current settings,
   with Apply JSON, Copy JSON, and Reload current. Invalid JSON shows an inline
   error; ignored fields are listed as warnings and the accepted fields still

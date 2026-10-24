@@ -52,6 +52,14 @@ ranges, language codes, automatic-save delays, image folders, export options, an
 shortcut maps are validated locally. Copy and Reload current assist manual
 backup; there is no network or file access in this flow.
 
+Preferences > Appearance can load a local CSS theme from the application data
+`themes` folder. The folder is created on demand, contains at most 50 `.css`
+files of up to 256 KB each, and can be opened from Preferences. Selecting a theme
+applies it to the whole interface and persists the file name. Reload themes
+picks up edits without a restart. Before applying, MarkSI removes `@import`
+rules, every non-data `url()`, quoted absolute URLs, and legacy script-capable
+declarations so a theme cannot trigger network loads.
+
 The release executable accepts one supported Markdown/text path as its first
 non-flag argument and opens it at startup. Windows installers register Markdown
 extensions (`md`, `markdown`, `mdown`, `mkd`, `mdwn`, `mmd`, `mdx`) with the
@@ -305,7 +313,7 @@ save the imported document to choose its final location.
 | Design tokens | done | M1 |
 | Built-in light/dark themes | done | M1 |
 | Additional built-in themes | done | M6 |
-| User CSS/theme folder | todo | M6 |
+| User CSS/theme folder | done | M6 |
 | Settings shell | done | M2/M3 |
 | Editor text size and column width | done | M3 |
 | Shortcut editor | done | M6 |

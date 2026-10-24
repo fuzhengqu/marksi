@@ -244,6 +244,16 @@ const ZH: Record<string, string> = {
   System: "跟随系统",
   Sepia: "柔和棕褐",
   "High contrast": "高对比度",
+  "Custom CSS theme": "自定义 CSS 主题",
+  "Load a local .css file from the themes folder.":
+    "从主题文件夹加载本地 .css 文件。",
+  None: "无",
+  "Reload themes": "重新加载主题",
+  "Loading themes…": "正在加载主题…",
+  "Open themes folder": "打开主题文件夹",
+  "Theme file not found: {name}": "未找到主题文件：{name}",
+  "Remote @import rules and every non-data url() are removed before a theme is applied. Only load CSS files that you trust.":
+    "应用主题前会移除远程 @import 和非 data url()。请只加载你信任的 CSS 文件。",
   "Follow the operating system or choose a fixed appearance.":
     "跟随操作系统外观，或选择固定的浅色、深色、柔和棕褐或高对比度主题。",
   "Choose the writing environment.": "选择写作环境。",

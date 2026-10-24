@@ -149,6 +149,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   largeFileOptimizations: true,
   rememberWindowFrame: true,
   restoreSession: true,
+  customTheme: "",
   shortcuts: { ...DEFAULT_SHORTCUTS },
 };
 
@@ -520,6 +521,12 @@ export const useAppStore = create<AppStore>()(
               typeof saved.settings?.restoreSession === "boolean"
                 ? saved.settings.restoreSession
                 : true,
+            customTheme:
+              typeof saved.settings?.customTheme === "string" &&
+              saved.settings.customTheme.length <= 128 &&
+              /\.css$/i.test(saved.settings.customTheme)
+                ? saved.settings.customTheme
+                : "",
             shortcuts: normalizeShortcuts(saved.settings?.shortcuts),
           },
         };

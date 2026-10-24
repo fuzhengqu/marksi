@@ -5,4 +5,5 @@ pub mod history;
 pub mod image;
 pub mod pandoc;
 pub mod remote_image;
+pub mod themes;
 pub mod workspace;

@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.29"), "About should show version 0.29", state);
+    assert(state.version?.includes("0.30"), "About should show version 0.30", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1025,6 +1025,109 @@ async function main() {
         "window.__MARKSI_DEV__.getState().newDocument()",
       ).catch(() => {});
       await rm(root, { recursive: true, force: true });
+      await resetBase();
+    }
+  });
+
+  await test("loads sanitized local CSS themes", async () => {
+    await resetBase();
+    const folder = await evaluate(
+      "window.__MARKSI_DEV__.customThemesFolder()",
+    );
+    const ocean = resolve(folder, "e2e-ocean.css");
+    const remote = resolve(folder, "e2e-remote.css");
+
+    async function selectTheme(name) {
+      await evaluate(
+        "window.__MARKSI_DEV__.openSettings()",
+      );
+      await waitFor('document.querySelector(".custom-theme-select")');
+      await sleep(200);
+      const selected = await evaluate(`(() => {
+        const select = document.querySelector(".custom-theme-select");
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLSelectElement.prototype,
+          "value"
+        ).set;
+        setter.call(select, ${JSON.stringify(name)});
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        return select.value;
+      })()`);
+      assert(selected === name, `theme option missing: ${name}`, selected);
+      await evaluate(
+        "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
+      );
+    }
+
+    try {
+      await mkdir(folder, { recursive: true });
+      await writeFile(
+        ocean,
+        ":root { --accent: #123456; } .markdown-body { font-size: 21px !important; }",
+        "utf8",
+      );
+      await writeFile(
+        remote,
+        "body { background-image: url(https://example.com/x.png); }",
+        "utf8",
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.setContent("# Theme\\n\\nBody.")',
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setViewMode("reading")',
+      );
+      await waitFor('document.querySelector(".markdown-body")');
+
+      await selectTheme("e2e-ocean.css");
+      await waitFor(
+        'document.getElementById("marksi-custom-theme")?.textContent.includes("--accent: #123456")',
+      );
+      const applied = await evaluate(`({
+        accent: getComputedStyle(document.documentElement)
+          .getPropertyValue("--accent")
+          .trim(),
+        font: getComputedStyle(document.querySelector(".markdown-body")).fontSize
+      })`);
+      assert(
+        applied.accent === "#123456",
+        "custom CSS variables should apply",
+        applied,
+      );
+      assert(
+        applied.font === "21px",
+        "custom document typography should apply",
+        applied,
+      );
+
+      await selectTheme("e2e-remote.css");
+      await waitFor(
+        'document.getElementById("marksi-custom-theme")?.textContent.includes("background-image")',
+      );
+      const sanitized = await evaluate(
+        'document.getElementById("marksi-custom-theme")?.textContent ?? ""',
+      );
+      assert(
+        !sanitized.includes("https://") && sanitized.includes("none"),
+        "remote theme URLs should be removed",
+        sanitized,
+      );
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ customTheme: "missing.css" })',
+      );
+      await waitFor(
+        '!document.getElementById("marksi-custom-theme")',
+      );
+    } finally {
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ customTheme: "" })',
+      ).catch(() => {});
+      await evaluate(
+        "window.__MARKSI_DEV__.reloadCustomThemes()",
+      ).catch(() => {});
+      await rm(ocean, { force: true });
+      await rm(remote, { force: true });
       await resetBase();
     }
   });

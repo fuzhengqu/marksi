@@ -3095,6 +3095,22 @@ body.is-resizing-image[data-resize-axis="height"] * {
   white-space: pre;
 }
 
+.custom-theme-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 0 8px;
+}
+
+.custom-theme-actions .button {
+  height: 27px;
+  font-size: 10.5px;
+}
+
+.custom-theme-select {
+  max-width: 220px;
+}
+
 .settings-json-actions {
   display: flex;
   flex-wrap: wrap;

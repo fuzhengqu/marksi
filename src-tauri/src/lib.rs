@@ -60,6 +60,8 @@ pub fn run() {
             commands::history::delete_history,
             commands::history::clear_history,
             commands::history::relocate_history,
+            commands::themes::list_custom_themes,
+            commands::themes::custom_themes_folder,
             commands::image::import_image_asset,
             commands::image::save_image_data,
             commands::image::read_image_data_url,

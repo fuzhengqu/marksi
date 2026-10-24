@@ -174,6 +174,7 @@ export interface AppSettings {
   largeFileOptimizations: boolean;
   rememberWindowFrame: boolean;
   restoreSession: boolean;
+  customTheme: string;
   shortcuts: Record<ShortcutId, string>;
 }
 

@@ -6,6 +6,7 @@ import {
   Focus,
   Image as ImageIcon,
   Keyboard,
+  Palette,
   RotateCcw,
   Save,
   Settings,
@@ -14,8 +15,11 @@ import {
   X,
 } from "lucide-react";
 import { useT } from "../i18n";
+import type { CustomTheme } from "../lib/customThemes";
 import {
   clearRemoteImageCache,
+  listCustomThemes,
+  openCustomThemesFolder,
   pandocVersion,
 } from "../lib/platform";
 import {
@@ -45,6 +49,46 @@ export function SettingsDialog() {
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [jsonWarnings, setJsonWarnings] = useState<string[]>([]);
+  const [customThemes, setCustomThemes] = useState<CustomTheme[]>([]);
+  const [themesLoading, setThemesLoading] = useState(false);
+  const [themesError, setThemesError] = useState<string | null>(null);
+
+  async function loadThemes(): Promise<void> {
+    setThemesLoading(true);
+    setThemesError(null);
+    try {
+      setCustomThemes(await listCustomThemes());
+    } catch (error) {
+      setCustomThemes([]);
+      setThemesError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setThemesLoading(false);
+    }
+  }
+
+  async function reloadThemes(): Promise<void> {
+    await loadThemes();
+    window.dispatchEvent(new Event("marksi:themes-changed"));
+  }
+
+  async function openThemesFolder(): Promise<void> {
+    try {
+      await openCustomThemesFolder();
+    } catch (error) {
+      useAppStore
+        .getState()
+        .showToast(
+          error instanceof Error ? error.message : String(error),
+          "error",
+        );
+    }
+  }
+
+  useEffect(() => {
+    if (open) {
+      void loadThemes();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -209,6 +253,64 @@ export function SettingsDialog() {
                 <option value="contrast">{t("High contrast")}</option>
               </select>
             </div>
+
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Custom CSS theme")}</span>
+                <small>
+                  {t("Load a local .css file from the themes folder.")}
+                </small>
+              </div>
+              <select
+                className="settings-select custom-theme-select"
+                value={settings.customTheme}
+                aria-label={t("Custom CSS theme")}
+                onChange={(event) =>
+                  update("customTheme", event.target.value)
+                }
+              >
+                <option value="">{t("None")}</option>
+                {customThemes.map((theme) => (
+                  <option key={theme.name} value={theme.name}>
+                    {theme.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="custom-theme-actions">
+              <button
+                className="button button-quiet"
+                onClick={() => void reloadThemes()}
+                disabled={themesLoading}
+              >
+                <RotateCcw size={13} strokeWidth={1.8} />
+                {themesLoading ? t("Loading themes…") : t("Reload themes")}
+              </button>
+              <button
+                className="button button-quiet custom-themes-folder"
+                onClick={() => void openThemesFolder()}
+              >
+                <Palette size={13} strokeWidth={1.8} />
+                {t("Open themes folder")}
+              </button>
+            </div>
+            {themesError ? (
+              <p className="settings-json-error">{themesError}</p>
+            ) : null}
+            {settings.customTheme &&
+            !themesLoading &&
+            !customThemes.some((theme) => theme.name === settings.customTheme) ? (
+              <p className="settings-json-error">
+                {t("Theme file not found: {name}", {
+                  name: settings.customTheme,
+                })}
+              </p>
+            ) : null}
+            <p className="settings-note">
+              {t(
+                "Remote @import rules and every non-data url() are removed before a theme is applied. Only load CSS files that you trust.",
+              )}
+            </p>
 
             <div className="settings-row">
               <div className="settings-copy">

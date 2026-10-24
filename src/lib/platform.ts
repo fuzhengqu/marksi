@@ -10,6 +10,7 @@ import type {
   WorkspaceFile,
   WorkspaceSearchMatch,
 } from "../types";
+import type { CustomTheme } from "./customThemes";
 import type { WindowFrame, WorkArea } from "./windowFrame";
 import { APP_SEMVER } from "./version";
 
@@ -704,6 +705,26 @@ export async function openExternal(url: string): Promise<void> {
   }
   const { openUrl } = await import("@tauri-apps/plugin-opener");
   await openUrl(url);
+}
+
+export async function listCustomThemes(): Promise<CustomTheme[]> {
+  if (!isTauri()) {
+    return [];
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<CustomTheme[]>("list_custom_themes");
+}
+
+export async function customThemesFolder(): Promise<string> {
+  if (!isTauri()) {
+    throw new Error("Custom themes are only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<string>("custom_themes_folder");
+}
+
+export async function openCustomThemesFolder(): Promise<void> {
+  await openLocalPath(await customThemesFolder());
 }
 
 export async function openLocalPath(path: string): Promise<void> {

@@ -57,14 +57,20 @@ import {
   pastedImageName,
 } from "./lib/images";
 import {
+  findCustomTheme,
+  sanitizeCustomCss,
+} from "./lib/customThemes";
+import {
   applyWindowFrame,
   clearHistory,
+  customThemesFolder,
   fileName,
   getFileModifiedMs,
   importImageAsset,
   isAlwaysOnTop,
   isFullscreen,
   isTauri,
+  listCustomThemes,
   listDirectory,
   openDocument,
   openFolder,
@@ -162,6 +168,7 @@ export default function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [encodingOpen, setEncodingOpen] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
+  const [themeRevision, setThemeRevision] = useState(0);
   const savingRef = useRef(false);
   const bootStartedRef = useRef(false);
   const windowFrameRef = useRef<WindowFrame | null>(null);
@@ -1398,6 +1405,47 @@ export default function App() {
   }, [settings.rememberWindowFrame]);
 
   useEffect(() => {
+    const onReload = () => setThemeRevision((value) => value + 1);
+    window.addEventListener("marksi:themes-changed", onReload);
+    return () => window.removeEventListener("marksi:themes-changed", onReload);
+  }, []);
+
+  useEffect(() => {
+    const styleID = "marksi-custom-theme";
+    const existing = document.getElementById(styleID);
+    if (!isTauri() || !settings.customTheme) {
+      existing?.remove();
+      return;
+    }
+    let cancelled = false;
+    void listCustomThemes()
+      .then((themes) => {
+        if (cancelled) {
+          return;
+        }
+        const theme = findCustomTheme(themes, settings.customTheme);
+        if (!theme) {
+          document.getElementById(styleID)?.remove();
+          return;
+        }
+        const sanitized = sanitizeCustomCss(theme.css);
+        let style = document.getElementById(styleID) as HTMLStyleElement | null;
+        if (!style) {
+          style = document.createElement("style");
+          style.id = styleID;
+          document.head.appendChild(style);
+        }
+        style.textContent = sanitized.css;
+      })
+      .catch(() => {
+        document.getElementById(styleID)?.remove();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [settings.customTheme, themeRevision]);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = resolvedTheme;
     document.documentElement.style.colorScheme = resolvedTheme;
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -1730,6 +1778,9 @@ export default function App() {
         return saved ? applySavedSession(saved) : false;
       },
       clearSessionMemory: () => clearSession(),
+      reloadCustomThemes: () =>
+        window.dispatchEvent(new Event("marksi:themes-changed")),
+      customThemesFolder: () => customThemesFolder(),
       openEncoding: () => setEncodingOpen(true),
       closeEncoding: () => setEncodingOpen(false),
       setSettings: (patch: Partial<AppSettings>) =>

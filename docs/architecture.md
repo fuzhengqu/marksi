@@ -408,6 +408,12 @@ success toasts.
   rejected, invalid fields keep their current values, and warnings list every
   ignored key or value. Export options and shortcuts reuse their existing
   normalizers; no file system or network access is involved.
+- Custom themes are read by Rust from the app data `themes` folder with
+  canonical-path containment, a 256 KB limit per file, a 50-file cap, `.css`
+  filtering, UTF-8 validation, and deterministic sorting. The frontend sanitizer
+  removes imports, non-data URLs, quoted absolute URLs, and legacy script-capable
+  declarations, then injects one `<style>` element. No theme content is bundled,
+  uploaded, or written by the app.
 - Startup arguments are parsed in Rust for the first existing supported text
   file; `take_startup_file` returns it once from managed state. The frontend
   opens it only when the editor is blank and no recovery draft is pending.

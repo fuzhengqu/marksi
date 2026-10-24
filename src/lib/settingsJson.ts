@@ -51,6 +51,7 @@ const SETTING_KEYS = new Set([
   "largeFileOptimizations",
   "rememberWindowFrame",
   "restoreSession",
+  "customTheme",
   "shortcuts",
 ]);
 
@@ -231,6 +232,21 @@ export function parseSettingsJson(
       current.imageRootUrl,
       2_000,
     );
+  }
+
+  if (input.customTheme !== undefined) {
+    if (
+      typeof input.customTheme === "string" &&
+      input.customTheme.length <= 128 &&
+      !/[\u0000-\u001f\u007f]/.test(input.customTheme) &&
+      (input.customTheme === "" || /\.css$/i.test(input.customTheme))
+    ) {
+      settings.customTheme = input.customTheme;
+    } else {
+      warnings.push(
+        "customTheme must be an empty string or a .css file name.",
+      );
+    }
   }
 
   if (input.exportOptions !== undefined) {
