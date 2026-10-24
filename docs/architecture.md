@@ -385,6 +385,10 @@ success toasts.
   user-facing list and keeps the canonical encoding name in the document state
   so the next save uses the same encoder. Display names are normalized in the
   UI without changing the stored label.
+- Window flags are read from the real Tauri window on startup and written
+  through `@tauri-apps/api/window` with explicit capability grants. Fullscreen
+  also has a fixed F11 handler so it works before or without a custom binding;
+  always-on-top has no default key and remains a View-menu action.
 - Startup arguments are parsed in Rust for the first existing supported text
   file; `take_startup_file` returns it once from managed state. The frontend
   opens it only when the editor is blank and no recovery draft is pending.

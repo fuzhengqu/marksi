@@ -52,7 +52,11 @@ import {
   fileName,
   getFileModifiedMs,
   importImageAsset,
+  isAlwaysOnTop,
+  isFullscreen,
   isTauri,
+  setAlwaysOnTop,
+  setFullscreen,
   listDirectory,
   openDocument,
   openFolder,
@@ -317,6 +321,35 @@ export default function App() {
       cancelled = true;
     };
   }, [draftToRecover, handleOpenPath]);
+
+  const handleToggleFullscreen = useCallback(async () => {
+    try {
+      const next = !(await isFullscreen());
+      await setFullscreen(next);
+      useAppStore.getState().setFullscreen(next);
+    } catch (error) {
+      useAppStore.getState().showToast(errorMessage(error), "error");
+    }
+  }, []);
+
+  const handleToggleAlwaysOnTop = useCallback(async () => {
+    if (!isTauri()) {
+      useAppStore
+        .getState()
+        .showToast(
+          tNow("Always on top is only available in the desktop app."),
+          "info",
+        );
+      return;
+    }
+    try {
+      const next = !(await isAlwaysOnTop());
+      await setAlwaysOnTop(next);
+      useAppStore.getState().setAlwaysOnTop(next);
+    } catch (error) {
+      useAppStore.getState().showToast(errorMessage(error), "error");
+    }
+  }, []);
 
   const handleReopenWithEncoding = useCallback(
     async (encoding: string): Promise<boolean> => {
@@ -1186,6 +1219,26 @@ export default function App() {
   }, [settings.contentWidth, settings.editorFontSize]);
 
   useEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
+    let cancelled = false;
+    void Promise.all([isFullscreen(), isAlwaysOnTop()])
+      .then(([nextFullscreen, nextAlwaysOnTop]) => {
+        if (!cancelled) {
+          useAppStore.getState().setFullscreen(nextFullscreen);
+          useAppStore.getState().setAlwaysOnTop(nextAlwaysOnTop);
+        }
+      })
+      .catch(() => {
+        // Window flags are optional; the menu remains usable if querying fails.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     document.documentElement.dataset.theme = resolvedTheme;
     document.documentElement.style.colorScheme = resolvedTheme;
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -1267,6 +1320,12 @@ export default function App() {
     const handler = (event: KeyboardEvent) => {
       const state = useAppStore.getState();
       if (state.shortcutRecording) {
+        return;
+      }
+      if (event.key === "F11") {
+        event.preventDefault();
+        event.stopPropagation();
+        void handleToggleFullscreen();
         return;
       }
       const command = shortcutForEvent(state.settings.shortcuts, event);
@@ -1380,6 +1439,7 @@ export default function App() {
     handleNew,
     handleOpen,
     handleOpenFolder,
+    handleToggleFullscreen,
     saveCurrent,
   ]);
 
@@ -1467,6 +1527,18 @@ export default function App() {
       openSettings: () => useAppStore.getState().setSettingsOpen(true),
       openHistory: () => setHistoryOpen(true),
       closeHistory: () => setHistoryOpen(false),
+      toggleFullscreen: handleToggleFullscreen,
+      toggleAlwaysOnTop: handleToggleAlwaysOnTop,
+      windowFlags: async () => ({
+        fullscreen: await isFullscreen(),
+        alwaysOnTop: await isAlwaysOnTop(),
+      }),
+      setWindowFlags: async (fullscreen: boolean, alwaysOnTop: boolean) => {
+        await setFullscreen(fullscreen);
+        await setAlwaysOnTop(alwaysOnTop);
+        useAppStore.getState().setFullscreen(fullscreen);
+        useAppStore.getState().setAlwaysOnTop(alwaysOnTop);
+      },
       openEncoding: () => setEncodingOpen(true),
       closeEncoding: () => setEncodingOpen(false),
       setSettings: (patch: Partial<AppSettings>) =>
@@ -1478,6 +1550,8 @@ export default function App() {
     handleOpenFolder,
     handleOpenFolderPath,
     handleOpenPath,
+    handleToggleFullscreen,
+    handleToggleAlwaysOnTop,
     handleSave,
     handleSaveAs,
     handleCloseWorkspace,
@@ -1583,6 +1657,8 @@ export default function App() {
         onToggleView={handleToggleView}
         onFormat={handleFormat}
         onInsertImage={handleInsertImage}
+        onToggleFullscreen={() => void handleToggleFullscreen()}
+        onToggleAlwaysOnTop={() => void handleToggleAlwaysOnTop()}
         onZoomIn={() => adjustZoom(1)}
         onZoomOut={() => adjustZoom(-1)}
         onResetZoom={() => adjustZoom(0)}

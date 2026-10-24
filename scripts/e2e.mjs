@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.25"), "About should show version 0.25", state);
+    assert(state.version?.includes("0.26"), "About should show version 0.26", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -795,6 +795,67 @@ async function main() {
     } finally {
       await evaluate(
         "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
+      ).catch(() => {});
+      await resetBase();
+    }
+  });
+
+  await test("toggles fullscreen and always-on-top", async () => {
+    await resetBase();
+    const windowFlags = "window.__MARKSI_DEV__.windowFlags()";
+
+    try {
+      await evaluate("window.__MARKSI_DEV__.toggleFullscreen()");
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().fullscreen === true",
+        8_000,
+      );
+      assert(
+        (await evaluate(windowFlags)).fullscreen,
+        "window should be fullscreen",
+      );
+      await evaluate("window.__MARKSI_DEV__.toggleFullscreen()");
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().fullscreen === false",
+        8_000,
+      );
+      assert(
+        !(await evaluate(windowFlags)).fullscreen,
+        "window should leave fullscreen",
+      );
+
+      await press("F11", "F11", 122);
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().fullscreen === true",
+        8_000,
+      );
+      await press("F11", "F11", 122);
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().fullscreen === false",
+        8_000,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.toggleAlwaysOnTop()");
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().alwaysOnTop === true",
+        8_000,
+      );
+      assert(
+        (await evaluate(windowFlags)).alwaysOnTop,
+        "window should be always on top",
+      );
+      await evaluate("window.__MARKSI_DEV__.toggleAlwaysOnTop()");
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().alwaysOnTop === false",
+        8_000,
+      );
+      assert(
+        !(await evaluate(windowFlags)).alwaysOnTop,
+        "window should leave always-on-top",
+      );
+    } finally {
+      await evaluate(
+        "window.__MARKSI_DEV__.setWindowFlags(false, false)",
       ).catch(() => {});
       await resetBase();
     }

@@ -18,7 +18,7 @@ that design decisions do not paint us into a corner.
 | Minimize / maximize / close controls | done | M1 |
 | Native title bar option | todo | M6 |
 | Multiple document windows | todo | M6 |
-| Fullscreen / always on top | todo | M6 |
+| Fullscreen / always on top | done | M6 |
 | Window size/position/session restore | todo | M6 |
 | Light / dark appearance | done | M1 |
 | System appearance following | done | M6 |
@@ -50,6 +50,10 @@ non-flag argument and opens it at startup. Windows installers register Markdown
 extensions (`md`, `markdown`, `mdown`, `mkd`, `mdwn`, `mmd`, `mdx`) with the
 application. A second instance is still launched for each file because single
 instance forwarding is not implemented yet.
+
+View > Toggle fullscreen (F11) switches the native window state, and Always on
+top keeps MarkSI above other windows. Both expose a check mark while active and
+reset to normal window mode when toggled off.
 
 ## Files and workspace
 

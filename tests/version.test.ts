@@ -8,9 +8,9 @@ describe("displayVersion", () => {
     expect(displayVersion("0.10.0")).toBe("0.10");
   });
 
-  it("shows the current package version as 0.25", () => {
-    expect(APP_SEMVER).toBe("0.25.0");
-    expect(displayVersion()).toBe("0.25");
+  it("shows the current package version as 0.26", () => {
+    expect(APP_SEMVER).toBe("0.26.0");
+    expect(displayVersion()).toBe("0.26");
   });
 
   it("does not hide unexpected versions", () => {

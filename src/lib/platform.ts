@@ -721,6 +721,43 @@ export async function revealLocalPath(path: string): Promise<void> {
   await revealItemInDir(path);
 }
 
+export async function isFullscreen(): Promise<boolean> {
+  if (!isTauri()) {
+    return Boolean(document.fullscreenElement);
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  return getCurrentWindow().isFullscreen();
+}
+
+export async function setFullscreen(fullscreen: boolean): Promise<void> {
+  if (!isTauri()) {
+    if (fullscreen) {
+      await document.documentElement.requestFullscreen();
+    } else if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    }
+    return;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  await getCurrentWindow().setFullscreen(fullscreen);
+}
+
+export async function isAlwaysOnTop(): Promise<boolean> {
+  if (!isTauri()) {
+    return false;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  return getCurrentWindow().isAlwaysOnTop();
+}
+
+export async function setAlwaysOnTop(alwaysOnTop: boolean): Promise<void> {
+  if (!isTauri()) {
+    throw new Error("Always on top is only available in the desktop app.");
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  await getCurrentWindow().setAlwaysOnTop(alwaysOnTop);
+}
+
 export async function closeApplication(): Promise<void> {
   if (!isTauri()) {
     window.close();

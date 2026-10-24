@@ -453,6 +453,10 @@ const ZH: Record<string, string> = {
     "超过 50 万字符的文档将关闭实时预览装饰、拼写检查和 Emoji 建议。",
   "Live preview decorations, spell check, and emoji suggestions are off for documents over 500,000 characters.":
     "超过 50 万字符的文档已关闭实时预览装饰、拼写检查和 Emoji 建议。",
+  "Toggle fullscreen": "切换全屏",
+  "Always on top": "窗口置顶",
+  "Always on top is only available in the desktop app.":
+    "仅桌面应用支持窗口置顶。",
   "Reopen with encoding…": "按编码重新打开…",
   "Reopen with encoding": "按编码重新打开",
   "Choose how to decode this file. Reopening does not write the file.":

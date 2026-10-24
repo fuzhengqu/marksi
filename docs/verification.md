@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.25` product version.
+- About dialog close behavior and display of the `0.26` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,7 +139,10 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 185 ms during the release run.
+  Windows dev WebView opened the fixture in 159 ms during the release run.
+- Window flags: View > Toggle fullscreen and F11 both enter and leave real
+  window fullscreen, and Always on top toggles the native flag while the
+  in-app state follows it.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -261,7 +264,10 @@ arbitrary labels; decoding is read-only, and saving into a legacy encoding
 still fails when the text contains characters that encoding cannot represent.
 System appearance follows the WebView's `prefers-color-scheme` value. The E2E
 suite emulates that media feature through CDP; the real Windows/Linux OS theme
-switch remains a manual release check. Custom shortcuts cover application
+switch remains a manual release check. Fullscreen and always-on-top are native
+window flags queried at startup; the E2E suite verifies the real Tauri window,
+but window-manager behavior such as macOS Spaces or Linux tiling is outside the
+automated gate. Custom shortcuts cover application
 commands only; editor formatting keeps fixed CodeMirror bindings, global
 OS-level hotkeys are not supported, captured bindings require Ctrl or Meta, and
 duplicate bindings are rejected instead of swapped. Sepia and High contrast are CSS/theme
@@ -271,7 +277,7 @@ before release. Large-file mode compares JavaScript string length, so the 500,00
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 185 ms measurement is from one Windows development machine;
+large files. The 159 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

@@ -233,6 +233,8 @@ ease-out; honor `prefers-reduced-motion`.
 - View > Zoom in, Zoom out, and Actual size mirror `Ctrl+=`, `Ctrl+-`, and
   `Ctrl+0`. The menu items disable at the 80% and 160% bounds, and Actual size
   disables at 100%.
+- View > Toggle fullscreen uses the native window state and a fixed F11 shortcut;
+  Always on top shows a check mark while the native flag is active.
 - Preferences > Appearance exposes the same range as a slider. Zoom affects the
   whole window rather than only editor text; editor text size and writing-column
   width remain separate preferences.

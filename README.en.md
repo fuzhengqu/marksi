@@ -39,8 +39,8 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
 - **Reliability**: optional autosave for named documents, unsaved-work recovery,
   and external-change notices.
 - **Interface**: Chinese and English, system-following or fixed light/dark/
-  sepia/high-contrast appearance, customizable application shortcuts, and
-  interface zoom.
+  sepia/high-contrast appearance, customizable application shortcuts,
+  fullscreen and always-on-top, and interface zoom.
 - **Privacy**: no account and no telemetry; documents stay on your machine; raw
   HTML is not executed; remote images are off by default, cached locally only
   when enabled, and can be cleared at any time; images are never uploaded.

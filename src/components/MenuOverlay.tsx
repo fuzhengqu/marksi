@@ -22,9 +22,11 @@ import {
   Link2,
   Lock,
   LogOut,
+  Maximize2,
   Moon,
   PanelLeft,
   PenLine,
+  Pin,
   Printer,
   RefreshCw,
   RotateCcw,
@@ -44,6 +46,7 @@ import { useT } from "../i18n";
 import { closeApplication, getAppVersion } from "../lib/platform";
 import { displayVersion } from "../lib/version";
 import { ZOOM_MAX, ZOOM_MIN } from "../lib/zoom";
+import { isDarkAppearance, resolveTheme, useSystemDark } from "../lib/theme";
 import { useAppStore } from "../store/useAppStore";
 import type { CopyFormat } from "../types";
 
@@ -78,6 +81,8 @@ interface MenuOverlayProps {
   onToggleView: () => void;
   onFormat: (command: EditorCommand) => void;
   onInsertImage: () => void;
+  onToggleFullscreen: () => void;
+  onToggleAlwaysOnTop: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
@@ -104,6 +109,8 @@ export function MenuOverlay({
   onToggleView,
   onFormat,
   onInsertImage,
+  onToggleFullscreen,
+  onToggleAlwaysOnTop,
   onZoomIn,
   onZoomOut,
   onResetZoom,
@@ -116,6 +123,10 @@ export function MenuOverlay({
   const open = useAppStore((state) => state.menuOpen);
   const setOpen = useAppStore((state) => state.setMenuOpen);
   const theme = useAppStore((state) => state.theme);
+  const systemDark = useSystemDark();
+  const darkAppearance = isDarkAppearance(resolveTheme(theme, systemDark));
+  const fullscreen = useAppStore((state) => state.fullscreen);
+  const alwaysOnTop = useAppStore((state) => state.alwaysOnTop);
   const viewMode = useAppStore((state) => state.viewMode);
   const workspace = useAppStore((state) => state.workspace);
   const docPath = useAppStore((state) => state.doc.path);
@@ -416,18 +427,31 @@ export function MenuOverlay({
               />
               <MenuItem
                 icon={
-                  theme === "light" ? (
-                    <Moon size={16} strokeWidth={1.8} />
-                  ) : (
+                  darkAppearance ? (
                     <Sun size={16} strokeWidth={1.8} />
+                  ) : (
+                    <Moon size={16} strokeWidth={1.8} />
                   )
                 }
                 label={
-                  theme === "light"
-                    ? t("Dark appearance")
-                    : t("Light appearance")
+                  darkAppearance
+                    ? t("Light appearance")
+                    : t("Dark appearance")
                 }
                 onClick={() => run(toggleTheme)}
+              />
+              <MenuItem
+                icon={<Maximize2 size={16} strokeWidth={1.8} />}
+                label={t("Toggle fullscreen")}
+                shortcut="F11"
+                checked={fullscreen}
+                onClick={() => run(onToggleFullscreen)}
+              />
+              <MenuItem
+                icon={<Pin size={16} strokeWidth={1.8} />}
+                label={t("Always on top")}
+                checked={alwaysOnTop}
+                onClick={() => run(onToggleAlwaysOnTop)}
               />
               <MenuItem
                 icon={<Focus size={16} strokeWidth={1.8} />}

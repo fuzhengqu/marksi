@@ -62,6 +62,8 @@ interface AppStore {
   doc: DocumentState;
   recent: RecentFile[];
   pinned: PinnedEntry[];
+  fullscreen: boolean;
+  alwaysOnTop: boolean;
   workspace: WorkspaceState | null;
   sidebarTab: SidebarTab;
   sidebarOpen: boolean;
@@ -111,6 +113,8 @@ interface AppStore {
   togglePinned: (entry: PinnedEntry) => void;
   removePinned: (path: string) => void;
   clearPinned: () => void;
+  setFullscreen: (fullscreen: boolean) => void;
+  setAlwaysOnTop: (alwaysOnTop: boolean) => void;
   applyFileOperation: (oldPath: string, newPath: string | null) => void;
   setWorkspace: (path: string, entries: FileEntry[]) => void;
   setWorkspaceLoading: (loading: boolean) => void;
@@ -182,6 +186,8 @@ export const useAppStore = create<AppStore>()(
       doc: { ...emptyDocument },
       recent: [],
       pinned: [],
+      fullscreen: false,
+      alwaysOnTop: false,
       workspace: null,
       sidebarTab: "files",
       sidebarOpen: true,
@@ -376,6 +382,9 @@ export const useAppStore = create<AppStore>()(
         })),
 
       clearPinned: () => set({ pinned: [] }),
+
+      setFullscreen: (fullscreen) => set({ fullscreen }),
+      setAlwaysOnTop: (alwaysOnTop) => set({ alwaysOnTop }),
 
       applyFileOperation: (oldPath, newPath) =>
         set((state) => {
