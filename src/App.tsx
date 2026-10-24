@@ -29,6 +29,10 @@ import {
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
 import { encodingDisplayName } from "./lib/encodings";
 import { buildPageCss, normalizeExportOptions } from "./lib/exportOptions";
+import {
+  resolveTheme,
+  useSystemDark,
+} from "./lib/theme";
 import { isLargeDocument } from "./lib/largeFile";
 import { frontMatterTitle } from "./lib/frontMatter";
 import { pandocImportName } from "./lib/pandoc";
@@ -118,6 +122,8 @@ export default function App() {
   const doc = useAppStore((state) => state.doc);
   const sidebarOpen = useAppStore((state) => state.sidebarOpen);
   const theme = useAppStore((state) => state.theme);
+  const systemDark = useSystemDark();
+  const resolvedTheme = resolveTheme(theme, systemDark);
   const viewMode = useAppStore((state) => state.viewMode);
   const gotoLine = useAppStore((state) => state.gotoLine);
   const settings = useAppStore((state) => state.settings);
@@ -670,7 +676,7 @@ export default function App() {
         "./lib/clipboard"
       );
       const documentToCopy = await buildClipboardDocument(content, {
-        theme: state.theme,
+        theme: resolvedTheme,
         diagrams: format === "html",
         strictMode: state.settings.strictMode,
       });
@@ -1154,10 +1160,14 @@ export default function App() {
   }, [settings.contentWidth, settings.editorFontSize]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.theme = resolvedTheme;
+    document.documentElement.style.colorScheme = resolvedTheme;
     const meta = document.querySelector('meta[name="theme-color"]');
-    meta?.setAttribute("content", theme === "light" ? "#fbfbfa" : "#1d2024");
-  }, [theme]);
+    meta?.setAttribute(
+      "content",
+      resolvedTheme === "light" ? "#fbfbfa" : "#1d2024",
+    );
+  }, [resolvedTheme]);
 
   useEffect(() => {
     document.title = `${doc.dirty ? "• " : ""}${doc.name} — MarkSI`;
@@ -1546,7 +1556,7 @@ export default function App() {
                 documentPath={doc.path}
                 workspacePath={workspacePath}
                 gotoLine={gotoLine}
-                theme={theme}
+                theme={resolvedTheme}
                 onResizeImage={handleResizeImage}
                 onFitImage={handleFitImage}
                 onResetImage={handleResetImage}

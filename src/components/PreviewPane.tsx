@@ -38,14 +38,14 @@ import {
   revealLocalPath,
 } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
-import type { Theme } from "../types";
+import type { ResolvedTheme } from "../lib/theme";
 
 interface PreviewPaneProps {
   content: string;
   documentPath: string | null;
   workspacePath: string | null;
   gotoLine: number | null;
-  theme: Theme;
+  theme: ResolvedTheme;
   onResizeImage: (
     imageIndex: number,
     width: number | null,

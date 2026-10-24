@@ -363,6 +363,11 @@ success toasts.
   rejects directories and unsupported extensions. The frontend retargets the
   open document and recent entries after rename or move, and resets to a blank
   document after deleting the open file. Overwrites are rejected, not merged.
+- `src/lib/theme.ts` resolves Light, Dark, and System modes against
+  `prefers-color-scheme`, exposes a live media-query hook, and normalizes
+  persisted values. The resolved light/dark value drives the document theme,
+  Mermaid palettes, clipboard HTML, and preview props; the stored mode remains
+  System when the user chooses it.
 - `src/lib/largeFile.ts` is a pure threshold helper. The app disables the
   editor's live-preview decorations, spell check, and emoji suggestions when
   the document reaches 500,000 characters and the preference is enabled. The

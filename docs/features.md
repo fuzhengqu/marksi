@@ -21,11 +21,16 @@ that design decisions do not paint us into a corner.
 | Fullscreen / always on top | todo | M6 |
 | Window size/position/session restore | todo | M6 |
 | Light / dark appearance | done | M1 |
-| System appearance following | todo | M6 |
+| System appearance following | done | M6 |
 | Zoom in/out/reset | done | M4 |
 | Windows 11 snap layouts support | todo | M6 |
 | Single instance / file forwarding | todo | M6 |
 | CLI file open | todo | M6 |
+
+System theme mode follows `prefers-color-scheme` live, including while the app
+is open. Preferences and the title-bar toggle can still force Light or Dark;
+the resolved appearance is used for the editor, preview, Mermaid diagrams,
+clipboard HTML, and window chrome metadata. The choice is persisted.
 
 ## Files and workspace
 

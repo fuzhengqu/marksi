@@ -37,8 +37,8 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   (Pandoc is not bundled); copy as Markdown, HTML, or plain text.
 - **Reliability**: optional autosave for named documents, unsaved-work recovery,
   and external-change notices.
-- **Interface**: Chinese and English, built-in light and dark themes, and
-  interface zoom.
+- **Interface**: Chinese and English, system-following or fixed light/dark
+  appearance, and interface zoom.
 - **Privacy**: no account and no telemetry; documents stay on your machine; raw
   HTML is not executed; remote images are off by default, cached locally only
   when enabled, and can be cleared at any time; images are never uploaded.

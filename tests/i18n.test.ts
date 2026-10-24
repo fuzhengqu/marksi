@@ -27,6 +27,7 @@ describe("translate", () => {
     expect(translate("zh-CN", "Pinned")).toBe("已固定");
     expect(translate("zh-CN", "Reopen with encoding")).toBe("按编码重新打开");
     expect(translate("zh-CN", "Large file mode")).toBe("大文件模式");
+    expect(translate("zh-CN", "System")).toBe("跟随系统");
   });
 
   it("returns the source label for English", () => {

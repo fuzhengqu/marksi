@@ -1,7 +1,7 @@
 import { copyText } from "./clipboardText";
 import { renderMarkdown } from "./markdown";
 import { renderMermaidMarkup } from "./mermaid";
-import type { Theme } from "../types";
+import type { ResolvedTheme } from "./theme";
 
 export interface ClipboardDocument {
   html: string;
@@ -118,7 +118,11 @@ export function htmlToPlainText(root: ParentNode): string {
 
 export async function buildClipboardDocument(
   source: string,
-  options: { theme?: Theme; diagrams?: boolean; strictMode?: boolean } = {},
+  options: {
+    theme?: ResolvedTheme;
+    diagrams?: boolean;
+    strictMode?: boolean;
+  } = {},
 ): Promise<ClipboardDocument> {
   const strictMode = options.strictMode ?? true;
   let html = renderMarkdown(source, {

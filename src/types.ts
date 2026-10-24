@@ -4,7 +4,7 @@ export type SidebarTab = "files" | "outline" | "search";
 
 export type SearchScope = "document" | "workspace";
 
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "system";
 
 export type Language = "zh-CN" | "en";
 

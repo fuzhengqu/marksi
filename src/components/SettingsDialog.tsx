@@ -134,20 +134,26 @@ export function SettingsDialog() {
             <div className="settings-row">
               <div className="settings-copy">
                 <span>{t("Theme")}</span>
-                <small>{t("Choose the writing environment.")}</small>
+                <small>
+                  {t("Follow the operating system or choose a fixed appearance.")}
+                </small>
               </div>
               <div
                 className="segmented-control"
                 role="group"
                 aria-label={t("Theme")}
               >
-                {(["light", "dark"] as Theme[]).map((value) => (
+                {(["system", "light", "dark"] as Theme[]).map((value) => (
                   <button
                     key={value}
                     className={theme === value ? "is-active" : ""}
                     onClick={() => setTheme(value)}
                   >
-                    {value === "light" ? t("Light") : t("Dark")}
+                    {value === "system"
+                      ? t("System")
+                      : value === "light"
+                        ? t("Light")
+                        : t("Dark")}
                   </button>
                 ))}
               </div>

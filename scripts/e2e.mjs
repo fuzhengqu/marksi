@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.19"), "About should show version 0.19", state);
+    assert(state.version?.includes("0.20"), "About should show version 0.20", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -575,6 +575,65 @@ async function main() {
     await sleep(200);
     await clickSelector(".settings-close");
     await waitFor('!document.querySelector(".settings-dialog")');
+  });
+
+  await test("follows the system color scheme", async () => {
+    await resetBase();
+    try {
+      await send("Emulation.setEmulatedMedia", {
+        features: [{ name: "prefers-color-scheme", value: "dark" }],
+      });
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setTheme("system")',
+      );
+      await waitFor('document.documentElement.dataset.theme === "dark"');
+      const dark = await evaluate(`({
+        theme: document.documentElement.dataset.theme,
+        meta: document.querySelector('meta[name="theme-color"]')?.content ?? ""
+      })`);
+      assert(dark.theme === "dark", "system dark mode was not applied", dark);
+      assert(dark.meta === "#1d2024", "dark theme-color is wrong", dark);
+
+      await send("Emulation.setEmulatedMedia", {
+        features: [{ name: "prefers-color-scheme", value: "light" }],
+      });
+      await waitFor('document.documentElement.dataset.theme === "light"');
+
+      await evaluate('window.__MARKSI_DEV__.getState().setTheme("dark")');
+      await waitFor('document.documentElement.dataset.theme === "dark"');
+      await sleep(200);
+      assert(
+        await evaluate(
+          'document.documentElement.dataset.theme === "dark"',
+        ),
+        "explicit dark mode should ignore the system preference",
+      );
+
+      await evaluate("window.__MARKSI_DEV__.openSettings()");
+      await waitFor('document.querySelector(".settings-dialog .segmented-control")');
+      const labels = await evaluate(
+        'Array.from(document.querySelectorAll(".settings-dialog .segmented-control")[0]?.querySelectorAll("button") ?? []).map((node) => node.textContent)',
+      );
+      assert(
+        JSON.stringify(labels) === JSON.stringify(["跟随系统", "浅色", "深色"]),
+        "theme control should offer three modes",
+        labels,
+      );
+      await evaluate(
+        'document.querySelectorAll(".settings-dialog .segmented-control")[0]?.querySelectorAll("button")[0]?.click()',
+      );
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().theme === "system"',
+      );
+    } finally {
+      await send("Emulation.setEmulatedMedia", { features: [] }).catch(
+        () => {},
+      );
+      await evaluate(
+        "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
+      ).catch(() => {});
+      await resetBase();
+    }
   });
 
   await test("strict mode toggles compact ATX headings", async () => {

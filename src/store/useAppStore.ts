@@ -10,6 +10,11 @@ import {
   retargetPins,
   togglePin,
 } from "../lib/pins";
+import {
+  nextTheme,
+  normalizeTheme,
+  systemPrefersDark,
+} from "../lib/theme";
 import type {
   AppSettings,
   CursorPosition,
@@ -173,7 +178,7 @@ export const useAppStore = create<AppStore>()(
       workspace: null,
       sidebarTab: "files",
       sidebarOpen: true,
-      theme: "light",
+      theme: "system",
       viewMode: "preview",
       menuOpen: false,
       cursor: { line: 1, column: 1 },
@@ -308,7 +313,9 @@ export const useAppStore = create<AppStore>()(
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       setTheme: (theme) => set({ theme }),
       toggleTheme: () =>
-        set((state) => ({ theme: state.theme === "light" ? "dark" : "light" })),
+        set((state) => ({
+          theme: nextTheme(state.theme, systemPrefersDark()),
+        })),
       setViewMode: (viewMode) => set({ viewMode }),
       toggleViewMode: () =>
         set((state) => ({
@@ -441,6 +448,7 @@ export const useAppStore = create<AppStore>()(
         return {
           ...current,
           ...saved,
+          theme: normalizeTheme(saved.theme),
           pinned: normalizePins(saved.pinned),
           settings: {
             ...DEFAULT_SETTINGS,

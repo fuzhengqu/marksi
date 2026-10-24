@@ -1,5 +1,5 @@
 import DOMPurify from "dompurify";
-import type { Theme } from "../types";
+import type { ResolvedTheme } from "./theme";
 
 interface Palette {
   background: string;
@@ -11,7 +11,7 @@ interface Palette {
   accentSoft: string;
 }
 
-const PALETTES: Record<Theme, Palette> = {
+const PALETTES: Record<ResolvedTheme, Palette> = {
   light: {
     background: "#fbfbfa",
     surface: "#ffffff",
@@ -36,10 +36,10 @@ const FONT_FAMILY =
   '"Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif';
 
 let modulePromise: Promise<typeof import("mermaid").default> | null = null;
-let initializedTheme: Theme | null = null;
+let initializedTheme: ResolvedTheme | null = null;
 let diagramSequence = 0;
 
-function themeVariables(theme: Theme): Record<string, string> {
+function themeVariables(theme: ResolvedTheme): Record<string, string> {
   const palette = PALETTES[theme];
   return {
     background: palette.background,
@@ -75,7 +75,7 @@ function themeVariables(theme: Theme): Record<string, string> {
   };
 }
 
-async function loadMermaid(theme: Theme) {
+async function loadMermaid(theme: ResolvedTheme) {
   if (!modulePromise) {
     modulePromise = import("mermaid").then((module) => module.default);
   }
@@ -185,7 +185,7 @@ function renderError(element: HTMLElement, message: string): void {
  */
 export async function renderMermaidDiagrams(
   root: ParentNode,
-  theme: Theme,
+  theme: ResolvedTheme,
 ): Promise<void> {
   const diagrams = Array.from(
     root.querySelectorAll<HTMLElement>(
@@ -262,7 +262,7 @@ export async function renderMermaidDiagrams(
  */
 export async function renderMermaidMarkup(
   html: string,
-  theme: Theme,
+  theme: ResolvedTheme,
 ): Promise<string> {
   if (!html.includes('class="mermaid-diagram"')) {
     return html;

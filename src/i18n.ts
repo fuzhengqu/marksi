@@ -241,6 +241,9 @@ const ZH: Record<string, string> = {
     "更改会立即生效，并只保存在本机。",
   Appearance: "外观",
   Theme: "主题",
+  System: "跟随系统",
+  "Follow the operating system or choose a fixed appearance.":
+    "跟随操作系统外观，或选择固定的浅色/深色主题。",
   "Choose the writing environment.": "选择写作环境。",
   Light: "浅色",
   Dark: "深色",
