@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.28` product version.
+- About dialog close behavior and display of the `0.29` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,7 +139,7 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 160 ms during the release run.
+  Windows dev WebView opened the fixture in 155 ms during the release run.
 - Window flags: View > Toggle fullscreen and F11 both enter and leave real
   window fullscreen, and Always on top toggles the native flag while the
   in-app state follows it.
@@ -151,6 +151,10 @@ The E2E suite currently covers:
   view, and wait for the path-only session record; clear the editor and restore
   the session, then verify the document content, workspace file list, and view
   mode. Disabling Restore last session clears the stored record.
+- Advanced JSON settings: open the JSON editor from Preferences, confirm it
+  starts from current values, reject malformed JSON without changing settings,
+  apply valid font/width/folder/flat-list values, ignore out-of-range and unknown
+  keys with warnings, and reload the applied JSON.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -292,14 +296,17 @@ but window-manager behavior such as macOS Spaces or Linux tiling is outside the
 automated gate. Custom shortcuts cover application
 commands only; editor formatting keeps fixed CodeMirror bindings, global
 OS-level hotkeys are not supported, captured bindings require Ctrl or Meta, and
-duplicate bindings are rejected instead of swapped. Sepia and High contrast are CSS/theme
+duplicate bindings are rejected instead of swapped. Advanced settings JSON is
+not a full configuration-file format: there is no import/export file or schema
+version, unknown keys are ignored with a warning, and applying settings takes
+effect immediately with no undo. Sepia and High contrast are CSS/theme
 token sets and Mermaid palettes, not operating-system high-contrast API
 integration; their visual contrast and platform rendering need a manual review
 before release. Large-file mode compares JavaScript string length, so the 500,000 threshold is
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 160 ms measurement is from one Windows development machine;
+large files. The 155 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

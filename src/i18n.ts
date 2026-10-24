@@ -473,6 +473,17 @@ const ZH: Record<string, string> = {
   "Restore last session": "恢复上次会话",
   "Reopen the last document and folder at startup. A recovered draft or command-line file takes precedence.":
     "启动时重新打开上次的文档和文件夹；待恢复的草稿或命令行文件优先。",
+  Advanced: "高级",
+  "Edit the raw preferences as JSON. Only known settings are applied; invalid values are ignored with a warning.":
+    "以 JSON 编辑原始偏好设置；仅应用已知设置，无效值会被忽略并给出警告。",
+  "Edit settings JSON": "编辑设置 JSON",
+  "Hide settings JSON": "隐藏设置 JSON",
+  "Settings JSON": "设置 JSON",
+  "Apply JSON": "应用 JSON",
+  "Copy JSON": "复制 JSON",
+  "Reload current": "重新载入当前设置",
+  "Settings applied.": "设置已应用。",
+  "Settings JSON copied.": "设置 JSON 已复制。",
   "Restore the last window bounds when the app starts. Offscreen windows return to the nearest monitor.":
     "启动时恢复上次的窗口位置和大小；窗口若在屏幕外会移回最近的显示器。",
   "Local history…": "本地历史…",

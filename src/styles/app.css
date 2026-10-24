@@ -3080,6 +3080,43 @@ body.is-resizing-image[data-resize-axis="height"] * {
   opacity: 0.45;
 }
 
+.settings-json {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.settings-json-text {
+  min-height: 260px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.settings-json-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.settings-json-error,
+.settings-json-warnings p {
+  margin: 0;
+  color: var(--danger);
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.settings-json-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
 .shortcut-editor {
   display: flex;
   flex-direction: column;

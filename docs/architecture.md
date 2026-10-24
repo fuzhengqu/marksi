@@ -403,6 +403,11 @@ success toasts.
   command-line file wins. After the one-shot boot, document/workspace/view
   changes are debounced into `marksi.session.v1`, and `beforeunload` writes the
   same record synchronously. Disabling the preference clears the record.
+- Advanced settings JSON is validated by `src/lib/settingsJson.ts` before one
+  atomic `updateSettings` call. Known keys are range-checked, malformed JSON is
+  rejected, invalid fields keep their current values, and warnings list every
+  ignored key or value. Export options and shortcuts reuse their existing
+  normalizers; no file system or network access is involved.
 - Startup arguments are parsed in Rust for the first existing supported text
   file; `take_startup_file` returns it once from managed state. The frontend
   opens it only when the editor is blank and no recovery draft is pending.

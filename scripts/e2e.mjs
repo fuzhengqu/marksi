@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.28"), "About should show version 0.28", state);
+    assert(state.version?.includes("0.29"), "About should show version 0.29", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1025,6 +1025,122 @@ async function main() {
         "window.__MARKSI_DEV__.getState().newDocument()",
       ).catch(() => {});
       await rm(root, { recursive: true, force: true });
+      await resetBase();
+    }
+  });
+
+  await test("edits advanced settings as validated JSON", async () => {
+    await resetBase();
+
+    async function setJson(value) {
+      await evaluate(`(() => {
+        const textarea = document.querySelector(".settings-json-text");
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLTextAreaElement.prototype,
+          "value"
+        ).set;
+        setter.call(textarea, ${JSON.stringify(value)});
+        textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      })()`);
+      await sleep(120);
+    }
+
+    try {
+      await evaluate("window.__MARKSI_DEV__.openSettings()");
+      await waitFor('document.querySelector(".settings-json-open")');
+      await evaluate(
+        'document.querySelector(".settings-json-open")?.scrollIntoView({ block: "center" })',
+      );
+      await evaluate('document.querySelector(".settings-json-open")?.click()');
+      await waitFor('document.querySelector(".settings-json-text")');
+      const initial = await evaluate(
+        'document.querySelector(".settings-json-text")?.value ?? ""',
+      );
+      assert(
+        initial.includes('"editorFontSize": 16'),
+        "settings JSON should start from the current settings",
+        initial.slice(0, 120),
+      );
+
+      await setJson("{");
+      await evaluate('document.querySelector(".settings-json-apply")?.click()');
+      await waitFor('document.querySelector(".settings-json-error")');
+      const afterInvalid = await evaluate(
+        "window.__MARKSI_DEV__.getState().settings.editorFontSize",
+      );
+      assert(
+        afterInvalid === 16,
+        "invalid JSON must not change settings",
+        afterInvalid,
+      );
+
+      await setJson(
+        JSON.stringify({
+          editorFontSize: 18,
+          contentWidth: 900,
+          imageAssetFolder: "media/images",
+          flatFileList: true,
+        }),
+      );
+      await evaluate('document.querySelector(".settings-json-apply")?.click()');
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().settings.editorFontSize === 18",
+      );
+      const applied = await evaluate(`({
+        width: window.__MARKSI_DEV__.getState().settings.contentWidth,
+        folder: window.__MARKSI_DEV__.getState().settings.imageAssetFolder,
+        flat: window.__MARKSI_DEV__.getState().settings.flatFileList,
+        error: Boolean(document.querySelector(".settings-json-error")),
+        warnings: document.querySelectorAll(".settings-json-warnings p").length
+      })`);
+      assert(
+        applied.width === 900 &&
+          applied.folder === "media/images" &&
+          applied.flat === true &&
+          !applied.error &&
+          applied.warnings === 0,
+        "valid JSON should apply every known setting",
+        applied,
+      );
+
+      await setJson(
+        JSON.stringify({ editorFontSize: 100, unknownSetting: true }),
+      );
+      await evaluate('document.querySelector(".settings-json-apply")?.click()');
+      await waitFor('document.querySelectorAll(".settings-json-warnings p").length >= 2');
+      const warnings = await evaluate(
+        'Array.from(document.querySelectorAll(".settings-json-warnings p")).map((node) => node.textContent).join(" | ")',
+      );
+      const afterOutOfRange = await evaluate(
+        "window.__MARKSI_DEV__.getState().settings.editorFontSize",
+      );
+      assert(
+        afterOutOfRange === 18,
+        "out-of-range values should be ignored",
+        afterOutOfRange,
+      );
+      assert(
+        warnings.includes("editorFontSize") &&
+          warnings.includes("unknownSetting"),
+        "invalid and unknown keys should produce warnings",
+        warnings,
+      );
+
+      await evaluate('document.querySelector(".settings-json-actions .button-quiet")?.click()');
+      await sleep(150);
+      const reloaded = await evaluate(
+        'document.querySelector(".settings-json-text")?.value ?? ""',
+      );
+      assert(
+        reloaded.includes('"editorFontSize": 18') &&
+          !reloaded.includes("100"),
+        "reload should restore the applied settings JSON",
+        reloaded.slice(0, 160),
+      );
+    } finally {
+      await evaluate(
+        "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
+      ).catch(() => {});
       await resetBase();
     }
   });

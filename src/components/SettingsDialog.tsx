@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   BookOpen,
   Braces,
+  FileJson,
   Focus,
   Image as ImageIcon,
   Keyboard,
@@ -17,6 +18,10 @@ import {
   clearRemoteImageCache,
   pandocVersion,
 } from "../lib/platform";
+import {
+  parseSettingsJson,
+  serializeSettings,
+} from "../lib/settingsJson";
 import { ZOOM_MAX, ZOOM_MIN, zoomPercent } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { AppSettings, Language, Theme } from "../types";
@@ -36,6 +41,10 @@ export function SettingsDialog() {
   const [pandocError, setPandocError] = useState<string | null>(null);
   const [pandocDetecting, setPandocDetecting] = useState(false);
   const [clearingRemoteCache, setClearingRemoteCache] = useState(false);
+  const [jsonOpen, setJsonOpen] = useState(false);
+  const [jsonText, setJsonText] = useState("");
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [jsonWarnings, setJsonWarnings] = useState<string[]>([]);
 
   useEffect(() => {
     if (!open) {
@@ -59,6 +68,53 @@ export function SettingsDialog() {
     value: AppSettings[K],
   ) {
     updateSettings({ [key]: value } as Pick<AppSettings, K>);
+  }
+
+  function toggleJson(): void {
+    if (jsonOpen) {
+      setJsonOpen(false);
+      return;
+    }
+    setJsonText(serializeSettings(useAppStore.getState().settings));
+    setJsonError(null);
+    setJsonWarnings([]);
+    setJsonOpen(true);
+  }
+
+  function reloadJson(): void {
+    setJsonText(serializeSettings(useAppStore.getState().settings));
+    setJsonError(null);
+    setJsonWarnings([]);
+  }
+
+  function applyJson(): void {
+    try {
+      const result = parseSettingsJson(
+        jsonText,
+        useAppStore.getState().settings,
+      );
+      updateSettings(result.settings);
+      setJsonText(serializeSettings(result.settings));
+      setJsonWarnings(result.warnings);
+      setJsonError(null);
+      useAppStore
+        .getState()
+        .showToast(t("Settings applied."), "success");
+    } catch (error) {
+      setJsonError(error instanceof Error ? error.message : String(error));
+      setJsonWarnings([]);
+    }
+  }
+
+  async function copyJson(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(jsonText);
+      useAppStore
+        .getState()
+        .showToast(t("Settings JSON copied."), "success");
+    } catch (error) {
+      setJsonError(error instanceof Error ? error.message : String(error));
+    }
   }
 
   async function clearRemoteCache(): Promise<void> {
@@ -705,6 +761,62 @@ export function SettingsDialog() {
                         "Pandoc is not bundled. Install it separately or set its executable path.",
                       )}
             </p>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-heading">
+              <FileJson size={15} strokeWidth={1.8} />
+              <span>{t("Advanced")}</span>
+            </div>
+            <p className="settings-note">
+              {t(
+                "Edit the raw preferences as JSON. Only known settings are applied; invalid values are ignored with a warning.",
+              )}
+            </p>
+            <button
+              className="button button-quiet settings-json-open"
+              onClick={toggleJson}
+            >
+              {jsonOpen ? t("Hide settings JSON") : t("Edit settings JSON")}
+            </button>
+            {jsonOpen ? (
+              <div className="settings-json">
+                <textarea
+                  className="settings-textarea settings-json-text"
+                  value={jsonText}
+                  spellCheck={false}
+                  onChange={(event) => setJsonText(event.target.value)}
+                  aria-label={t("Settings JSON")}
+                />
+                {jsonError ? (
+                  <p className="settings-json-error">{jsonError}</p>
+                ) : null}
+                {jsonWarnings.length > 0 ? (
+                  <div className="settings-json-warnings">
+                    {jsonWarnings.map((warning) => (
+                      <p key={warning}>{warning}</p>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="settings-json-actions">
+                  <button className="button button-quiet" onClick={reloadJson}>
+                    {t("Reload current")}
+                  </button>
+                  <button
+                    className="button button-quiet"
+                    onClick={() => void copyJson()}
+                  >
+                    {t("Copy JSON")}
+                  </button>
+                  <button
+                    className="button button-primary settings-json-apply"
+                    onClick={applyJson}
+                  >
+                    {t("Apply JSON")}
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </section>
         </div>
 

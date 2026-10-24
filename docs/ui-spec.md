@@ -130,6 +130,10 @@ ease-out; honor `prefers-reduced-motion`.
 - Preferences > Files can remember the window size and position. Saved bounds
   are validated against the current monitors; offscreen windows return to the
   nearest work area, and disabled memory clears the stored frame.
+- Preferences > Advanced expands a JSON editor seeded from the current settings,
+  with Apply JSON, Copy JSON, and Reload current. Invalid JSON shows an inline
+  error; ignored fields are listed as warnings and the accepted fields still
+  apply.
 - Preferences > Files can restore the last document and workspace at startup.
   Only paths and the view mode are stored; a recovered draft or command-line
   file takes precedence.

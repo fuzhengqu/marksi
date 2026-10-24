@@ -45,6 +45,13 @@ stored locally, apply immediately, and update the File/View menu labels. Reset
 shortcuts restores the defaults. Editor formatting keys remain on their standard
 CodeMirror bindings.
 
+Preferences > Advanced can show and edit the stored preferences as JSON. The
+editor starts from the current settings, applies known keys only, and reports
+unknown keys or invalid values without changing the accepted fields. Numeric
+ranges, language codes, automatic-save delays, image folders, export options, and
+shortcut maps are validated locally. Copy and Reload current assist manual
+backup; there is no network or file access in this flow.
+
 The release executable accepts one supported Markdown/text path as its first
 non-flag argument and opens it at startup. Windows installers register Markdown
 extensions (`md`, `markdown`, `mdown`, `mkd`, `mdwn`, `mmd`, `mdx`) with the
@@ -302,7 +309,7 @@ save the imported document to choose its final location.
 | Settings shell | done | M2/M3 |
 | Editor text size and column width | done | M3 |
 | Shortcut editor | done | M6 |
-| Advanced JSON settings | todo | M6 |
+| Advanced JSON settings | done | M6 |
 | Chinese default / English language switch | done | M5 |
 | Version display and one-step bump | done | M5 |
 | i18n framework (en, zh-Hans, zh-Hant first) | wip | M6 |
