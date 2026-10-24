@@ -30,6 +30,24 @@ const PALETTES: Record<ResolvedTheme, Palette> = {
     accent: "#78c6b5",
     accentSoft: "#1f3b36",
   },
+  sepia: {
+    background: "#f4ecd8",
+    surface: "#fbf5e6",
+    text: "#3b3125",
+    muted: "#75654f",
+    border: "#d9cbb1",
+    accent: "#8a5a2b",
+    accentSoft: "#ead9bd",
+  },
+  contrast: {
+    background: "#000000",
+    surface: "#0b0b0b",
+    text: "#ffffff",
+    muted: "#d6d6d6",
+    border: "#6a6a6a",
+    accent: "#66e0ff",
+    accentSoft: "#003b47",
+  },
 };
 
 const FONT_FAMILY =
@@ -86,7 +104,7 @@ async function loadMermaid(theme: ResolvedTheme) {
       securityLevel: "strict",
       theme: "base",
       themeVariables: themeVariables(theme),
-      darkMode: theme === "dark",
+      darkMode: theme === "dark" || theme === "contrast",
       htmlLabels: false,
       fontFamily: FONT_FAMILY,
       maxTextSize: 50_000,

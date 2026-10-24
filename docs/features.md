@@ -32,6 +32,12 @@ is open. Preferences and the title-bar toggle can still force Light or Dark;
 the resolved appearance is used for the editor, preview, Mermaid diagrams,
 clipboard HTML, and window chrome metadata. The choice is persisted.
 
+Five appearances are available: System, Light, Dark, Sepia, and High contrast.
+Each built-in theme supplies its own background, text, accent, selection,
+border, search-match, table-stripe, and syntax colors. The status of the title
+toggle always reflects the resolved dark/light family, and the theme selector
+is a compact select in Preferences.
+
 ## Files and workspace
 
 | Feature | Status | Milestone |
@@ -264,7 +270,7 @@ save the imported document to choose its final location.
 |---|---|---|
 | Design tokens | done | M1 |
 | Built-in light/dark themes | done | M1 |
-| Additional built-in themes | todo | M6 |
+| Additional built-in themes | done | M6 |
 | User CSS/theme folder | todo | M6 |
 | Settings shell | done | M2/M3 |
 | Editor text size and column width | done | M3 |

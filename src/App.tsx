@@ -31,6 +31,7 @@ import { encodingDisplayName } from "./lib/encodings";
 import { buildPageCss, normalizeExportOptions } from "./lib/exportOptions";
 import {
   resolveTheme,
+  themeColor,
   useSystemDark,
 } from "./lib/theme";
 import { isLargeDocument } from "./lib/largeFile";
@@ -1163,10 +1164,7 @@ export default function App() {
     document.documentElement.dataset.theme = resolvedTheme;
     document.documentElement.style.colorScheme = resolvedTheme;
     const meta = document.querySelector('meta[name="theme-color"]');
-    meta?.setAttribute(
-      "content",
-      resolvedTheme === "light" ? "#fbfbfa" : "#1d2024",
-    );
+    meta?.setAttribute("content", themeColor(resolvedTheme));
   }, [resolvedTheme]);
 
   useEffect(() => {

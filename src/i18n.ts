@@ -242,8 +242,10 @@ const ZH: Record<string, string> = {
   Appearance: "外观",
   Theme: "主题",
   System: "跟随系统",
+  Sepia: "柔和棕褐",
+  "High contrast": "高对比度",
   "Follow the operating system or choose a fixed appearance.":
-    "跟随操作系统外观，或选择固定的浅色/深色主题。",
+    "跟随操作系统外观，或选择固定的浅色、深色、柔和棕褐或高对比度主题。",
   "Choose the writing environment.": "选择写作环境。",
   Light: "浅色",
   Dark: "深色",

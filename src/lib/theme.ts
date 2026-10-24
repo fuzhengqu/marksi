@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import type { Theme } from "../types";
 
-export type ResolvedTheme = "light" | "dark";
+export type ResolvedTheme = "light" | "dark" | "sepia" | "contrast";
 
 export const SYSTEM_THEME_QUERY = "(prefers-color-scheme: dark)";
 
 export function normalizeTheme(value: unknown): Theme {
-  return value === "light" || value === "dark" || value === "system"
+  return value === "light" ||
+    value === "dark" ||
+    value === "sepia" ||
+    value === "contrast" ||
+    value === "system"
     ? value
     : "system";
 }
@@ -21,11 +25,30 @@ export function resolveTheme(
   return theme;
 }
 
+export function isDarkAppearance(theme: ResolvedTheme): boolean {
+  return theme === "dark" || theme === "contrast";
+}
+
 export function nextTheme(
   theme: Theme,
   systemDark: boolean,
 ): ResolvedTheme {
-  return resolveTheme(theme, systemDark) === "light" ? "dark" : "light";
+  return isDarkAppearance(resolveTheme(theme, systemDark))
+    ? "light"
+    : "dark";
+}
+
+export function themeColor(theme: ResolvedTheme): string {
+  switch (theme) {
+    case "dark":
+      return "#1d2024";
+    case "sepia":
+      return "#f4ecd8";
+    case "contrast":
+      return "#000000";
+    default:
+      return "#fbfbfa";
+  }
 }
 
 export function systemPrefersDark(): boolean {

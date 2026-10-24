@@ -119,9 +119,10 @@ ease-out; honor `prefers-reduced-motion`.
   Each pinned row opens a file or folder and reveals an unpin button on hover.
   Row menus include Pin to sidebar for files and folders and Unpin when already
   pinned.
-- Preferences > Appearance offers System, Light, and Dark. The title-bar toggle
-  always switches to the opposite resolved appearance, leaving System mode when
-  used. System follows the OS preference without a restart.
+- Preferences > Appearance offers System, Light, Dark, Sepia, and High contrast
+  in a compact select. The title-bar toggle always switches to the opposite
+  resolved light/dark family, leaving System mode when used. System follows the
+  OS preference without a restart.
 - Documents over 500,000 characters show a Large file mode badge in the status
   bar and use the Source label while live-preview decorations are off.
   Preferences > Editor can disable large-file optimizations.

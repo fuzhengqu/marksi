@@ -10,7 +10,11 @@ import {
 } from "lucide-react";
 import { useT } from "../i18n";
 import { isTauri } from "../lib/platform";
-import { resolveTheme, useSystemDark } from "../lib/theme";
+import {
+  isDarkAppearance,
+  resolveTheme,
+  useSystemDark,
+} from "../lib/theme";
 import { useAppStore } from "../store/useAppStore";
 
 export function TitleBar() {
@@ -19,6 +23,7 @@ export function TitleBar() {
   const theme = useAppStore((state) => state.theme);
   const systemDark = useSystemDark();
   const resolvedTheme = resolveTheme(theme, systemDark);
+  const darkAppearance = isDarkAppearance(resolvedTheme);
   const menuOpen = useAppStore((state) => state.menuOpen);
   const setMenuOpen = useAppStore((state) => state.setMenuOpen);
   const toggleTheme = useAppStore((state) => state.toggleTheme);
@@ -109,19 +114,17 @@ export function TitleBar() {
         <button
           className="icon-button"
           aria-label={
-            resolvedTheme === "light"
-              ? t("Switch to dark theme")
-              : t("Switch to light theme")
+            darkAppearance
+              ? t("Switch to light theme")
+              : t("Switch to dark theme")
           }
-          title={
-            resolvedTheme === "light" ? t("Dark theme") : t("Light theme")
-          }
+          title={darkAppearance ? t("Light theme") : t("Dark theme")}
           onClick={toggleTheme}
         >
-          {resolvedTheme === "light" ? (
-            <Moon size={16} strokeWidth={1.8} />
-          ) : (
+          {darkAppearance ? (
             <Sun size={16} strokeWidth={1.8} />
+          ) : (
+            <Moon size={16} strokeWidth={1.8} />
           )}
         </button>
 

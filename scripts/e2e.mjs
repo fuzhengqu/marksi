@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.20"), "About should show version 0.20", state);
+    assert(state.version?.includes("0.21"), "About should show version 0.21", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -610,18 +610,28 @@ async function main() {
       );
 
       await evaluate("window.__MARKSI_DEV__.openSettings()");
-      await waitFor('document.querySelector(".settings-dialog .segmented-control")');
+      await waitFor('document.querySelector(".settings-dialog .theme-select")');
       const labels = await evaluate(
-        'Array.from(document.querySelectorAll(".settings-dialog .segmented-control")[0]?.querySelectorAll("button") ?? []).map((node) => node.textContent)',
+        'Array.from(document.querySelector(".settings-dialog .theme-select").options).map((option) => option.textContent)',
       );
       assert(
-        JSON.stringify(labels) === JSON.stringify(["跟随系统", "浅色", "深色"]),
-        "theme control should offer three modes",
+        JSON.stringify(labels) ===
+          JSON.stringify([
+            "跟随系统",
+            "浅色",
+            "深色",
+            "柔和棕褐",
+            "高对比度",
+          ]),
+        "theme control should offer all modes",
         labels,
       );
-      await evaluate(
-        'document.querySelectorAll(".settings-dialog .segmented-control")[0]?.querySelectorAll("button")[0]?.click()',
-      );
+      await evaluate(`(() => {
+        const select = document.querySelector(".theme-select");
+        const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set;
+        setter.call(select, "system");
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      })()`);
       await waitFor(
         'window.__MARKSI_DEV__.getState().theme === "system"',
       );
@@ -632,6 +642,41 @@ async function main() {
       await evaluate(
         "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
       ).catch(() => {});
+      await resetBase();
+    }
+  });
+
+  await test("applies sepia and high-contrast themes", async () => {
+    await resetBase();
+    try {
+      await evaluate('window.__MARKSI_DEV__.getState().setTheme("sepia")');
+      await waitFor('document.documentElement.dataset.theme === "sepia"');
+      const sepia = await evaluate(`({
+        bg: getComputedStyle(document.documentElement).getPropertyValue("--bg").trim(),
+        meta: document.querySelector('meta[name="theme-color"]')?.content ?? ""
+      })`);
+      assert(sepia.bg === "#f4ecd8", "sepia background is wrong", sepia);
+      assert(sepia.meta === "#f4ecd8", "sepia theme-color is wrong", sepia);
+
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setTheme("contrast")',
+      );
+      await waitFor(
+        'document.documentElement.dataset.theme === "contrast"',
+      );
+      const contrast = await evaluate(`({
+        bg: getComputedStyle(document.documentElement).getPropertyValue("--bg").trim(),
+        fg: getComputedStyle(document.documentElement).getPropertyValue("--fg").trim(),
+        meta: document.querySelector('meta[name="theme-color"]')?.content ?? ""
+      })`);
+      assert(contrast.bg === "#000000", "contrast background is wrong", contrast);
+      assert(contrast.fg === "#ffffff", "contrast foreground is wrong", contrast);
+      assert(
+        contrast.meta === "#000000",
+        "contrast theme-color is wrong",
+        contrast,
+      );
+    } finally {
       await resetBase();
     }
   });
