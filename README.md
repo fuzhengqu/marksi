@@ -8,7 +8,8 @@ MarkSI 是一个免费、开源的 Markdown 编辑器，使用 Rust 与 Tauri �
 可编辑实时预览和阅读视图，支持工作区搜索、本地图片、数学公式与 Mermaid 图表，
 文档始终保存在本机。
 
-> 早期开发中：功能和文件格式可能变化。当前尚未提供打包安装包，请从源码构建。
+> 早期开发中：功能和文件格式可能变化。尚未发布官方下载包；源码构建可在本地生成
+> 未签名的 Windows MSI/NSIS 安装程序。
 
 ## 功能
 
@@ -44,7 +45,7 @@ MarkSI 是一个免费、开源的 Markdown 编辑器，使用 Rust 与 Tauri �
 
 ## 安装与运行
 
-当前仅提供源码构建：
+当前不提供官方下载，可从源码运行：
 
 ```bash
 npm install
@@ -56,6 +57,9 @@ npm run tauri:dev
 ```bash
 npm run tauri:build
 ```
+
+Windows 构建会在 `src-tauri/target/release/bundle/` 下生成 MSI 和 NSIS
+安装程序。它们目前未做代码签名，Windows 可能显示 SmartScreen 提示。
 
 ## 开发
 

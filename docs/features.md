@@ -294,7 +294,7 @@ save the imported document to choose its final location.
 
 | Feature | Status | Milestone |
 |---|---|---|
-| Windows 11 installer (NSIS/MSI) | todo | M6 |
+| Windows 11 installer (NSIS/MSI) | done | M6 |
 | Linux deb/rpm/AppImage | todo | M6 |
 | Flatpak packaging | todo | M7 |
 | Signed releases / checksums | todo | M6 |

@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.22` product version.
+- About dialog close behavior and display of the `0.23` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,7 +139,7 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 154 ms during the release run.
+  Windows dev WebView opened the fixture in 153 ms during the release run.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -182,6 +182,23 @@ working-directory handling, Pandoc argument construction, format allowlisting,
 bounded process-output capture, media path validation, percent-decoded paths,
 media embedding limits, remote URL/private-address validation, image sniffing,
 cache round trips/clearing, and a real local WinHTTP fetch.
+
+## Windows packaging
+
+`npm run tauri:build` completed with exit code 0 for version 0.23.0 and produced:
+
+- `MarkSI_0.23.0_x64_en-US.msi` (6.84 MiB), SHA256
+  `73B7406E023476BC51F209EB125AED10B8D4DA31306814E55E34A41DE40591CE`
+- `MarkSI_0.23.0_x64-setup.exe` (5.58 MiB), SHA256
+  `839120517A4B8DB32C2904894B5B1250F31959BCD55E858BA7128DCE983F2617`
+
+Both artifacts report `NotSigned` through Authenticode. The release executable
+started and remained alive during a short smoke run. The installer itself was
+not executed in this automated gate; installing, uninstalling, upgrading, and
+SmartScreen presentation remain manual release checks. Checksums change on
+every rebuild. The bundle identifier ends in `.app`, which Tauri warns about for
+macOS; changing it would move the application data folder, so it is intentionally
+kept for now.
 
 ## Limits and native-dialog checks
 
@@ -229,7 +246,7 @@ before release. Large-file mode compares JavaScript string length, so the 500,00
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 154 ms measurement is from one Windows development machine;
+large files. The 153 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

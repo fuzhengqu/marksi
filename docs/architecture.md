@@ -385,6 +385,10 @@ success toasts.
   user-facing list and keeps the canonical encoding name in the document state
   so the next save uses the same encoder. Display names are normalized in the
   UI without changing the stored label.
+- The Tauri bundle configuration builds MSI and NSIS targets on Windows with
+  the current-user NSIS install mode, the project icon set, MIT license, and
+  product metadata. Artifacts are written under
+  `src-tauri/target/release/bundle`. No signing key or updater is configured.
 - Pinned files and folders live in the persisted store, capped at 20 and
   deduplicated by normalized path. They add no Rust command: opening a pinned
   file reuses the document reader, and opening a pinned folder reuses
