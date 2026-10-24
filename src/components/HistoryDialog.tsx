@@ -8,6 +8,7 @@ import {
   X,
 } from "lucide-react";
 import { useT } from "../i18n";
+import { encodingDisplayName } from "../lib/encodings";
 import { formatSnapshotSize, snapshotTime } from "../lib/history";
 import {
   clearHistory,
@@ -239,8 +240,8 @@ export function HistoryDialog({ open, onClose }: HistoryDialogProps) {
                     {entry.preview || t("Empty document")}
                   </span>
                   <small>
-                    {formatSnapshotSize(entry.size)} · {entry.encoding} ·{" "}
-                    {entry.lineEnding}
+                    {formatSnapshotSize(entry.size)} ·{" "}
+                    {encodingDisplayName(entry.encoding)} · {entry.lineEnding}
                   </small>
                 </button>
               ))}
@@ -255,7 +256,8 @@ export function HistoryDialog({ open, onClose }: HistoryDialogProps) {
                     </strong>
                     <span>
                       {formatSnapshotSize(selectedEntry.size)} ·{" "}
-                      {selectedEntry.encoding} · {selectedEntry.lineEnding}
+                      {encodingDisplayName(selectedEntry.encoding)} ·{" "}
+                      {selectedEntry.lineEnding}
                     </span>
                   </div>
                   <pre className="history-content">

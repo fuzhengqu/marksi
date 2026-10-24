@@ -119,6 +119,9 @@ ease-out; honor `prefers-reduced-motion`.
   Each pinned row opens a file or folder and reveals an unpin button on hover.
   Row menus include Pin to sidebar for files and folders and Unpin when already
   pinned.
+- File > Reopen with encoding opens a radio list of supported encodings, with
+  the current encoding marked and a warning when the document is dirty. The
+  action decodes only; saving remains a separate user action.
 - File > Local history opens a two-pane dialog: saved versions on the left,
   a read-only preview and restore/delete actions on the right. Clearing requires
   a second confirmation. The footer states that snapshots stay in the local app

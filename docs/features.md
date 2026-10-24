@@ -49,7 +49,7 @@ that design decisions do not paint us into a corner.
 | Quick open | done | M3 |
 | Pinned locations | done | M4 |
 | Workspace full-text search | done | M3 |
-| File encoding reopen | todo | M4 |
+| File encoding reopen | done | M4 |
 | Large file mode | todo | M4 |
 | File associations / installer integration | todo | M6 |
 
@@ -77,6 +77,13 @@ Pinned section above the workspace. Pinned files open directly, pinned folders
 switch the workspace, and entries persist in local storage across restarts.
 Renaming, moving, or deleting a pinned file updates or removes the matching pin.
 Missing pinned paths remain listed and show an error when opened.
+
+File > Reopen with encoding decodes the current file with Auto-detect, UTF-8,
+UTF-16 LE/BE, GB18030, GBK/GB2312, Big5, Shift_JIS, EUC-JP, EUC-KR,
+Windows-1252, or ISO-8859-1. Reopening never writes the file; it replaces the
+editor buffer with a clean document that keeps the selected encoding for the
+next save. Existing BOMs are reported, and unrepresentable characters are still
+rejected on save.
 
 ## Editor
 

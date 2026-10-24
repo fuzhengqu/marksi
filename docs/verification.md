@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.17` product version.
+- About dialog close behavior and display of the `0.18` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -124,6 +124,9 @@ The E2E suite currently covers:
   text, the dialog lists both, restoring the older snapshot changes only the
   editor and leaves it dirty, and clearing removes every snapshot for that
   document.
+- Explicit encoding reopen: a GB18030 fixture is reopened as UTF-8 (wrong text,
+  file bytes unchanged) and then as GB18030 (correct Chinese text, clean
+  document); an edit saved afterwards keeps the exact GB18030 bytes.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -155,7 +158,8 @@ and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, and analysis helpers.
-Rust tests cover encoding/BOM/CRLF round trips, atomic text and binary writes,
+Rust tests cover encoding/BOM/CRLF round trips, explicit GB18030 and UTF-8 BOM
+reopening, unknown-encoding rejection, atomic text and binary writes,
 local-history recording/deduplication/retention, path-hash isolation, snapshot
 relocation and clearing, workspace file rename/duplicate/move/delete with path
 and collision validation,
@@ -197,7 +201,10 @@ are migrated on rename or move inside MarkSI and cleared when MarkSI deletes the
 file; files moved or deleted outside MarkSI leave orphaned history because there
 is no global purge UI yet. Pinned paths are stored without checking the
 filesystem; a missing file or folder stays pinned and reports an error when
-opened. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
+opened. Reopen with encoding offers a curated encoding list rather than
+arbitrary labels; decoding is read-only, and saving into a legacy encoding
+still fails when the text contains characters that encoding cannot represent.
+Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the
 manual DOCX/EPUB check. Image uploader integration is not implemented; the

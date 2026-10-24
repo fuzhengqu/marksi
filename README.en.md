@@ -24,7 +24,8 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   outline, quick open, full-text search, an optional flat file list, pinned
   files and folders, workspace rename, duplicate, move, and delete, plus local
   history snapshots that can be previewed and restored; preserves encoding and
-  line endings.
+  line endings and can reopen files as UTF-8, GB18030, GBK, Big5, and other
+  encodings.
 - **Images**: insert, drag and drop, or paste; document-relative assets and an
   optional root path; lightbox; width and height resizing; contain/cover fit and
   original-size reset.

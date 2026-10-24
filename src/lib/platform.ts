@@ -149,6 +149,20 @@ export async function readDocument(path: string): Promise<DocumentPayload> {
   return invoke<DocumentPayload>("read_document", { path });
 }
 
+export async function readDocumentWithEncoding(
+  path: string,
+  encoding: string,
+): Promise<DocumentPayload> {
+  if (!isTauri()) {
+    throw new Error("Encoding selection is only available in the desktop app.");
+  }
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<DocumentPayload>("read_document_with_encoding", {
+    path,
+    encoding,
+  });
+}
+
 export async function openFolder(): Promise<string | null> {
   if (!isTauri()) {
     return null;

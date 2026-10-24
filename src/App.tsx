@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { DraftRecovery } from "./components/DraftRecovery";
 import { EditorPane } from "./components/EditorPane";
+import { EncodingDialog } from "./components/EncodingDialog";
 import { ExportDialog } from "./components/ExportDialog";
 import { HistoryDialog } from "./components/HistoryDialog";
 import { MenuOverlay } from "./components/MenuOverlay";
@@ -26,6 +27,7 @@ import {
   parseCommandArguments,
 } from "./lib/customExport";
 import { clearDraft, loadDraft, saveDraft } from "./lib/drafts";
+import { encodingDisplayName } from "./lib/encodings";
 import { buildPageCss, normalizeExportOptions } from "./lib/exportOptions";
 import { frontMatterTitle } from "./lib/frontMatter";
 import { pandocImportName } from "./lib/pandoc";
@@ -52,6 +54,7 @@ import {
   pickImageFile,
   pickPandocImportFile,
   readDocument,
+  readDocumentWithEncoding,
   recordHistory,
   relocateHistory,
   clearHistory,
@@ -123,6 +126,7 @@ export default function App() {
   const [exportOpen, setExportOpen] = useState(false);
   const [pandocOpen, setPandocOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [encodingOpen, setEncodingOpen] = useState(false);
   const savingRef = useRef(false);
 
   useEffect(() => {
@@ -272,6 +276,42 @@ export default function App() {
         }
       } catch (error) {
         state.showToast(errorMessage(error), "error");
+      } finally {
+        useAppStore.getState().setLoading(false);
+      }
+    },
+    [confirmDiscard],
+  );
+
+  const handleReopenWithEncoding = useCallback(
+    async (encoding: string): Promise<boolean> => {
+      const state = useAppStore.getState();
+      const path = state.doc.path;
+      if (!path) {
+        return false;
+      }
+      if (!(await confirmDiscard())) {
+        return false;
+      }
+      state.setLoading(true);
+      try {
+        const payload =
+          encoding === "auto"
+            ? await readDocument(path)
+            : await readDocumentWithEncoding(path, encoding);
+        useAppStore.getState().setLoadedDocument(payload);
+        useAppStore
+          .getState()
+          .showToast(
+            tNow("Reopened with {encoding}.", {
+              encoding: encodingDisplayName(payload.encoding),
+            }),
+            "success",
+          );
+        return true;
+      } catch (error) {
+        useAppStore.getState().showToast(errorMessage(error), "error");
+        return false;
       } finally {
         useAppStore.getState().setLoading(false);
       }
@@ -1420,6 +1460,8 @@ export default function App() {
       openSettings: () => useAppStore.getState().setSettingsOpen(true),
       openHistory: () => setHistoryOpen(true),
       closeHistory: () => setHistoryOpen(false),
+      openEncoding: () => setEncodingOpen(true),
+      closeEncoding: () => setEncodingOpen(false),
       setSettings: (patch: Partial<AppSettings>) =>
         useAppStore.getState().updateSettings(patch),
     };
@@ -1521,6 +1563,7 @@ export default function App() {
         onSave={handleSave}
         onSaveAs={handleSaveAs}
         onOpenHistory={() => setHistoryOpen(true)}
+        onOpenEncoding={() => setEncodingOpen(true)}
         onExport={handleOpenExport}
         onExportImage={() => void handleExportImage()}
         onPandocExport={handleOpenPandoc}
@@ -1568,6 +1611,11 @@ export default function App() {
       <HistoryDialog
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}
+      />
+      <EncodingDialog
+        open={encodingOpen}
+        onClose={() => setEncodingOpen(false)}
+        onReopen={handleReopenWithEncoding}
       />
       {draftToRecover ? (
         <DraftRecovery

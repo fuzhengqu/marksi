@@ -363,6 +363,11 @@ success toasts.
   rejects directories and unsupported extensions. The frontend retargets the
   open document and recent entries after rename or move, and resets to a blank
   document after deleting the open file. Overwrites are rejected, not merged.
+- `read_document_with_encoding` resolves labels through encoding_rs, reports a
+  matching BOM, and decodes without writing. The frontend offers a fixed
+  user-facing list and keeps the canonical encoding name in the document state
+  so the next save uses the same encoder. Display names are normalized in the
+  UI without changing the stored label.
 - Pinned files and folders live in the persisted store, capped at 20 and
   deduplicated by normalized path. They add no Rust command: opening a pinned
   file reuses the document reader, and opening a pinned folder reuses
@@ -434,8 +439,9 @@ success toasts.
 
 ## Current surface (M4/M5)
 
-Document commands: `read_document`, `write_document`, `write_export`,
-`write_export_binary`, `list_directory`, `app_version`,
+Document commands: `read_document`, `read_document_with_encoding`,
+`write_document`, `write_export`, `write_export_binary`, `list_directory`,
+`app_version`,
 `run_export_command`, `pandoc_version`, `pandoc_export`,
 `pandoc_import`, `remote_image_data_url`, and `clear_remote_image_cache`. Workspace commands:
 `list_workspace_files`, `search_workspace`, `file_modified_ms`,

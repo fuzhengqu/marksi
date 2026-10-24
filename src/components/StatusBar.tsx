@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Eye, Lock, PenLine } from "lucide-react";
 import { getTextStats } from "../editor/analyze";
 import { useT } from "../i18n";
+import { encodingDisplayName } from "../lib/encodings";
 import { useAppStore } from "../store/useAppStore";
 
 export function StatusBar() {
@@ -35,7 +36,7 @@ export function StatusBar() {
           </span>
         ) : null}
         <span title={t("Document encoding")}>
-          {doc.encoding}
+          {encodingDisplayName(doc.encoding)}
           {doc.hasBom ? " BOM" : ""}
         </span>
         <span title={t("Line endings")}>{doc.lineEnding}</span>

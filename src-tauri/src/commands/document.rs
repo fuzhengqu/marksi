@@ -54,8 +54,41 @@ pub fn read_document(path: String) -> Result<DocumentPayload, String> {
     let bytes =
         fs::read(&target).map_err(|error| format!("Cannot read {}: {error}", target.display()))?;
     let (content, encoding, has_bom, had_errors) = decode_bytes(&bytes);
+    build_payload(&target, content, encoding, has_bom, had_errors)
+}
+
+/// Reopen a document with an explicit encoding instead of auto-detection.
+/// This never writes the file; it only changes how the bytes are decoded.
+#[tauri::command]
+pub fn read_document_with_encoding(
+    path: String,
+    encoding: String,
+) -> Result<DocumentPayload, String> {
+    let requested = PathBuf::from(&path);
+    let target = dunce::canonicalize(&requested)
+        .map_err(|error| format!("Cannot open {}: {error}", requested.display()))?;
+    if !target.is_file() {
+        return Err(format!("{} is not a file", target.display()));
+    }
+
+    let encoding = Encoding::for_label(encoding.trim().as_bytes())
+        .ok_or_else(|| format!("Unsupported encoding: {encoding}"))?;
+    let bytes =
+        fs::read(&target).map_err(|error| format!("Cannot read {}: {error}", target.display()))?;
+    let has_bom = bom_matches(&bytes, encoding);
+    let (decoded, _, had_errors) = encoding.decode(&bytes);
+    build_payload(&target, decoded.into_owned(), encoding, has_bom, had_errors)
+}
+
+fn build_payload(
+    target: &Path,
+    content: String,
+    encoding: &'static Encoding,
+    has_bom: bool,
+    had_errors: bool,
+) -> Result<DocumentPayload, String> {
     let (normalized, line_ending) = normalize_line_endings(&content);
-    let metadata = fs::metadata(&target)
+    let metadata = fs::metadata(target)
         .map_err(|error| format!("Cannot inspect {}: {error}", target.display()))?;
 
     Ok(DocumentPayload {
@@ -68,6 +101,15 @@ pub fn read_document(path: String) -> Result<DocumentPayload, String> {
         size: metadata.len(),
         modified_ms: modified_ms(&metadata),
     })
+}
+
+fn bom_matches(bytes: &[u8], encoding: &'static Encoding) -> bool {
+    match encoding.name() {
+        "UTF-8" => bytes.starts_with(&[0xEF, 0xBB, 0xBF]),
+        "UTF-16LE" => bytes.starts_with(&[0xFF, 0xFE]),
+        "UTF-16BE" => bytes.starts_with(&[0xFE, 0xFF]),
+        _ => false,
+    }
 }
 
 #[tauri::command]
@@ -555,5 +597,60 @@ mod tests {
         assert_eq!(payload.content, "hello");
         assert_eq!(payload.encoding, "UTF-16LE");
         assert!(payload.has_bom);
+    }
+
+    #[test]
+    fn reopens_with_an_explicit_encoding_and_round_trips_gb18030() {
+        let directory = tempfile::tempdir().expect("tempdir");
+        let path = directory.path().join("gb18030.md");
+        let path_string = path.to_string_lossy().into_owned();
+        let text = "# 中文\n第二行\n";
+
+        write_document(
+            path_string.clone(),
+            text.to_string(),
+            "GB18030".to_string(),
+            "LF".to_string(),
+            false,
+        )
+        .expect("write gb18030");
+
+        let payload = read_document_with_encoding(path_string, "gb18030".to_string())
+            .expect("read explicit encoding");
+        assert_eq!(payload.content, text);
+        assert_eq!(payload.encoding, "gb18030");
+        assert!(!payload.has_bom);
+        assert!(!payload.had_errors);
+
+        let bytes = fs::read(&path).expect("read bytes");
+        assert_eq!(&bytes[..5], &[b'#', b' ', 0xD6, 0xD0, 0xCE]);
+    }
+
+    #[test]
+    fn reports_a_bom_when_reopened_with_explicit_utf8() {
+        let directory = tempfile::tempdir().expect("tempdir");
+        let path = directory.path().join("bom-explicit.md");
+        fs::write(&path, [0xEF, 0xBB, 0xBF, b'h', b'i']).expect("write bom fixture");
+
+        let payload =
+            read_document_with_encoding(path.to_string_lossy().into_owned(), "utf-8".to_string())
+                .expect("read");
+        assert_eq!(payload.content, "hi");
+        assert_eq!(payload.encoding, "UTF-8");
+        assert!(payload.has_bom);
+    }
+
+    #[test]
+    fn rejects_an_unknown_explicit_encoding() {
+        let directory = tempfile::tempdir().expect("tempdir");
+        let path = directory.path().join("note.md");
+        fs::write(&path, "text").expect("write fixture");
+
+        let error = read_document_with_encoding(
+            path.to_string_lossy().into_owned(),
+            "not-an-encoding".to_string(),
+        )
+        .expect_err("unknown encoding should fail");
+        assert!(error.contains("Unsupported encoding"));
     }
 }

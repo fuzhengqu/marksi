@@ -26,6 +26,7 @@ import {
   PanelLeft,
   PenLine,
   Printer,
+  RefreshCw,
   RotateCcw,
   Save,
   SaveAll,
@@ -63,6 +64,7 @@ interface MenuOverlayProps {
   onSave: () => void;
   onSaveAs: () => void;
   onOpenHistory: () => void;
+  onOpenEncoding: () => void;
   onExport: () => void;
   onExportImage: () => void;
   onPandocExport: () => void;
@@ -88,6 +90,7 @@ export function MenuOverlay({
   onSave,
   onSaveAs,
   onOpenHistory,
+  onOpenEncoding,
   onExport,
   onExportImage,
   onPandocExport,
@@ -281,6 +284,12 @@ export function MenuOverlay({
                 label={t("Local history…")}
                 disabled={!docPath}
                 onClick={() => run(onOpenHistory)}
+              />
+              <MenuItem
+                icon={<RefreshCw size={16} strokeWidth={1.8} />}
+                label={t("Reopen with encoding…")}
+                disabled={!docPath}
+                onClick={() => run(onOpenEncoding)}
               />
               <div className="menu-separator" />
               <MenuItem

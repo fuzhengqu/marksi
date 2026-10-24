@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.17"), "About should show version 0.17", state);
+    assert(state.version?.includes("0.18"), "About should show version 0.18", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1158,6 +1158,109 @@ async function main() {
         await platform.clearHistory(${JSON.stringify(historyFile)});
       })()`).catch(() => {});
       await rm(historyFile, { force: true });
+      await resetBase();
+    }
+  });
+
+  await test("reopens a GB18030 document with an explicit encoding", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "encoding-note.md");
+    const original = Buffer.from([0x23, 0x20, 0xd6, 0xd0, 0xce, 0xc4, 0x0a]);
+    const updated = Buffer.from([
+      0x23, 0x20, 0xd6, 0xd0, 0xce, 0xc4, 0x20, 0xb8, 0xfc, 0xd0, 0xc2, 0x0a,
+    ]);
+
+    try {
+      await writeFile(file, original);
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.path?.toLowerCase().endsWith("encoding-note.md")',
+        10_000,
+      );
+      assert(
+        (await readFile(file)).equals(original),
+        "opening must not rewrite the encoded file",
+      );
+
+      async function reopenAs(encoding) {
+        await evaluate("window.__MARKSI_DEV__.openEncoding()");
+        await waitFor('document.querySelector(".encoding-dialog")');
+        await sleep(250);
+        const selected = await evaluate(`(() => {
+          const input = document.querySelector('[data-encoding="${encoding}"]');
+          input?.click();
+          return Boolean(input);
+        })()`);
+        assert(selected, `encoding option missing: ${encoding}`);
+        await sleep(120);
+        await evaluate('document.querySelector(".encoding-reopen")?.click()');
+        await waitFor('!document.querySelector(".encoding-dialog")', 10_000);
+      }
+
+      await reopenAs("utf-8");
+      const wrong = await evaluate(`({
+        encoding: window.__MARKSI_DEV__.getState().doc.encoding,
+        content: window.__MARKSI_DEV__.getState().doc.content
+      })`);
+      assert(
+        wrong.encoding.toLowerCase() === "utf-8",
+        "UTF-8 reopen was not applied",
+        wrong,
+      );
+      assert(
+        !wrong.content.includes("中文"),
+        "GB18030 bytes should not read as Chinese under UTF-8",
+        wrong,
+      );
+      assert(
+        (await readFile(file)).equals(original),
+        "reopening with an encoding must not write the file",
+      );
+
+      await reopenAs("gb18030");
+      const fixed = await evaluate(`({
+        encoding: window.__MARKSI_DEV__.getState().doc.encoding,
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        dirty: window.__MARKSI_DEV__.getState().doc.dirty
+      })`);
+      assert(
+        fixed.encoding.toLowerCase() === "gb18030",
+        "GB18030 reopen was not applied",
+        fixed,
+      );
+      assert(fixed.content === "# 中文\n", "GB18030 text was not recovered", fixed);
+      assert(!fixed.dirty, "reopened text should be clean", fixed);
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setContent("# 中文 更新\\n")',
+      );
+      await evaluate("window.__MARKSI_DEV__.save()");
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.dirty === false",
+        10_000,
+      );
+      let saved = await readFile(file);
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        saved = await readFile(file);
+        if (saved.equals(updated)) {
+          break;
+        }
+        await sleep(100);
+      }
+      assert(
+        saved.equals(updated),
+        "saving should keep GB18030 bytes",
+        saved.toString("hex"),
+      );
+    } finally {
+      await evaluate("window.__MARKSI_DEV__.closeEncoding?.()").catch(() => {});
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        await platform.clearHistory(${JSON.stringify(file)});
+      })()`).catch(() => {});
+      await rm(file, { force: true });
       await resetBase();
     }
   });

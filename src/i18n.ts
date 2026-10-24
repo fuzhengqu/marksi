@@ -426,6 +426,17 @@ const ZH: Record<string, string> = {
   "Unpin from sidebar": "取消固定",
   "Pinned to sidebar.": "已固定到侧栏。",
   "Unpinned from sidebar.": "已取消固定。",
+  "Reopen with encoding…": "按编码重新打开…",
+  "Reopen with encoding": "按编码重新打开",
+  "Choose how to decode this file. Reopening does not write the file.":
+    "选择此文件的解码方式；重新打开不会写入文件。",
+  "Current encoding: {encoding}": "当前编码：{encoding}",
+  "Auto-detect": "自动检测",
+  Current: "当前",
+  Reopen: "重新打开",
+  "Reopened with {encoding}.": "已使用 {encoding} 重新打开。",
+  "Unsaved changes will be lost after confirmation.":
+    "确认后未保存的更改将丢失。",
   "Local history": "本地历史",
   "Local history…": "本地历史…",
   "Keep a capped set of snapshots when you save.":
