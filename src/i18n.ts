@@ -421,6 +421,11 @@ const ZH: Record<string, string> = {
   "Show every workspace file without expanding folders.":
     "不展开文件夹，直接显示工作区中的所有文件。",
   "File actions": "文件操作",
+  Pinned: "已固定",
+  "Pin to sidebar": "固定到侧栏",
+  "Unpin from sidebar": "取消固定",
+  "Pinned to sidebar.": "已固定到侧栏。",
+  "Unpinned from sidebar.": "已取消固定。",
   "Local history": "本地历史",
   "Local history…": "本地历史…",
   "Keep a capped set of snapshots when you save.":

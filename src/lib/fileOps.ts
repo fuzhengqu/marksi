@@ -19,6 +19,7 @@ export type FileOperationKind = "rename" | "duplicate" | "move" | "delete";
 export interface FileOperationTarget {
   name: string;
   path: string;
+  isDir?: boolean;
 }
 
 export function isSupportedTextFile(name: string): boolean {

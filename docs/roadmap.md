@@ -7,11 +7,11 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.16**
-- Technical version: **0.16.0**
+- Product version: **0.17**
+- Technical version: **0.17.0**
 - Foundation milestones M1 and M3 are complete.
 - M2 core is complete; golden Markdown tests remain open.
-- M4 core is complete, with three planned file/workspace items still open.
+- M4 core is complete, with two planned file/workspace items still open.
 - M5 is complete with twenty-three done items and one explicitly deferred
   uploader integration.
 - M6 and M7 have not started.
@@ -19,8 +19,8 @@ The public security and version policies are enforced by
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **90 done, 4 wip,
-26 todo, 2 deferred** across 122 items.
+is the source for exact status values. Current raw count: **91 done, 4 wip,
+25 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
 
@@ -83,9 +83,8 @@ Exit criteria:
 
 Current gaps (tracked as M4 debt, not mixed into M5):
 
-1. Pinned locations.
-2. Reopen with a selected encoding.
-3. Large-file mode.
+1. Reopen with a selected encoding.
+2. Large-file mode.
 
 M4 debt is scheduled after M5 scope is closed, before M6 release work begins.
 

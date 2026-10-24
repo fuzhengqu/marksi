@@ -418,6 +418,21 @@
   box-shadow: var(--shadow);
 }
 
+.pinned-section {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pinned-section .panel-subheading {
+  padding-top: 12px;
+}
+
+.file-actions-separator {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--border);
+}
+
 .file-actions-title {
   overflow: hidden;
   padding: 4px 8px 6px;

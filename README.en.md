@@ -21,9 +21,10 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   diagrams, and strict/lax heading, nested-list, continuation, and quoted-list
   indentation.
 - **Files and workspace**: open, save, save as, folder workspace, recent files,
-  outline, quick open, full-text search, an optional flat file list, workspace
-  rename, duplicate, move, and delete, plus local history snapshots that can be
-  previewed and restored; preserves encoding and line endings.
+  outline, quick open, full-text search, an optional flat file list, pinned
+  files and folders, workspace rename, duplicate, move, and delete, plus local
+  history snapshots that can be previewed and restored; preserves encoding and
+  line endings.
 - **Images**: insert, drag and drop, or paste; document-relative assets and an
   optional root path; lightbox; width and height resizing; contain/cover fit and
   original-size reset.

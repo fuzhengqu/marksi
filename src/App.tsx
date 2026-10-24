@@ -301,6 +301,15 @@ export default function App() {
     }
   }, []);
 
+  const handleOpenFolderPath = useCallback(async (path: string) => {
+    try {
+      const entries = await listDirectory(path);
+      useAppStore.getState().setWorkspace(path, entries);
+    } catch (error) {
+      useAppStore.getState().showToast(errorMessage(error), "error");
+    }
+  }, []);
+
   const handleRefreshWorkspace = useCallback(async () => {
     const state = useAppStore.getState();
     const current = state.workspace;
@@ -1382,6 +1391,7 @@ export default function App() {
       openPath: handleOpenPath,
       open: handleOpen,
       openFolder: handleOpenFolder,
+      openFolderPath: handleOpenFolderPath,
       closeWorkspace: handleCloseWorkspace,
       newDocument: handleNew,
       save: handleSave,
@@ -1417,6 +1427,7 @@ export default function App() {
     handleNew,
     handleOpen,
     handleOpenFolder,
+    handleOpenFolderPath,
     handleOpenPath,
     handleSave,
     handleSaveAs,
@@ -1446,6 +1457,7 @@ export default function App() {
             onOpenFileAtLine={(path, line) => void handleOpenPath(path, line)}
             onOpenFileDialog={() => void handleOpen()}
             onOpenFolder={() => void handleOpenFolder()}
+            onOpenFolderPath={(path) => void handleOpenFolderPath(path)}
             onNewFile={handleNew}
             onQuickOpen={() => useAppStore.getState().setQuickOpen(true)}
             onRefreshWorkspace={() => void handleRefreshWorkspace()}

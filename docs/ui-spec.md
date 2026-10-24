@@ -115,6 +115,10 @@ ease-out; honor `prefers-reduced-motion`.
   small form dialog, duplicate confirms the copy, and delete requires an
   explicit destructive confirmation that also warns when the open document will
   close. These overlays use the shared modal scrim and close with Escape.
+- The Files tab shows a Pinned section above the workspace when entries exist.
+  Each pinned row opens a file or folder and reveals an unpin button on hover.
+  Row menus include Pin to sidebar for files and folders and Unpin when already
+  pinned.
 - File > Local history opens a two-pane dialog: saved versions on the left,
   a read-only preview and restore/delete actions on the right. Clearing requires
   a second confirmation. The footer states that snapshots stay in the local app

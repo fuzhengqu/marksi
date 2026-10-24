@@ -19,6 +19,8 @@ import {
   Loader2,
   MoreHorizontal,
   Pencil,
+  Pin,
+  PinOff,
   RefreshCw,
   Search,
   Trash2,
@@ -47,6 +49,7 @@ import {
   type FileOperationKind,
   type FileOperationTarget,
 } from "../lib/fileOps";
+import { isPinned } from "../lib/pins";
 import { useAppStore } from "../store/useAppStore";
 import type {
   FileEntry,
@@ -61,6 +64,7 @@ interface SidebarProps {
   onOpenFileAtLine: (path: string, line: number) => void;
   onOpenFileDialog: () => void;
   onOpenFolder: () => void;
+  onOpenFolderPath: (path: string) => void;
   onNewFile: () => void;
   onQuickOpen: () => void;
   onRefreshWorkspace: () => void;
@@ -81,6 +85,7 @@ export function Sidebar({
   onOpenFileAtLine,
   onOpenFileDialog,
   onOpenFolder,
+  onOpenFolderPath,
   onNewFile,
   onQuickOpen,
   onRefreshWorkspace,
@@ -133,6 +138,7 @@ export function Sidebar({
             onOpenFile={onOpenFile}
             onOpenFileDialog={onOpenFileDialog}
             onOpenFolder={onOpenFolder}
+            onOpenFolderPath={onOpenFolderPath}
             onQuickOpen={onQuickOpen}
             onRefreshWorkspace={onRefreshWorkspace}
             onFilesChanged={onFilesChanged}
@@ -188,6 +194,8 @@ export function Sidebar({
   );
 }
 
+type FileMenuAction = FileOperationKind | "pin";
+
 interface FilesPanelProps {
   recent: Array<{ path: string; name: string }>;
   workspace: { path: string; entries: FileEntry[]; loading: boolean } | null;
@@ -195,6 +203,7 @@ interface FilesPanelProps {
   onOpenFile: (path: string) => void;
   onOpenFileDialog: () => void;
   onOpenFolder: () => void;
+  onOpenFolderPath: (path: string) => void;
   onQuickOpen: () => void;
   onRefreshWorkspace: () => void;
   onFilesChanged: (
@@ -211,6 +220,7 @@ function FilesPanel({
   onOpenFile,
   onOpenFileDialog,
   onOpenFolder,
+  onOpenFolderPath,
   onQuickOpen,
   onRefreshWorkspace,
   onFilesChanged,
@@ -218,6 +228,9 @@ function FilesPanel({
 }: FilesPanelProps) {
   const t = useT();
   const removeRecent = useAppStore((state) => state.removeRecent);
+  const pinned = useAppStore((state) => state.pinned);
+  const togglePinned = useAppStore((state) => state.togglePinned);
+  const removePinned = useAppStore((state) => state.removePinned);
   const flatFileList = useAppStore(
     (state) => state.settings.flatFileList,
   );
@@ -265,10 +278,23 @@ function FilesPanel({
   }
 
   function chooseAction(
-    kind: FileOperationKind,
+    kind: FileMenuAction,
     entry: FileOperationTarget,
   ): void {
     setMenu(null);
+    if (kind === "pin") {
+      const wasPinned = isPinned(pinned, entry.path);
+      togglePinned({
+        path: entry.path,
+        name: entry.name,
+        isDir: Boolean(entry.isDir),
+      });
+      onShowToast(
+        wasPinned ? t("Unpinned from sidebar.") : t("Pinned to sidebar."),
+        "success",
+      );
+      return;
+    }
     setOperation({ kind, entry });
   }
 
@@ -283,6 +309,41 @@ function FilesPanel({
 
   return (
     <div className="panel-scroll">
+      {pinned.length > 0 ? (
+        <div className="pinned-section">
+          <div className="panel-subheading">{t("Pinned")}</div>
+          <div className="recent-list">
+            {pinned.map((item) => (
+              <div key={item.path} className="recent-item">
+                <button
+                  className="recent-open"
+                  title={item.path}
+                  onClick={() =>
+                    item.isDir
+                      ? onOpenFolderPath(item.path)
+                      : onOpenFile(item.path)
+                  }
+                >
+                  {item.isDir ? (
+                    <Folder size={14} strokeWidth={1.7} />
+                  ) : (
+                    <FileText size={14} strokeWidth={1.7} />
+                  )}
+                  <span className="recent-name">{item.name}</span>
+                </button>
+                <button
+                  className="recent-remove"
+                  title={t("Unpin from sidebar")}
+                  aria-label={t("Unpin from sidebar")}
+                  onClick={() => removePinned(item.path)}
+                >
+                  <X size={12} strokeWidth={2} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <div className="panel-heading">
         <span>{workspace ? fileName(workspace.path) : t("Workspace")}</span>
         {workspace ? (
@@ -404,7 +465,7 @@ interface FlatFileListProps {
   onShowToast: (message: string, tone?: "info" | "success" | "error") => void;
   onToggleMenu: (entry: FileOperationTarget) => void;
   onChooseAction: (
-    kind: FileOperationKind,
+    kind: FileMenuAction,
     entry: FileOperationTarget,
   ) => void;
 }
@@ -519,7 +580,7 @@ interface FileTreeNodeProps {
   onShowToast: (message: string, tone?: "info" | "success" | "error") => void;
   onToggleMenu: (entry: FileOperationTarget) => void;
   onChooseAction: (
-    kind: FileOperationKind,
+    kind: FileMenuAction,
     entry: FileOperationTarget,
   ) => void;
 }
@@ -599,7 +660,7 @@ function FileTreeNode({
           )}
           <span className="file-name">{entry.name}</span>
         </button>
-        {!entry.isDir && isSupportedTextFile(entry.name) ? (
+        {entry.isDir || isSupportedTextFile(entry.name) ? (
           <button
             className="file-row-actions"
             aria-label={t("File actions")}
@@ -640,11 +701,13 @@ function FileActionsMenu({
 }: {
   target: FileOperationTarget;
   onChoose: (
-    kind: FileOperationKind,
+    kind: FileMenuAction,
     entry: FileOperationTarget,
   ) => void;
 }) {
   const t = useT();
+  const pinned = useAppStore((state) => state.pinned);
+  const pinnedHere = isPinned(pinned, target.path);
   const actions: Array<{
     kind: FileOperationKind;
     label: string;
@@ -659,19 +722,40 @@ function FileActionsMenu({
   return (
     <div className="file-actions-menu" role="menu" aria-label={t("File actions")}>
       <div className="file-actions-title">{target.name}</div>
-      {actions.map(({ kind, label, icon: Icon, danger }) => (
-        <button
-          key={kind}
-          type="button"
-          role="menuitem"
-          className={`file-action ${danger ? "is-danger" : ""}`}
-          data-action={kind}
-          onClick={() => onChoose(kind, target)}
-        >
-          <Icon size={14} strokeWidth={1.8} />
-          <span>{t(label)}</span>
-        </button>
-      ))}
+      <button
+        type="button"
+        role="menuitem"
+        className="file-action"
+        data-action="pin"
+        onClick={() => onChoose("pin", target)}
+      >
+        {pinnedHere ? (
+          <PinOff size={14} strokeWidth={1.8} />
+        ) : (
+          <Pin size={14} strokeWidth={1.8} />
+        )}
+        <span>
+          {t(pinnedHere ? "Unpin from sidebar" : "Pin to sidebar")}
+        </span>
+      </button>
+      {target.isDir ? null : (
+        <>
+          <div className="file-actions-separator" />
+          {actions.map(({ kind, label, icon: Icon, danger }) => (
+            <button
+              key={kind}
+              type="button"
+              role="menuitem"
+              className={`file-action ${danger ? "is-danger" : ""}`}
+              data-action={kind}
+              onClick={() => onChoose(kind, target)}
+            >
+              <Icon size={14} strokeWidth={1.8} />
+              <span>{t(label)}</span>
+            </button>
+          ))}
+        </>
+      )}
     </div>
   );
 }

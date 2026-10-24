@@ -24,6 +24,7 @@ describe("translate", () => {
     expect(translate("zh-CN", "Flat file list")).toBe("扁平文件列表");
     expect(translate("zh-CN", "File actions")).toBe("文件操作");
     expect(translate("zh-CN", "Local history")).toBe("本地历史");
+    expect(translate("zh-CN", "Pinned")).toBe("已固定");
   });
 
   it("returns the source label for English", () => {

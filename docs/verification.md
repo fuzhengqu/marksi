@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.16` product version.
+- About dialog close behavior and display of the `0.17` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -110,6 +110,10 @@ The E2E suite currently covers:
 - Flat file list: a nested workspace fixture shows only folders in tree mode,
   then exposes top-level and nested files with relative paths when enabled,
   with no folder rows.
+- Pinned locations: a file and a folder are pinned from the row menu, the file
+  pin opens the document, the folder pin switches the workspace, both survive a
+  full reload, and unpinning removes them. Renaming or deleting a pinned file
+  updates or removes the pin.
 - Workspace file actions: an invalid rename is blocked without touching disk;
   then rename preserves content and retargets the open document, duplicate
   creates numbered copies, move relocates a file into an existing folder,
@@ -191,7 +195,9 @@ at 40 snapshots and 4 MB each per document. It is local-only but not encrypted,
 so anyone with access to the user profile can read it. Snapshots for a document
 are migrated on rename or move inside MarkSI and cleared when MarkSI deletes the
 file; files moved or deleted outside MarkSI leave orphaned history because there
-is no global purge UI yet. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
+is no global purge UI yet. Pinned paths are stored without checking the
+filesystem; a missing file or folder stays pinned and reports an error when
+opened. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the
 manual DOCX/EPUB check. Image uploader integration is not implemented; the

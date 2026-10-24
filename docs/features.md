@@ -47,7 +47,7 @@ that design decisions do not paint us into a corner.
 | Autosave and draft recovery | done | M3 |
 | Local history / snapshots | done | M4 |
 | Quick open | done | M3 |
-| Pinned locations | todo | M4 |
+| Pinned locations | done | M4 |
 | Workspace full-text search | done | M3 |
 | File encoding reopen | todo | M4 |
 | Large file mode | todo | M4 |
@@ -71,6 +71,12 @@ Local history previews, restores, deletes, and clears saved versions. Restoring
 only places the text in the editor as an unsaved change. Rename and move migrate
 the document's snapshots, and deleting a workspace file removes them through the
 sidebar. Snapshots are plaintext and never leave the device.
+
+Files and folders can be pinned from the sidebar action menu and appear in a
+Pinned section above the workspace. Pinned files open directly, pinned folders
+switch the workspace, and entries persist in local storage across restarts.
+Renaming, moving, or deleting a pinned file updates or removes the matching pin.
+Missing pinned paths remain listed and show an error when opened.
 
 ## Editor
 

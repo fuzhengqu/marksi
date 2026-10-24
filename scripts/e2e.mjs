@@ -378,7 +378,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.16"), "About should show version 0.16", state);
+    assert(state.version?.includes("0.17"), "About should show version 0.17", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -718,6 +718,111 @@ async function main() {
     }
   });
 
+  await test("pins files and folders across reloads", async () => {
+    await resetBase();
+    const root = resolve(fixtureDir, "pinned-workspace");
+    const target = resolve(root, "notes");
+    const topFile = resolve(root, "top.md");
+    const childFile = resolve(target, "child.md");
+
+    try {
+      await mkdir(target, { recursive: true });
+      await writeFile(topFile, "# Top\n", "utf8");
+      await writeFile(childFile, "# Child\n", "utf8");
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        const entries = await platform.listDirectory(${JSON.stringify(root)});
+        window.__MARKSI_DEV__.getState().clearPinned();
+        window.__MARKSI_DEV__.getState().setWorkspace(${JSON.stringify(root)}, entries);
+      })()`);
+      await waitFor('document.querySelector(".file-tree .file-row")');
+
+      async function pinEntry(name) {
+        const opened = await evaluate(`(() => {
+          const wrap = Array.from(document.querySelectorAll(".file-row-wrap"))
+            .find((node) => node.querySelector(".file-name")?.textContent === ${JSON.stringify(name)});
+          wrap?.querySelector(".file-row-actions")?.click();
+          return Boolean(wrap);
+        })()`);
+        assert(opened, `row action button missing for ${name}`);
+        await waitFor('document.querySelector(".file-actions-menu")');
+        const pinned = await evaluate(`(() => {
+          const button = document.querySelector('.file-actions-menu [data-action="pin"]');
+          button?.click();
+          return Boolean(button);
+        })()`);
+        assert(pinned, "pin action is missing");
+        await sleep(250);
+      }
+
+      await pinEntry("top.md");
+      await pinEntry("notes");
+      const pinned = await evaluate(
+        'Array.from(document.querySelectorAll(".pinned-section .recent-open")).map((node) => node.title)',
+      );
+      assert(
+        pinned.some((path) => path.toLowerCase().endsWith("top.md")),
+        "pinned file is missing",
+        pinned,
+      );
+      assert(
+        pinned.some((path) => path.toLowerCase().endsWith("notes")),
+        "pinned folder is missing",
+        pinned,
+      );
+
+      const opened = await evaluate(`(() => {
+        const button = Array.from(document.querySelectorAll(".pinned-section .recent-open"))
+          .find((node) => node.title === ${JSON.stringify(topFile)});
+        button?.click();
+        return Boolean(button);
+      })()`);
+      assert(opened, "pinned file entry is not clickable");
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.path?.toLowerCase().endsWith("top.md")',
+        10_000,
+      );
+
+      await evaluate(`(() => {
+        const button = Array.from(document.querySelectorAll(".pinned-section .recent-open"))
+          .find((node) => node.title === ${JSON.stringify(target)});
+        button?.click();
+      })()`);
+      await waitFor(
+        `window.__MARKSI_DEV__.getState().workspace?.path?.toLowerCase() === ${JSON.stringify(target.toLowerCase())}`,
+        10_000,
+      );
+      await waitFor(
+        'document.querySelector(".file-name")?.textContent === "child.md"',
+      );
+
+      await reloadApp();
+      await waitFor('document.querySelector(".pinned-section")');
+      const afterReload = await evaluate(
+        'document.querySelectorAll(".pinned-section .recent-item").length',
+      );
+      assert(afterReload === 2, "pinned entries should survive a reload", afterReload);
+
+      await evaluate(
+        'Array.from(document.querySelectorAll(".pinned-section .recent-remove")).forEach((node) => node.click())',
+      );
+      await waitFor('!document.querySelector(".pinned-section")');
+      const remaining = await evaluate(
+        'window.__MARKSI_DEV__.getState().pinned.length',
+      );
+      assert(remaining === 0, "unpinning should empty the list", remaining);
+    } finally {
+      await evaluate("window.__MARKSI_DEV__.getState().clearPinned()").catch(
+        () => {},
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().clearWorkspace()',
+      ).catch(() => {});
+      await rm(root, { recursive: true, force: true });
+      await resetBase();
+    }
+  });
+
   await test("file actions rename, duplicate, move, and delete workspace files", async () => {
     await resetBase();
     const root = resolve(fixtureDir, "file-ops-workspace");
@@ -842,6 +947,19 @@ async function main() {
         relocatedHistory,
       );
 
+      const pinOpened = await evaluate(`(() => {
+        const wrap = Array.from(document.querySelectorAll(".file-row-wrap"))
+          .find((node) => node.querySelector(".file-name")?.textContent === "renamed.md");
+        wrap?.querySelector(".file-row-actions")?.click();
+        return Boolean(wrap);
+      })()`);
+      assert(pinOpened, "renamed file should still have an action menu");
+      await waitFor('document.querySelector(\'.file-actions-menu [data-action="pin"]\')');
+      await evaluate(
+        'document.querySelector(\'.file-actions-menu [data-action="pin"]\')?.click()',
+      );
+      await waitFor('document.querySelector(".pinned-section")');
+
       await openRowAction("renamed.md", "duplicate");
       await confirmDialog();
       await waitForFile(copyFile);
@@ -905,6 +1023,14 @@ async function main() {
         "deleting the open document should return to a blank preview",
         blank,
       );
+      const pinsAfterDelete = await evaluate(
+        'window.__MARKSI_DEV__.getState().pinned.map((entry) => entry.path.toLowerCase())',
+      );
+      assert(
+        !pinsAfterDelete.some((path) => path.endsWith("renamed.md")),
+        "deleting a file should remove its pinned entry",
+        pinsAfterDelete,
+      );
     } finally {
       await evaluate(
         'document.querySelector(".file-op-cancel")?.click()',
@@ -912,6 +1038,9 @@ async function main() {
       await evaluate(
         'window.__MARKSI_DEV__.getState().clearWorkspace()',
       ).catch(() => {});
+      await evaluate("window.__MARKSI_DEV__.getState().clearPinned()").catch(
+        () => {},
+      );
       await evaluate(`(async () => {
         const platform = await import("/src/lib/platform.ts");
         await platform.clearHistory(${JSON.stringify(renameFile)});

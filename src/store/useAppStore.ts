@@ -4,6 +4,12 @@ import {
   DEFAULT_EXPORT_OPTIONS,
   normalizeExportOptions,
 } from "../lib/exportOptions";
+import {
+  normalizePins,
+  pinKey,
+  retargetPins,
+  togglePin,
+} from "../lib/pins";
 import type {
   AppSettings,
   CursorPosition,
@@ -12,6 +18,7 @@ import type {
   FileEntry,
   FileMeta,
   LineEnding,
+  PinnedEntry,
   RecentFile,
   SearchScope,
   SidebarTab,
@@ -45,6 +52,7 @@ interface WorkspaceState {
 interface AppStore {
   doc: DocumentState;
   recent: RecentFile[];
+  pinned: PinnedEntry[];
   workspace: WorkspaceState | null;
   sidebarTab: SidebarTab;
   sidebarOpen: boolean;
@@ -89,6 +97,9 @@ interface AppStore {
   addRecent: (path: string) => void;
   removeRecent: (path: string) => void;
   clearRecent: () => void;
+  togglePinned: (entry: PinnedEntry) => void;
+  removePinned: (path: string) => void;
+  clearPinned: () => void;
   applyFileOperation: (oldPath: string, newPath: string | null) => void;
   setWorkspace: (path: string, entries: FileEntry[]) => void;
   setWorkspaceLoading: (loading: boolean) => void;
@@ -157,6 +168,7 @@ export const useAppStore = create<AppStore>()(
     (set, get) => ({
       doc: { ...emptyDocument },
       recent: [],
+      pinned: [],
       workspace: null,
       sidebarTab: "files",
       sidebarOpen: true,
@@ -336,6 +348,18 @@ export const useAppStore = create<AppStore>()(
 
       clearRecent: () => set({ recent: [] }),
 
+      togglePinned: (entry) =>
+        set((state) => ({ pinned: togglePin(state.pinned, entry) })),
+
+      removePinned: (path) =>
+        set((state) => ({
+          pinned: state.pinned.filter(
+            (entry) => pinKey(entry.path) !== pinKey(path),
+          ),
+        })),
+
+      clearPinned: () => set({ pinned: [] }),
+
       applyFileOperation: (oldPath, newPath) =>
         set((state) => {
           const oldKey = pathKey(oldPath);
@@ -351,6 +375,7 @@ export const useAppStore = create<AppStore>()(
                 (entry) => pathKey(entry.path) !== oldKey,
               );
 
+          const pinned = retargetPins(state.pinned, oldPath, newPath);
           if (active && newPath) {
             return {
               doc: {
@@ -359,6 +384,7 @@ export const useAppStore = create<AppStore>()(
                 name: fileName(newPath),
               },
               recent,
+              pinned,
             };
           }
           if (active) {
@@ -371,10 +397,11 @@ export const useAppStore = create<AppStore>()(
                     : "Untitled.md",
               },
               recent,
+              pinned,
               cursor: { line: 1, column: 1 },
             };
           }
-          return { recent };
+          return { recent, pinned };
         }),
 
       setWorkspace: (path, entries) =>
@@ -398,17 +425,22 @@ export const useAppStore = create<AppStore>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         recent: state.recent,
+        pinned: state.pinned,
         theme: state.theme,
         sidebarOpen: state.sidebarOpen,
         settings: state.settings,
       }),
       merge: (persisted, current) => {
         const saved = (persisted ?? {}) as Partial<
-          Pick<AppStore, "recent" | "theme" | "sidebarOpen" | "settings">
+          Pick<
+            AppStore,
+            "recent" | "pinned" | "theme" | "sidebarOpen" | "settings"
+          >
         >;
         return {
           ...current,
           ...saved,
+          pinned: normalizePins(saved.pinned),
           settings: {
             ...DEFAULT_SETTINGS,
             ...(saved.settings ?? {}),

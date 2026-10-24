@@ -107,6 +107,12 @@ export interface HistorySnapshot {
   content: string;
 }
 
+export interface PinnedEntry {
+  path: string;
+  name: string;
+  isDir: boolean;
+}
+
 export interface FileOperationResult {
   path: string;
   name: string;

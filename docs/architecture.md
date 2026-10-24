@@ -363,6 +363,11 @@ success toasts.
   rejects directories and unsupported extensions. The frontend retargets the
   open document and recent entries after rename or move, and resets to a blank
   document after deleting the open file. Overwrites are rejected, not merged.
+- Pinned files and folders live in the persisted store, capped at 20 and
+  deduplicated by normalized path. They add no Rust command: opening a pinned
+  file reuses the document reader, and opening a pinned folder reuses
+  `list_directory`. File rename, move, and delete update or remove matching
+  pins in the same store transaction as the document and recent-file updates.
 - Local history stores snapshots under the Tauri application data folder in a
   folder named by the SHA-256 of the normalized document path. Snapshots are
   JSON records with atomic writes, a 4 MB per-snapshot limit, a 40-snapshot cap,
