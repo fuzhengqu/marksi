@@ -51,6 +51,7 @@ const SETTING_KEYS = new Set([
   "localHistory",
   "largeFileOptimizations",
   "nativeTitleBar",
+  "textDirection",
   "rememberWindowFrame",
   "restoreSession",
   "customTheme",
@@ -166,6 +167,18 @@ export function parseSettingsJson(
       settings[key] = value;
     } else {
       warnings.push(`${key} must be true or false.`);
+    }
+  }
+
+  if (input.textDirection !== undefined) {
+    if (
+      input.textDirection === "auto" ||
+      input.textDirection === "ltr" ||
+      input.textDirection === "rtl"
+    ) {
+      settings.textDirection = input.textDirection;
+    } else {
+      warnings.push('textDirection must be "auto", "ltr", or "rtl".');
     }
   }
 

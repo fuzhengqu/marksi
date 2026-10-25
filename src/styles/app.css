@@ -1434,6 +1434,34 @@
   overflow-wrap: break-word;
 }
 
+.markdown-body[dir="rtl"] {
+  text-align: right;
+}
+
+.markdown-body[dir="rtl"] ul,
+.markdown-body[dir="rtl"] ol {
+  padding-right: 1.65em;
+  padding-left: 0;
+}
+
+.markdown-body[dir="rtl"] blockquote {
+  border-right: 3px solid var(--accent);
+  border-left: 0;
+}
+
+.markdown-body[dir="rtl"] pre,
+.markdown-body[dir="rtl"] .code-block,
+.markdown-body[dir="rtl"] .mermaid-block,
+.markdown-body[dir="rtl"] .katex {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
+}
+
+.cm-content[dir="rtl"] {
+  text-align: right;
+}
+
 .markdown-body > :first-child {
   margin-top: 0;
 }

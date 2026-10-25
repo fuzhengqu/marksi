@@ -131,6 +131,10 @@ ease-out; honor `prefers-reduced-motion`.
   in a compact select. The title-bar toggle always switches to the opposite
   resolved light/dark family, leaving System mode when used. System follows the
   OS preference without a restart.
+- Preferences > Appearance selects Automatic, Left to right, or Right to left
+  document direction. Automatic follows the first strong character after front
+  matter; the editor and reading view stay in sync, while code, Mermaid, and
+  math remain LTR. The interface itself stays LTR.
 - Preferences > Files can remember the window size and position. Saved bounds
   are validated against the current monitors; offscreen windows return to the
   nearest work area, and disabled memory clears the stored frame.

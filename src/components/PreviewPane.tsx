@@ -47,6 +47,7 @@ interface PreviewPaneProps {
   workspacePath: string | null;
   gotoLine: number | null;
   theme: ResolvedTheme;
+  textDirection: "ltr" | "rtl";
   onResizeImage: (
     imageIndex: number,
     width: number | null,
@@ -162,6 +163,7 @@ export function PreviewPane({
   workspacePath,
   gotoLine,
   theme,
+  textDirection,
   onResizeImage,
   onFitImage,
   onResetImage,
@@ -689,6 +691,7 @@ export function PreviewPane({
         <article
           key={loadRemoteImages ? "remote-images-on" : "remote-images-off"}
           className="markdown-body"
+          dir={textDirection}
           dangerouslySetInnerHTML={{ __html: html }}
         />
       </section>

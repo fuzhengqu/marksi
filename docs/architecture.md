@@ -310,6 +310,25 @@ The rendered `PreviewPane` is reserved for `reading` mode and print; switching
 between source, live preview, and reading never changes the Markdown source or
 undo history.
 
+## Text direction
+
+`src/lib/textDirection.ts` is the only direction classifier. It skips a leading
+YAML front-matter block, then scans for the first strong character: Hebrew,
+Arabic, Syriac, Thaana, NKo, Samaritan, and their presentation ranges are RTL;
+any other Unicode letter is LTR; digits, punctuation, combining marks, and emoji
+are neutral. The preference can force `ltr` or `rtl`; otherwise the classifier
+returns LTR when no strong character exists.
+
+The resolved direction is passed to both editor and preview. CodeMirror receives
+it through `EditorView.contentAttributes` in the existing content-attributes
+compartment, so changing the preference reconfigures the live editor without
+recreating it. The preview sets `dir` on the sanitized `markdown-body` article.
+CSS flips list and blockquote sides, right-aligns RTL prose, and forces code,
+Mermaid, and KaTeX blocks back to LTR with `unicode-bidi: isolate`. The setting
+is validated by the settings JSON parser and persisted with the other
+preferences. MarkSI does not mirror its Chinese/English application chrome and
+does not claim full bidi editor support for code inside RTL paragraphs.
+
 ## Typing assistance
 
 `src/editor/smartTyping.ts` installs a single high-precedence input handler for

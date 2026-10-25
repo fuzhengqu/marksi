@@ -33,11 +33,15 @@ export interface EditorCallbacks {
   onFocus?: () => void;
 }
 
-export function editorContentAttributes(spellcheck: boolean): Extension {
+export function editorContentAttributes(
+  spellcheck: boolean,
+  textDirection: "ltr" | "rtl" = "ltr",
+): Extension {
   return EditorView.contentAttributes.of({
     spellcheck: String(spellcheck),
     autocorrect: "off",
     autocapitalize: "off",
+    dir: textDirection,
   });
 }
 

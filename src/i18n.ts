@@ -583,6 +583,12 @@ const ZH: Record<string, string> = {
   "Native title bar": "原生标题栏",
   "Use the operating system title bar instead of MarkSI's custom one. Changes take effect immediately.":
     "使用操作系统标题栏代替 MarkSI 自绘标题栏。更改会立即生效。",
+  "Text direction": "文本方向",
+  "Automatic follows the first strong character in the document. Code and math stay left to right.":
+    "自动模式跟随文档中第一个强方向字符。代码和数学公式始终保持从左到右。",
+  Automatic: "自动",
+  "Left to right": "从左到右",
+  "Right to left": "从右到左",
 };
 
 const ZH_SEARCH_PHRASES: Record<string, string> = {

@@ -261,6 +261,32 @@ export function SettingsDialog() {
 
             <div className="settings-row">
               <div className="settings-copy">
+                <span>{t("Text direction")}</span>
+                <small>
+                  {t(
+                    "Automatic follows the first strong character in the document. Code and math stay left to right.",
+                  )}
+                </small>
+              </div>
+              <select
+                className="settings-select text-direction-select"
+                value={settings.textDirection}
+                aria-label={t("Text direction")}
+                onChange={(event) =>
+                  update(
+                    "textDirection",
+                    event.target.value as AppSettings["textDirection"],
+                  )
+                }
+              >
+                <option value="auto">{t("Automatic")}</option>
+                <option value="ltr">{t("Left to right")}</option>
+                <option value="rtl">{t("Right to left")}</option>
+              </select>
+            </div>
+
+            <div className="settings-row">
+              <div className="settings-copy">
                 <span>{t("Custom CSS theme")}</span>
                 <small>
                   {t("Load a local .css file from the themes folder.")}

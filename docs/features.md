@@ -176,9 +176,17 @@ Keyboard accessibility includes a skip link to the editor, focus-visible rings,
 a Tab/Shift+Tab focus trap for every modal dialog, focus restoration to the
 trigger on close, arrow-key navigation between sidebar tabs with `aria-controls`
 and `aria-labelledby` relationships, and polite atomic status announcements for
-toasts. `prefers-reduced-motion` disables transitions and animations. RTL layout
-is not implemented because MarkSI currently ships only left-to-right Chinese and
-English interfaces.
+toasts. `prefers-reduced-motion` disables transitions and animations.
+
+RTL support covers document content rather than mirroring the application
+chrome. Text direction can be Automatic, Left to right, or Right to left.
+Automatic skips YAML front matter and follows the first strong character, so an
+Arabic or Hebrew document opens right-aligned with RTL list markers and block
+quotes while an English or CJK document stays LTR. The setting applies to both
+the editor and reading view. Code blocks, inline code, Mermaid diagrams, and
+math remain LTR with bidi isolation so operators and syntax do not reorder.
+The Chinese and English interfaces remain LTR; fully mirrored RTL interface
+translations are not shipped.
 
 ## Editor
 
@@ -370,7 +378,7 @@ save the imported document to choose its final location.
 | Chinese default / English language switch | done | M5 |
 | Version display and one-step bump | done | M5 |
 | i18n framework (en, zh-Hans, zh-Hant first) | wip | M6 |
-| RTL and accessibility pass | wip | M7 |
+| RTL and accessibility pass | done | M7 |
 | No telemetry / no account | done | M0 |
 | No activation / no paid gates | done | M0 |
 

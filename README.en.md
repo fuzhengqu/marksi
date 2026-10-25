@@ -16,7 +16,8 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
 
 - **Writing views**: source, editable live preview, and reading view; focus,
   typewriter, and read-only modes; auto-pairing, smart punctuation, emoji
-  completion, IME composition support, and find/replace.
+  completion, IME composition support, and find/replace. Automatic or explicit
+  LTR/RTL document direction keeps code and math LTR.
 - **Markdown**: CommonMark/GFM, tables, task lists, footnotes, table of contents,
   YAML front matter, callouts, syntax highlighting, KaTeX math, Mermaid
   diagrams, and strict/lax heading, nested-list, continuation, and quoted-list

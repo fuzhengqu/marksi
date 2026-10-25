@@ -173,6 +173,7 @@ export interface AppSettings {
   localHistory: boolean;
   largeFileOptimizations: boolean;
   nativeTitleBar: boolean;
+  textDirection: "auto" | "ltr" | "rtl";
   rememberWindowFrame: boolean;
   restoreSession: boolean;
   customTheme: string;

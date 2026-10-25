@@ -36,6 +36,7 @@ import {
 } from "./lib/theme";
 import { isLargeDocument } from "./lib/largeFile";
 import { isImeKeyEvent } from "./lib/ime";
+import { resolveTextDirection } from "./lib/textDirection";
 import { shortcutForEvent } from "./lib/shortcuts";
 import { frontMatterTitle } from "./lib/frontMatter";
 import { pandocImportName } from "./lib/pandoc";
@@ -165,6 +166,10 @@ export default function App() {
   const settings = useAppStore((state) => state.settings);
   const largeFile =
     settings.largeFileOptimizations && isLargeDocument(doc.content);
+  const textDirection = resolveTextDirection(
+    doc.content,
+    settings.textDirection,
+  );
   const workspacePath = useAppStore((state) => state.workspace?.path ?? null);
   const [draftToRecover, setDraftToRecover] =
     useState<DocumentDraft | null>(() => loadDraft());
@@ -1888,6 +1893,7 @@ export default function App() {
             emojiAutocomplete={settings.emojiAutocomplete && !largeFile}
             livePreviewMode={viewMode === "preview" && !largeFile}
             language={settings.language}
+            textDirection={textDirection}
           />
           {viewMode === "reading" ? (
             <Suspense
@@ -1903,6 +1909,7 @@ export default function App() {
                 workspacePath={workspacePath}
                 gotoLine={gotoLine}
                 theme={resolvedTheme}
+                textDirection={textDirection}
                 onResizeImage={handleResizeImage}
                 onFitImage={handleFitImage}
                 onResetImage={handleResetImage}

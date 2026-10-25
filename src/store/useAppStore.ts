@@ -148,6 +148,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   localHistory: true,
   largeFileOptimizations: true,
   nativeTitleBar: false,
+  textDirection: "auto",
   rememberWindowFrame: true,
   restoreSession: true,
   customTheme: "",
@@ -518,6 +519,12 @@ export const useAppStore = create<AppStore>()(
               typeof saved.settings?.nativeTitleBar === "boolean"
                 ? saved.settings.nativeTitleBar
                 : false,
+            textDirection:
+              saved.settings?.textDirection === "ltr" ||
+              saved.settings?.textDirection === "rtl" ||
+              saved.settings?.textDirection === "auto"
+                ? saved.settings.textDirection
+                : "auto",
             rememberWindowFrame:
               typeof saved.settings?.rememberWindowFrame === "boolean"
                 ? saved.settings.rememberWindowFrame

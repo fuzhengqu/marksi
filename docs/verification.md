@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.37` product version.
+- About dialog close behavior and display of the `0.38` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,7 +139,7 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 379 ms during the latest run;
+  Windows dev WebView opened the fixture in 353 ms during the latest run;
   repeated runs ranged from 196 to 444 ms.
 - Window flags: View > Toggle fullscreen and F11 both enter and leave real
   window fullscreen, and Always on top toggles the native flag while the
@@ -180,6 +180,12 @@ The E2E suite currently covers:
   inside the dialog, Escape closes it and restores focus to the trigger, the
   toast is a polite atomic status region, and reduced-motion emulation removes
   transitions.
+- Text direction: an Arabic document with English YAML metadata and a fenced
+  code block opens with `dir="rtl"` in both the editor content and reading view,
+  right-aligned body text, and a code block forced to LTR and left alignment.
+  Forcing LTR updates both surfaces, forcing RTL overrides plain English text,
+  and returning to Automatic restores the detected direction. The Settings
+  select exposes Automatic, Left to right, and Right to left in Chinese.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -403,8 +409,9 @@ composition events in the Windows WebView; the real Microsoft Pinyin candidate
 window, Japanese/Korean IMEs, dead keys, and Linux WebKitGTK composition remain
 manual release checks. Accessibility coverage uses WebView2 keyboard events and
 DOM/ARIA inspection; screen-reader sessions with NVDA, Narrator, or Orca,
-operating-system high-contrast modes, and RTL layouts remain manual or
-unimplemented. Advanced settings JSON is
+operating-system high-contrast modes, complex bidi editing, and RTL application
+chrome remain manual or unimplemented. Document-level RTL detection and code
+isolation are covered by Vitest and the real-WebView E2E. Advanced settings JSON is
 not a full configuration-file format: there is no import/export file or schema
 version, unknown keys are ignored with a warning, and applying settings takes
 effect immediately with no undo. Custom CSS themes are read only from the app

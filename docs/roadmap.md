@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.37**
-- Technical version: **0.37.0**
+- Product version: **0.38**
+- Technical version: **0.38.0**
 - Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
@@ -19,13 +19,14 @@ The public security and version policies are enforced by
   the shortcut editor, Windows installer validation, CLI open, file
   associations, window flags, window and session memory, the native title bar,
   advanced JSON settings, release checksums, Linux packages, and the
-  Windows/Linux build-test matrix. M7 has started with IME/CJK input coverage
-  and an accessibility pass; RTL layout and Flatpak remain open.
+  Windows/Linux build-test matrix. M7 has started with IME/CJK input coverage,
+  a keyboard/focus accessibility pass, and document-level RTL support;
+  large-document performance depth and Flatpak remain open.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **109 done, 5 wip,
+is the source for exact status values. Current raw count: **110 done, 4 wip,
 6 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
@@ -140,9 +141,9 @@ Snap Layouts remain open.
 Scope: IME/CJK coverage, large-document performance, RTL/accessibility pass, and
 Flatpak packaging.
 
-Status: in progress. IME/CJK composition coverage and the keyboard/focus
-accessibility pass are complete; RTL layout, large-document performance depth,
-and Flatpak packaging remain open.
+Status: in progress. IME/CJK composition coverage, the keyboard/focus
+accessibility pass, and document-level RTL support are complete; large-document
+performance depth and Flatpak packaging remain open.
 
 ## Delivery rules
 

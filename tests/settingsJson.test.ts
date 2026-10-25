@@ -24,6 +24,7 @@ describe("advanced settings JSON", () => {
         flatFileList: true,
         loadRemoteImages: true,
         nativeTitleBar: true,
+        textDirection: "rtl",
         theme: "dark",
       }),
       DEFAULT_SETTINGS,
@@ -36,6 +37,7 @@ describe("advanced settings JSON", () => {
     expect(result.settings.flatFileList).toBe(true);
     expect(result.settings.loadRemoteImages).toBe(true);
     expect(result.settings.nativeTitleBar).toBe(true);
+    expect(result.settings.textDirection).toBe("rtl");
     expect(result.warnings).toContain("Unknown setting ignored: theme");
   });
 
@@ -49,6 +51,7 @@ describe("advanced settings JSON", () => {
         autoSaveDelayMs: 123,
         imageAssetFolder: "../outside",
         spellcheck: "yes",
+        textDirection: "up",
         exportOptions: [],
         shortcuts: "Ctrl+N",
       }),
@@ -65,6 +68,9 @@ describe("advanced settings JSON", () => {
       DEFAULT_SETTINGS.imageAssetFolder,
     );
     expect(result.settings.spellcheck).toBe(DEFAULT_SETTINGS.spellcheck);
+    expect(result.settings.textDirection).toBe(
+      DEFAULT_SETTINGS.textDirection,
+    );
     expect(result.settings.exportOptions).toEqual(
       DEFAULT_SETTINGS.exportOptions,
     );

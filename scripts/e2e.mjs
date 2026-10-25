@@ -381,7 +381,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.37"), "About should show version 0.37", state);
+    assert(state.version?.includes("0.38"), "About should show version 0.38", state);
     await clickSelector(".about-notices summary");
     await sleep(180);
     const notices = await evaluate(`(() => {
@@ -656,6 +656,20 @@ async function main() {
     })`);
     assert(zh.title === "偏好设置", "settings title should be Chinese", zh);
     assert(zh.languageButtons.includes("中文"), "Chinese language option missing", zh);
+    const direction = await evaluate(`({
+      value: document.querySelector(".text-direction-select")?.value ?? null,
+      options: Array.from(
+        document.querySelector(".text-direction-select")?.options ?? []
+      ).map((option) => option.textContent)
+    })`);
+    assert(
+      direction.value === "auto" &&
+        direction.options.includes("自动") &&
+        direction.options.includes("从左到右") &&
+        direction.options.includes("从右到左"),
+      "text direction control is missing or mistranslated",
+      direction,
+    );
     await evaluate(`(() => {
       const button = Array.from(document.querySelectorAll(".segmented-control button")).find((node) => node.textContent === "English");
       button?.click();
@@ -1107,6 +1121,105 @@ async function main() {
         "window.__MARKSI_DEV__.setSettings({ nativeTitleBar: false })",
       ).catch(() => {});
       await sleep(250);
+      await resetBase();
+    }
+  });
+
+  await test("detects and overrides document text direction", async () => {
+    await resetBase();
+    try {
+      const source = [
+        "---",
+        "title: English metadata",
+        "---",
+        "",
+        "# مرحبا بالعالم",
+        "",
+        "نص عربي مع English words.",
+        "",
+        "```js",
+        "const value = 1;",
+        "```",
+      ].join("\n");
+      await evaluate(
+        `window.__MARKSI_DEV__.getState().setContent(${JSON.stringify(source)})`,
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setViewMode("reading")',
+      );
+      await waitFor(
+        'document.querySelector(".markdown-body")?.getAttribute("dir") === "rtl"',
+      );
+      const arabic = await evaluate(`({
+        body: document.querySelector(".markdown-body")?.getAttribute("dir"),
+        editor: document.querySelector(".cm-content")?.getAttribute("dir"),
+        heading: document.querySelector(".markdown-body h1")?.textContent,
+        codeDirection: getComputedStyle(
+          document.querySelector(".markdown-body pre")
+        ).direction,
+        codeAlign: getComputedStyle(
+          document.querySelector(".markdown-body pre")
+        ).textAlign,
+        bodyAlign: getComputedStyle(
+          document.querySelector(".markdown-body")
+        ).textAlign
+      })`);
+      assert(arabic.body === "rtl", "Arabic content should be RTL", arabic);
+      assert(arabic.editor === "rtl", "editor should follow RTL content", arabic);
+      assert(
+        arabic.heading?.includes("مرحبا"),
+        "Arabic heading should render",
+        arabic,
+      );
+      assert(
+        arabic.codeDirection === "ltr" && arabic.codeAlign === "left",
+        "code blocks should stay LTR",
+        arabic,
+      );
+      assert(arabic.bodyAlign === "right", "RTL body should align right", arabic);
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ textDirection: "ltr" })',
+      );
+      await waitFor(
+        'document.querySelector(".markdown-body")?.getAttribute("dir") === "ltr"',
+      );
+      assert(
+        (await evaluate(
+          'document.querySelector(".cm-content")?.getAttribute("dir")',
+        )) === "ltr",
+        "forced LTR should update the editor",
+      );
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ textDirection: "rtl" })',
+      );
+      await waitFor(
+        'document.querySelector(".markdown-body")?.getAttribute("dir") === "rtl"',
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setContent("English only text.")',
+      );
+      await waitFor(
+        'document.querySelector(".markdown-body h1") === null && document.querySelector(".markdown-body p")?.textContent === "English only text."',
+      );
+      assert(
+        (await evaluate(
+          'document.querySelector(".markdown-body")?.getAttribute("dir")',
+        )) === "rtl",
+        "forced RTL should override English content",
+      );
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ textDirection: "auto" })',
+      );
+      await waitFor(
+        'document.querySelector(".markdown-body")?.getAttribute("dir") === "ltr"',
+      );
+    } finally {
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ textDirection: "auto" })',
+      ).catch(() => {});
       await resetBase();
     }
   });

@@ -42,6 +42,7 @@ interface EditorPaneProps {
   emojiAutocomplete: boolean;
   livePreviewMode: boolean;
   language: Language;
+  textDirection: "ltr" | "rtl";
 }
 
 function focusSearchField(view: EditorView, replace: boolean): void {
@@ -87,6 +88,7 @@ export function EditorPane({
   emojiAutocomplete,
   livePreviewMode,
   language,
+  textDirection,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -95,6 +97,7 @@ export function EditorPane({
   const focusModeRef = useRef(focusModeEnabled);
   const typewriterModeRef = useRef(typewriterModeEnabled);
   const spellcheckRef = useRef(spellcheck);
+  const textDirectionRef = useRef(textDirection);
   const autoPairRef = useRef(autoPair);
   const smartPunctuationRef = useRef(smartPunctuation);
   const emojiAutocompleteRef = useRef(emojiAutocomplete);
@@ -132,6 +135,10 @@ export function EditorPane({
   useEffect(() => {
     spellcheckRef.current = spellcheck;
   }, [spellcheck]);
+
+  useEffect(() => {
+    textDirectionRef.current = textDirection;
+  }, [textDirection]);
 
   useEffect(() => {
     autoPairRef.current = autoPair;
@@ -174,7 +181,7 @@ export function EditorPane({
           typewriterModeRef.current ? typewriterMode() : [],
         ),
         spellcheckCompartment.of(
-          editorContentAttributes(spellcheckRef.current),
+          editorContentAttributes(spellcheckRef.current, textDirectionRef.current),
         ),
         typingCompartment.of(
           smartTyping({
@@ -273,10 +280,10 @@ export function EditorPane({
     }
     view.dispatch({
       effects: spellcheckCompartment.reconfigure(
-        editorContentAttributes(spellcheck),
+        editorContentAttributes(spellcheck, textDirection),
       ),
     });
-  }, [spellcheck, spellcheckCompartment]);
+  }, [spellcheck, textDirection, spellcheckCompartment]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -458,7 +465,7 @@ export function EditorPane({
               typewriterModeRef.current ? typewriterMode() : [],
             ),
             spellcheckCompartment.of(
-              editorContentAttributes(spellcheckRef.current),
+              editorContentAttributes(spellcheckRef.current, textDirectionRef.current),
             ),
             typingCompartment.of(
               smartTyping({
