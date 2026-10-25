@@ -358,6 +358,9 @@ function typingInputHandler(options: SmartTypingOptions): Extension {
 function emojiCompletionSource(
   context: CompletionContext,
 ): CompletionResult | null {
+  if (context.view?.composing || context.view?.compositionStarted) {
+    return null;
+  }
   if (isLiteralContext(context.state, context.pos)) {
     return null;
   }

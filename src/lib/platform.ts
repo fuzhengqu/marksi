@@ -800,6 +800,14 @@ export async function readWindowFrame(): Promise<WindowFrame> {
   };
 }
 
+export async function isWindowMinimized(): Promise<boolean> {
+  if (!isTauri()) {
+    return false;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  return getCurrentWindow().isMinimized();
+}
+
 export async function windowWorkAreas(): Promise<WorkArea[]> {
   if (!isTauri()) {
     return [];
@@ -823,6 +831,9 @@ export async function applyWindowFrame(frame: WindowFrame): Promise<void> {
     "@tauri-apps/api/dpi"
   );
   const window = getCurrentWindow();
+  if (await window.isMinimized()) {
+    await window.unminimize();
+  }
   if (await window.isMaximized()) {
     await window.unmaximize();
   }

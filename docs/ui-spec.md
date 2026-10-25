@@ -130,6 +130,9 @@ ease-out; honor `prefers-reduced-motion`.
 - Preferences > Files can remember the window size and position. Saved bounds
   are validated against the current monitors; offscreen windows return to the
   nearest work area, and disabled memory clears the stored frame.
+- While an IME is composing, application shortcuts are ignored and MarkSI does
+  not auto-pair Markdown markers, convert quotes, or open emoji suggestions.
+  Committed candidate text and Chinese punctuation appear exactly once.
 - Preferences > Appearance can pick a local CSS theme from the app data themes
   folder, reload the list, or open the folder. Applying a theme is immediate and
   a missing file removes the injected style.

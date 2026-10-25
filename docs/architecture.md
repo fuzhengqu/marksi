@@ -393,10 +393,11 @@ success toasts.
   saved physical bounds, checks overlap with a monitor work area, and clamps
   offscreen or oversized frames. Frames store the content-area size and outer
   position, so restore is stable against Windows shadow borders.
-  `applyWindowFrame` restores normal bounds before maximizing. The app listens
-  to `onResized` and `onMoved`, debounces writes by 400 ms, and stores the last
-  normal bounds with a maximized flag under `marksi.window-frame.v1`. No Rust
-  command or bundled plugin is involved.
+  `applyWindowFrame` restores normal bounds before maximizing. Minimized windows
+  are skipped by the capture listener and unminimized before a restore. The app
+  listens to `onResized` and `onMoved`, debounces writes by 400 ms, and stores
+  the last normal bounds with a maximized flag under
+  `marksi.window-frame.v1`. No Rust command or bundled plugin is involved.
 - Session memory is path-only. `src/lib/session.ts` normalizes the saved document
   path, workspace path, and view mode, and decides whether startup is eligible.
   Boot fails closed: page reloads skip restore, a recovered draft wins, and a
@@ -408,6 +409,12 @@ success toasts.
   rejected, invalid fields keep their current values, and warnings list every
   ignored key or value. Export options and shortcuts reuse their existing
   normalizers; no file system or network access is involved.
+- `src/lib/ime.ts` defines the app-level IME guard (`isComposing`, `keyCode 229`,
+  `Process`). The global shortcut handler consults it before resolving a key.
+  CodeMirror marks composition changes and the smart-typing input handler already
+  skips `composing`/`compositionStarted`; the emoji completion source now also
+  returns nothing during composition. The E2E suite drives real composition
+  events through CDP and checks the committed document.
 - Custom themes are read by Rust from the app data `themes` folder with
   canonical-path containment, a 256 KB limit per file, a 50-file cap, `.css`
   filtering, UTF-8 validation, and deterministic sorting. The frontend sanitizer

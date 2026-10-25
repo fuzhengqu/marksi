@@ -81,7 +81,8 @@ reset to normal window mode when toggled off.
 When Remember window size and position is enabled, MarkSI restores the last
 normal window bounds and maximized state at startup. Saved bounds are checked
 against the current monitor work areas; windows that are fully or mostly
-offscreen return to the nearest usable display.
+offscreen return to the nearest usable display. Minimized state is never saved,
+and restoring a frame brings a minimized window back into view.
 
 When Restore last session is enabled, the last document and workspace folder
 reopen at startup with the previous view mode. Only file paths are stored, never
@@ -152,6 +153,13 @@ keeping source editing and the view toggle available. The status bar shows a
 Large file mode badge and labels the editing view as Source. Reading view and
 export remain available but are not optimized by this mode.
 
+IME composition is handled without interfering with the document: auto-pair,
+smart punctuation, and emoji completion stay inactive while Chinese, Japanese,
+or Korean candidates are being composed, and application shortcuts ignore
+composition events and Chromium's `keyCode 229`. Committed Chinese text and
+full-width punctuation are inserted exactly once. This is verified through real
+WebView composition events, not only synthetic unit tests.
+
 ## Editor
 
 | Feature | Status | Milestone |
@@ -174,7 +182,7 @@ export remain available but are not optimized by this mode.
 | Smart punctuation | done | M4 |
 | Spellcheck | done | M3 |
 | Emoji autocomplete | done | M4 |
-| IME / CJK input coverage | todo | M7 |
+| IME / CJK input coverage | done | M7 |
 | Large-document performance mode | todo | M7 |
 
 ## Markdown

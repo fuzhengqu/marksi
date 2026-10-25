@@ -35,6 +35,7 @@ import {
   useSystemDark,
 } from "./lib/theme";
 import { isLargeDocument } from "./lib/largeFile";
+import { isImeKeyEvent } from "./lib/ime";
 import { shortcutForEvent } from "./lib/shortcuts";
 import { frontMatterTitle } from "./lib/frontMatter";
 import { pandocImportName } from "./lib/pandoc";
@@ -70,6 +71,7 @@ import {
   isAlwaysOnTop,
   isFullscreen,
   isTauri,
+  isWindowMinimized,
   listCustomThemes,
   listDirectory,
   openDocument,
@@ -1347,6 +1349,9 @@ export default function App() {
         return;
       }
       try {
+        if (await isWindowMinimized()) {
+          return;
+        }
         const frame = await readWindowFrame();
         if (frame.maximized && windowFrameRef.current) {
           saveWindowFrame({ ...windowFrameRef.current, maximized: true });
@@ -1533,6 +1538,9 @@ export default function App() {
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
+      if (isImeKeyEvent(event)) {
+        return;
+      }
       const state = useAppStore.getState();
       if (state.shortcutRecording) {
         return;
@@ -1747,6 +1755,7 @@ export default function App() {
       windowFlags: async () => ({
         fullscreen: await isFullscreen(),
         alwaysOnTop: await isAlwaysOnTop(),
+        minimized: await isWindowMinimized(),
       }),
       setWindowFlags: async (fullscreen: boolean, alwaysOnTop: boolean) => {
         await setFullscreen(fullscreen);

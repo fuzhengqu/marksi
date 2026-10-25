@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.32**
-- Technical version: **0.32.0**
+- Product version: **0.33**
+- Technical version: **0.33.0**
 - Foundation milestones M1 and M3 are complete.
 - M2 core is complete; golden Markdown tests remain open.
 - M4 is complete.
@@ -18,13 +18,13 @@ The public security and version policies are enforced by
   the shortcut editor, Windows installer validation, CLI open, file
   associations, window flags, window and session memory, advanced JSON
   settings, release checksums, Linux packages, and the Windows/Linux build-test
-  matrix. M7 has not started.
+  matrix. M7 has started with IME/CJK input coverage.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **105 done, 5 wip,
-10 todo, 2 deferred** across 122 items.
+is the source for exact status values. Current raw count: **106 done, 5 wip,
+9 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
 
@@ -132,7 +132,9 @@ still open.
 Scope: IME/CJK coverage, large-document performance, RTL/accessibility pass, and
 Flatpak packaging.
 
-Status: not started.
+Status: in progress. IME/CJK composition coverage is complete; large-document
+performance depth, the RTL/accessibility pass, and Flatpak packaging remain
+open.
 
 ## Delivery rules
 

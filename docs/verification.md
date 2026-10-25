@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.32` product version.
+- About dialog close behavior and display of the `0.33` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,14 +139,15 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 160 ms during the release run.
+  Windows dev WebView opened the fixture in 197 ms during the release run.
 - Window flags: View > Toggle fullscreen and F11 both enter and leave real
   window fullscreen, and Always on top toggles the native flag while the
   in-app state follows it.
 - Window frame memory: set and persist a known window frame, move to different
   bounds, restore from memory, and compare the real Tauri outer position and
-  content size; clearing removes the stored frame. Offscreen and oversized-frame
-  clamping is covered by Vitest rather than by moving the real window offscreen.
+  content size; clearing removes the stored frame. The test also asserts that a
+  restored frame is not minimized. Offscreen and oversized-frame clamping is
+  covered by Vitest rather than by moving the real window offscreen.
 - Session memory: open a document, attach its workspace folder, switch to source
   view, and wait for the path-only session record; clear the editor and restore
   the session, then verify the document content, workspace file list, and view
@@ -159,6 +160,12 @@ The E2E suite currently covers:
   select one from Preferences, and verify its variables and typography apply;
   select a second theme with a remote `url()` and verify the loaded style removes
   the remote URL. Selecting a missing theme removes the injected style.
+- IME composition: send real `compositionstart`/`compositionupdate` events with
+  Chinese text, verify the committed text appears exactly once, then compose
+  `*`, `"`, and `:sm` and verify auto-pair, smart quotes, and emoji completion
+  stay inactive. A synthetic composing shortcut is ignored while the same
+  non-composing shortcut toggles the sidebar; full-width Chinese punctuation is
+  inserted literally.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -310,12 +317,13 @@ opened. Reopen with encoding offers a curated encoding list rather than
 arbitrary labels; decoding is read-only, and saving into a legacy encoding
 still fails when the text contains characters that encoding cannot represent.
 - Window frame memory stores content-area bounds and outer position in local
-  storage and restores them on the next start when enabled. The automated E2E
-  restores within one process. A manual graceful restart check set the window
-  to 1100x720 at (150, 120), closed through the title-bar Close button, and
-  confirmed the same frame after restart. Monitor hot-plug and mixed-DPI
-  multi-monitor layouts remain manual release checks. A saved maximized state is
-  restored by applying normal bounds and then maximizing.
+  storage and restores them on the next start when enabled. Minimized windows
+  are never recorded, and restoring a frame first unminimizes the native window.
+  The automated E2E restores within one process. A manual graceful restart check
+  set the window to 1100x720 at (150, 120), closed through the title-bar Close
+  button, and confirmed the same frame after restart. Monitor hot-plug and
+  mixed-DPI multi-monitor layouts remain manual release checks. A saved
+  maximized state is restored by applying normal bounds and then maximizing.
 - Session memory stores paths and a view mode in local storage, never document
   content. A manual graceful restart check reopened `session-restart.md` with
   its workspace folder and source view. Missing session paths are skipped
@@ -330,7 +338,10 @@ but window-manager behavior such as macOS Spaces or Linux tiling is outside the
 automated gate. Custom shortcuts cover application
 commands only; editor formatting keeps fixed CodeMirror bindings, global
 OS-level hotkeys are not supported, captured bindings require Ctrl or Meta, and
-duplicate bindings are rejected instead of swapped. Advanced settings JSON is
+duplicate bindings are rejected instead of swapped. IME coverage uses CDP
+composition events in the Windows WebView; the real Microsoft Pinyin candidate
+window, Japanese/Korean IMEs, dead keys, and Linux WebKitGTK composition remain
+manual release checks. Advanced settings JSON is
 not a full configuration-file format: there is no import/export file or schema
 version, unknown keys are ignored with a warning, and applying settings takes
 effect immediately with no undo. Custom CSS themes are read only from the app
@@ -343,7 +354,7 @@ before release. Large-file mode compares JavaScript string length, so the 500,00
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 160 ms measurement is from one Windows development machine;
+large files. The 197 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

@@ -229,6 +229,9 @@ async function resetBase({ clearContent = true } = {}) {
     dev.getState().setTheme("light");
     dev.getState().setViewMode("preview");
     dev.getState().resetSettings();
+    if (!dev.getState().sidebarOpen) {
+      dev.getState().toggleSidebar();
+    }
     ${clearContent ? "dev.getState().newDocument();" : ""}
     await new Promise((resolve) => setTimeout(resolve, 180));
     document.querySelector(".cm-content")?.focus();
@@ -378,7 +381,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.32"), "About should show version 0.32", state);
+    assert(state.version?.includes("0.33"), "About should show version 0.33", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -883,6 +886,14 @@ async function main() {
       const savedFrame = await evaluate(
         "window.__MARKSI_DEV__.saveWindowFrameMemory()",
       );
+      const minimized = await evaluate(
+        "(async () => (await window.__MARKSI_DEV__.windowFlags()).minimized)()",
+      );
+      assert(
+        !minimized,
+        "window frame restore should leave the window visible",
+        { savedFrame, minimized },
+      );
       assert(
         savedFrame.width >= 900 && savedFrame.height >= 600,
         "saved window should keep a usable content size",
@@ -1244,6 +1255,175 @@ async function main() {
       await evaluate(
         "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
       ).catch(() => {});
+      await resetBase();
+    }
+  });
+
+  await test("handles IME composition without formatting or shortcuts", async () => {
+    await resetBase();
+
+    async function focusEditor() {
+      await evaluate(`(() => {
+        document.querySelector(".cm-content")?.focus();
+        return true;
+      })()`);
+      await sleep(120);
+    }
+
+    async function placeCaretAtEnd() {
+      await evaluate(`(() => {
+        const content = document.querySelector(".cm-content");
+        content?.focus();
+        const line = content?.querySelector(".cm-line");
+        if (!content || !line) return false;
+        const range = document.createRange();
+        range.selectNodeContents(line);
+        range.collapse(false);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        return true;
+      })()`);
+      await sleep(150);
+    }
+
+    async function compose(text) {
+      await send("Input.imeSetComposition", {
+        text,
+        selectionStart: text.length,
+        selectionEnd: text.length,
+      });
+      await sleep(200);
+    }
+
+    async function commit(text) {
+      await send("Input.insertText", { text });
+      await sleep(250);
+    }
+
+    try {
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().newDocument()',
+      );
+      await focusEditor();
+      await compose("中文");
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.content === "中文"',
+      );
+      await commit("中文输入");
+      const chinese = await evaluate(`({
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        cursor: window.__MARKSI_DEV__.getState().cursor
+      })`);
+      assert(
+        chinese.content === "中文输入",
+        "composed Chinese text should commit exactly once",
+        chinese,
+      );
+
+      await evaluate('window.__MARKSI_DEV__.setContent("a ")');
+      await placeCaretAtEnd();
+      await compose("*");
+      const asterisk = await evaluate(
+        'window.__MARKSI_DEV__.getState().doc.content',
+      );
+      assert(
+        asterisk === "a *",
+        "asterisk during composition must not auto-pair",
+        asterisk,
+      );
+      await commit("*");
+      assert(
+        (await evaluate('window.__MARKSI_DEV__.getState().doc.content')) ===
+          "a *",
+        "committed asterisk should remain literal",
+      );
+
+      await evaluate('window.__MARKSI_DEV__.setContent("a ")');
+      await placeCaretAtEnd();
+      await compose('"');
+      const quote = await evaluate(
+        'window.__MARKSI_DEV__.getState().doc.content',
+      );
+      assert(
+        quote === 'a "',
+        "quote during composition must stay literal",
+        quote,
+      );
+      await commit('"');
+      assert(
+        (await evaluate('window.__MARKSI_DEV__.getState().doc.content')) ===
+          'a "',
+        "committed quote should not become smart punctuation",
+      );
+
+      await evaluate('window.__MARKSI_DEV__.setContent("")');
+      await placeCaretAtEnd();
+      await compose(":sm");
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.content === ":sm"',
+      );
+      const emojiPopup = await evaluate(
+        'Boolean(document.querySelector(".cm-tooltip-autocomplete"))',
+      );
+      assert(
+        !emojiPopup,
+        "emoji completion must not open during composition",
+      );
+      await commit(":sm");
+      assert(
+        (await evaluate('window.__MARKSI_DEV__.getState().doc.content')) ===
+          ":sm",
+        "colon text should survive composition",
+      );
+
+      const sidebarBefore = await evaluate(
+        "window.__MARKSI_DEV__.getState().sidebarOpen",
+      );
+      const composingValue = await evaluate(`(() => {
+        window.dispatchEvent(new KeyboardEvent("keydown", {
+          key: "b",
+          code: "KeyB",
+          ctrlKey: true,
+          shiftKey: true,
+          isComposing: true,
+          bubbles: true
+        }));
+        return window.__MARKSI_DEV__.getState().sidebarOpen;
+      })()`);
+      assert(
+        composingValue === sidebarBefore,
+        "application shortcuts must not fire while composing",
+        { composingValue, sidebarBefore },
+      );
+      await evaluate(`(() => {
+        window.dispatchEvent(new KeyboardEvent("keydown", {
+          key: "b",
+          code: "KeyB",
+          ctrlKey: true,
+          shiftKey: true,
+          bubbles: true
+        }));
+      })()`);
+      await waitFor(
+        `window.__MARKSI_DEV__.getState().sidebarOpen === ${!sidebarBefore}`,
+      );
+
+      await evaluate('window.__MARKSI_DEV__.setContent("")');
+      await placeCaretAtEnd();
+      await commit("你好，世界！");
+      assert(
+        (await evaluate('window.__MARKSI_DEV__.getState().doc.content')) ===
+          "你好，世界！",
+        "Chinese punctuation should be inserted without conversion",
+      );
+    } finally {
+      await evaluate(`(() => {
+        const state = window.__MARKSI_DEV__.getState();
+        if (!state.sidebarOpen) {
+          state.toggleSidebar();
+        }
+      })()`).catch(() => {});
       await resetBase();
     }
   });
