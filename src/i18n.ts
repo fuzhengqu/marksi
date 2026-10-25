@@ -579,6 +579,7 @@ const ZH: Record<string, string> = {
   "MIT license": "MIT 许可",
   "No account": "无需账户",
   "No telemetry": "无遥测",
+  "Third-party notices": "第三方许可声明",
 };
 
 const ZH_SEARCH_PHRASES: Record<string, string> = {

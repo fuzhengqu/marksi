@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.35` product version.
+- About dialog close behavior and display of the `0.36` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,7 +139,7 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 177 ms during the release run.
+  Windows dev WebView opened the fixture in 196 ms during the release run.
 - Window flags: View > Toggle fullscreen and F11 both enter and leave real
   window fullscreen, and Always on top toggles the native flag while the
   in-app state follows it.
@@ -274,15 +274,38 @@ deb staging tarballs. The first 0.31 packaging run exposed those two upload and
 checksum defects, which were fixed before 0.32. The workflow does not sign,
 publish a release, or install the artifacts.
 
+## Third-party notices
+
+`scripts/notices.mjs` reads production packages from `package-lock.json` and
+resolves Rust crates with `cargo tree` for an explicit target. It writes exact
+versions, declared licenses, real copyright lines, and deduplicated license
+texts to `THIRD_PARTY_NOTICES.md`. The Windows development run covered 198 npm
+packages, 241 Windows-target Rust crates, and 90 distinct license texts; one
+package had no cached license file and is listed explicitly instead of being
+silently omitted. Vitest covers license-expression normalization, copyright
+filtering (including Apache clause text that must not be treated as a notice),
+license-body preservation, family detection, shared-text deduplication, cargo
+tree parsing, and deterministic rendering. `npm run notices:check` confirms the
+committed file is current on Windows. The About dialog exposes the generated
+text in an expandable, scrollable section; the E2E gate expands it and checks
+that npm and Rust tables and a license body are present. The release workflow
+runs `cargo fetch --locked`, regenerates the notices for each runner target, and
+uploads the generated file with the installers. The committed file is the
+Windows-target snapshot; Linux-only crate notices exist in the Linux artifact
+and are not represented by the repository copy. This is an engineering
+inventory, not a legal opinion, and unusual license terms still need review.
+
 ## Continuous integration
 
 `.github/workflows/build-test.yml` runs a Windows and Ubuntu matrix on pushes
 and pull requests. Each job installs Node.js 22 and Rust stable, caches the
 Cargo registry, runs `npm ci`, typecheck, Vitest, the frontend build,
-`cargo fmt --check`, and `cargo test`. The existing publication-audit workflow
-remains separate. The real-WebView E2E suite is not run in CI because it needs a
-desktop WebView session and CDP; it remains part of the local release gate. The
-matrix does not build installers, sign artifacts, or test auto-update.
+`cargo fmt --check`, and `cargo test`. The Windows job also runs
+`npm run notices:check` after the Rust cache is populated. The existing
+publication-audit workflow remains separate. The real-WebView E2E suite is not
+run in CI because it needs a desktop WebView session and CDP; it remains part of
+the local release gate. The matrix does not build installers, sign artifacts, or
+test auto-update.
 
 ## Windows packaging
 
@@ -378,7 +401,7 @@ before release. Large-file mode compares JavaScript string length, so the 500,00
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 177 ms measurement is from one Windows development machine;
+large files. The 196 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

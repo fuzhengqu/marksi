@@ -244,6 +244,25 @@ folder. The resulting content opens as a dirty unsaved document. Unsupported
 media types and traversal paths are left literal, and the temporary workspace is
 removed when the command returns.
 
+## Third-party notices
+
+`scripts/notices.mjs` is the single source for `THIRD_PARTY_NOTICES.md`. It
+collects production npm packages from `package-lock.json`, resolves Rust crates
+with `cargo tree --target` and the local Cargo cache, then removes real
+copyright notices from license bodies, deduplicates identical texts, and keeps
+the copyright lines beside each package. The output includes exact versions,
+declared license expressions, shared license-text identifiers, and an explicit
+list for packages whose license file was absent from the cache. It performs no
+network access and is deterministic for a fixed lockfile and target.
+
+The generated Markdown is imported into the frontend with Vite's `?raw` loader
+and shown inside an expandable section of the About dialog; the production
+bundle therefore carries the notice text without a filesystem or opener
+command. The release workflow regenerates the file for each runner target before
+`tauri build`, so the Windows and Linux installers embed their own dependency
+inventories. The committed copy is the Windows-target snapshot and is checked by
+`npm run notices:check` on Windows CI.
+
 ## Interface localization
 
 `src/i18n.ts` owns the English source labels, the Simplified Chinese

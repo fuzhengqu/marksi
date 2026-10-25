@@ -7,9 +7,9 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.35**
-- Technical version: **0.35.0**
-- Foundation milestones M1 and M3 are complete.
+- Product version: **0.36**
+- Technical version: **0.36.0**
+- Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
 - M4 is complete.
@@ -25,8 +25,8 @@ The public security and version policies are enforced by
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **107 done, 6 wip,
-7 todo, 2 deferred** across 122 items.
+is the source for exact status values. Current raw count: **108 done, 6 wip,
+6 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
 
@@ -42,8 +42,10 @@ Exit criteria:
 - Version display and one-step release bumping are enforced.
 - Full build/test CI matrix exists for Windows and Linux.
 
-Current gap: full cross-platform build/test CI is still open. The current
-GitHub Actions workflow runs the publication audit only.
+Status: complete. The notices file is generated from the locked npm and Cargo
+graphs, checked in Windows CI, and regenerated per target by the release
+workflow. The publication audit and the Windows/Linux build-test matrix are
+separate workflows.
 
 ### M1 — Desktop foundation
 

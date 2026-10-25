@@ -39,6 +39,7 @@ describe("translate", () => {
     expect(translate("zh-CN", "Advanced")).toBe("高级");
     expect(translate("zh-CN", "Apply JSON")).toBe("应用 JSON");
     expect(translate("zh-CN", "Skip to editor")).toBe("跳到编辑器");
+    expect(translate("zh-CN", "Third-party notices")).toBe("第三方许可声明");
     expect(translate("zh-CN", "Custom CSS theme")).toBe("自定义 CSS 主题");
   });
 

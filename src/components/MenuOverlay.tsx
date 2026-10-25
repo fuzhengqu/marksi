@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import thirdPartyNotices from "../../THIRD_PARTY_NOTICES.md?raw";
 import {
   AlignVerticalJustifyCenter,
   Bold,
@@ -672,6 +673,10 @@ function AboutDialog({ open, onClose }: AboutDialogProps) {
           <span>{t("No account")}</span>
           <span>{t("No telemetry")}</span>
         </div>
+        <details className="about-notices">
+          <summary>{t("Third-party notices")}</summary>
+          <pre>{thirdPartyNotices}</pre>
+        </details>
       </div>
     </div>
   );

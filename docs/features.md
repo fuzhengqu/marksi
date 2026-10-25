@@ -371,11 +371,22 @@ save the imported document to choose its final location.
 | Flatpak packaging | todo | M7 |
 | Signed releases / checksums | wip | M6 |
 | Auto-update | todo | M6 |
-| Third-party license notices | wip | M0 |
+| Third-party license notices | done | M0 |
 | Publication audit CI (Linux) | done | M0 |
 | Full build/test CI (Windows + Linux) | done | M0 |
 | E2E tests | done | M0 |
 | Golden Markdown tests | done | M2 |
+
+The third-party notices are generated from the locked dependency graph rather
+than maintained by hand. `npm run notices:generate` reads every production npm
+package from `package-lock.json` and resolves Rust crates with `cargo tree` for
+the requested target, then writes exact versions, declared licenses, copyright
+lines, and deduplicated license texts to `THIRD_PARTY_NOTICES.md`.
+`npm run notices:check` rejects stale notices on Windows CI. The release
+workflow regenerates the file for each runner target before building, so
+Windows and Linux packages describe their own dependency trees. The About dialog
+includes the generated text in an expandable section, and no network or
+telemetry is involved at runtime.
 
 ## Explicit non-goals
 

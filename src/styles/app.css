@@ -2670,6 +2670,40 @@ body.is-resizing-image[data-resize-axis="height"] * {
   font-size: 9.5px;
 }
 
+.about-notices {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+
+.about-notices summary {
+  cursor: pointer;
+  color: var(--fg-muted);
+  font-size: 11px;
+}
+
+.about-notices summary:hover {
+  color: var(--fg);
+}
+
+.about-notices pre {
+  max-height: 300px;
+  margin: 10px 0 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* ------------------------------------------------------------------ */
 /* Toast                                                              */
 /* ------------------------------------------------------------------ */

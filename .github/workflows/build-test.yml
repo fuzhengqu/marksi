@@ -78,3 +78,7 @@ jobs:
 
       - name: Run Rust tests
         run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Check third-party notices
+        if: runner.os == 'Windows'
+        run: npm run notices:check

@@ -167,6 +167,9 @@ ease-out; honor `prefers-reduced-motion`.
   confirmation toast so the transition is unambiguous.
 - About displays the product version, starting at `0.01`. Each bug-fix or
   feature release increments it by exactly `0.01`; versions never skip.
+- About includes a collapsed Third-party notices section. Expanding it shows the
+  generated dependency inventory and license texts in a scrollable monospace
+  panel; opening About performs no network request.
 - Unsaved changes are always visible via a dot next to the title.
 - The initial empty untitled document uses the normal editor surface; typing,
   opening a file, or choosing New document replaces the empty state directly.

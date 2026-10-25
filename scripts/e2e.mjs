@@ -381,7 +381,30 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.35"), "About should show version 0.35", state);
+    assert(state.version?.includes("0.36"), "About should show version 0.36", state);
+    await clickSelector(".about-notices summary");
+    await sleep(180);
+    const notices = await evaluate(`(() => {
+      const details = document.querySelector(".about-notices");
+      const text = details?.querySelector("pre")?.textContent ?? "";
+      return {
+        open: details?.hasAttribute("open") ?? false,
+        length: text.length,
+        npm: text.includes("## npm dependencies"),
+        rust: text.includes("## Rust dependencies"),
+        react: text.includes("| react |"),
+        license: text.includes("Permission is hereby granted")
+      };
+    })()`);
+    assert(notices.open, "third-party notices should expand", notices);
+    assert(notices.length > 100_000, "notices text is incomplete", {
+      length: notices.length,
+    });
+    assert(
+      notices.npm && notices.rust && notices.react && notices.license,
+      "notices should include package tables and license texts",
+      notices,
+    );
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
