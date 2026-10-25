@@ -18,6 +18,7 @@ const BOOLEAN_KEYS = [
   "flatFileList",
   "localHistory",
   "largeFileOptimizations",
+  "nativeTitleBar",
   "rememberWindowFrame",
   "restoreSession",
 ] as const;
@@ -49,6 +50,7 @@ const SETTING_KEYS = new Set([
   "flatFileList",
   "localHistory",
   "largeFileOptimizations",
+  "nativeTitleBar",
   "rememberWindowFrame",
   "restoreSession",
   "customTheme",

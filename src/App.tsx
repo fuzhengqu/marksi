@@ -71,6 +71,7 @@ import {
   isAlwaysOnTop,
   isFullscreen,
   isTauri,
+  isWindowDecorated,
   isWindowMinimized,
   listCustomThemes,
   listDirectory,
@@ -92,7 +93,9 @@ import {
   savePngFile,
   setAlwaysOnTop,
   setFullscreen,
+  setWindowDecorations,
   takeStartupFile,
+  windowTitle,
   windowWorkAreas,
 } from "./lib/platform";
 import {
@@ -1336,6 +1339,15 @@ export default function App() {
     if (!isTauri()) {
       return;
     }
+    void setWindowDecorations(settings.nativeTitleBar).catch(() => {
+      // Keep the current frame if the window manager rejects the change.
+    });
+  }, [settings.nativeTitleBar]);
+
+  useEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
     if (!settings.rememberWindowFrame) {
       clearWindowFrame();
       return;
@@ -1756,6 +1768,8 @@ export default function App() {
         fullscreen: await isFullscreen(),
         alwaysOnTop: await isAlwaysOnTop(),
         minimized: await isWindowMinimized(),
+        decorated: await isWindowDecorated(),
+        title: await windowTitle(),
       }),
       setWindowFlags: async (fullscreen: boolean, alwaysOnTop: boolean) => {
         await setFullscreen(fullscreen);

@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.36**
-- Technical version: **0.36.0**
+- Product version: **0.37**
+- Technical version: **0.37.0**
 - Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
@@ -17,15 +17,15 @@ The public security and version policies are enforced by
   uploader integration.
 - M6 has started with system appearance, additional themes, user CSS themes,
   the shortcut editor, Windows installer validation, CLI open, file
-  associations, window flags, window and session memory, advanced JSON
-  settings, release checksums, Linux packages, and the Windows/Linux build-test
-  matrix. M7 has started with IME/CJK input coverage and an accessibility pass;
-  RTL layout and Flatpak remain open.
+  associations, window flags, window and session memory, the native title bar,
+  advanced JSON settings, release checksums, Linux packages, and the
+  Windows/Linux build-test matrix. M7 has started with IME/CJK input coverage
+  and an accessibility pass; RTL layout and Flatpak remain open.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **108 done, 6 wip,
+is the source for exact status values. Current raw count: **109 done, 5 wip,
 6 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
@@ -130,9 +130,10 @@ Entry criteria:
 
 Status: in progress. System appearance, additional themes, user CSS themes, the
 shortcut editor, Windows installer validation, Linux packages, CLI open, file
-associations, window flags, window/session memory, and advanced JSON settings
-are complete. Release checksums are automated; code signing and auto-update are
-still open.
+associations, window flags, window/session memory, the native title bar option,
+and advanced JSON settings are complete. Release checksums are automated; code
+signing, auto-update, multiple windows, single-instance forwarding, and default
+Snap Layouts remain open.
 
 ### M7 — Performance, accessibility, and internationalization depth
 

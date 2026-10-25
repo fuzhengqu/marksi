@@ -16,7 +16,7 @@ that design decisions do not paint us into a corner.
 |---|---|---|
 | Custom title bar with drag region | done | M1 |
 | Minimize / maximize / close controls | done | M1 |
-| Native title bar option | todo | M6 |
+| Native title bar option | done | M6 |
 | Multiple document windows | todo | M6 |
 | Fullscreen / always on top | done | M6 |
 | Window size/position/session restore | done | M6 |
@@ -83,6 +83,18 @@ normal window bounds and maximized state at startup. Saved bounds are checked
 against the current monitor work areas; windows that are fully or mostly
 offscreen return to the nearest usable display. Minimized state is never saved,
 and restoring a frame brings a minimized window back into view.
+
+Native title bar is an optional window style. MarkSI normally draws its own
+title bar and window buttons. Enabling Native title bar in Preferences hands
+the frame back to the operating system, hides the custom minimize, maximize,
+and close buttons, removes the custom drag region, and lets the platform caption
+buttons provide Snap Layouts or equivalent window-manager behavior. The native
+window title follows the document name and dirty state, for example
+`notes.md * — MarkSI`. The change applies immediately and is persisted; the
+saved value is applied before the first window frame restore so the remembered
+content size is not gradually reduced. Linux behavior depends on the window
+manager, and a few desktops may need a restart before the new frame is fully
+repainted.
 
 When Restore last session is enabled, the last document and workspace folder
 reopen at startup with the previous view mode. Only file paths are stored, never

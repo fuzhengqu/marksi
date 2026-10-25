@@ -808,6 +808,38 @@ export async function isWindowMinimized(): Promise<boolean> {
   return getCurrentWindow().isMinimized();
 }
 
+export async function setWindowDecorations(decorations: boolean): Promise<void> {
+  if (!isTauri()) {
+    return;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  await getCurrentWindow().setDecorations(decorations);
+}
+
+export async function isWindowDecorated(): Promise<boolean> {
+  if (!isTauri()) {
+    return false;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  return getCurrentWindow().isDecorated();
+}
+
+export async function setWindowTitle(title: string): Promise<void> {
+  if (!isTauri()) {
+    return;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  await getCurrentWindow().setTitle(title);
+}
+
+export async function windowTitle(): Promise<string> {
+  if (!isTauri()) {
+    return document.title;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  return getCurrentWindow().title();
+}
+
 export async function windowWorkAreas(): Promise<WorkArea[]> {
   if (!isTauri()) {
     return [];

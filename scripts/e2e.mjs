@@ -381,7 +381,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.36"), "About should show version 0.36", state);
+    assert(state.version?.includes("0.37"), "About should show version 0.37", state);
     await clickSelector(".about-notices summary");
     await sleep(180);
     const notices = await evaluate(`(() => {
@@ -1032,6 +1032,85 @@ async function main() {
     }
   });
 
+  await test("switches between the custom and native title bars", async () => {
+    await resetBase();
+    try {
+      const initial = await evaluate(
+        "(async () => await window.__MARKSI_DEV__.windowFlags())()",
+      );
+      assert(!initial.decorated, "window should start undecorated", initial);
+      assert(
+        (await evaluate(
+          'document.querySelectorAll(".window-controls .window-button").length',
+        )) === 3,
+        "custom window controls should be present",
+      );
+
+      await evaluate(
+        "window.__MARKSI_DEV__.setSettings({ nativeTitleBar: true })",
+      );
+      await waitFor(
+        'document.querySelector(".titlebar")?.classList.contains("has-native-frame")',
+      );
+      await waitFor(
+        "(async () => (await window.__MARKSI_DEV__.windowFlags()).decorated)()",
+      );
+      const nativeFrame = await evaluate(`(async () => ({
+        flags: await window.__MARKSI_DEV__.windowFlags(),
+        controls: document.querySelectorAll(".window-controls .window-button").length,
+        drag: document.querySelector(".titlebar")?.hasAttribute("data-tauri-drag-region") ?? true,
+        titlebar: document.querySelector(".titlebar-center")?.textContent?.trim() ?? ""
+      }))()`);
+      assert(
+        nativeFrame.flags.decorated,
+        "native title bar should be applied to the window",
+        nativeFrame,
+      );
+      assert(
+        nativeFrame.flags.title.includes("MarkSI"),
+        "native window title should include MarkSI",
+        nativeFrame,
+      );
+      assert(
+        nativeFrame.controls === 0,
+        "custom window controls should hide with a native title bar",
+        nativeFrame,
+      );
+      assert(
+        !nativeFrame.drag,
+        "custom drag region should be removed with a native title bar",
+        nativeFrame,
+      );
+      assert(
+        nativeFrame.titlebar.length > 0,
+        "document title should remain visible in the custom toolbar",
+        nativeFrame,
+      );
+
+      await evaluate(
+        "window.__MARKSI_DEV__.setSettings({ nativeTitleBar: false })",
+      );
+      await waitFor(
+        '!document.querySelector(".titlebar")?.classList.contains("has-native-frame")',
+      );
+      await waitFor(
+        "(async () => !(await window.__MARKSI_DEV__.windowFlags()).decorated)()",
+      );
+      assert(
+        (await evaluate(
+          'document.querySelectorAll(".window-controls .window-button").length',
+        )) === 3,
+        "custom window controls should return",
+      );
+    } finally {
+      await evaluate(
+        "window.__MARKSI_DEV__.setSettings({ nativeTitleBar: false })",
+      ).catch(() => {});
+      await sleep(250);
+      await resetBase();
+    }
+  });
+
   await test("restores the last document and workspace session", async () => {
     await resetBase();
     const root = resolve(fixtureDir, "session-workspace");
@@ -1462,14 +1541,15 @@ async function main() {
         'document.activeElement?.id === "sidebar-tab-outline"',
       );
 
-      const liveRegion = await evaluate(`(() => {
-        window.__MARKSI_DEV__.getState().showToast("Accessibility check", "info");
-        return {
-          role: document.querySelector(".toast")?.getAttribute("role"),
-          live: document.querySelector(".toast")?.getAttribute("aria-live"),
-          atomic: document.querySelector(".toast")?.getAttribute("aria-atomic")
-        };
-      })()`);
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().showToast("Accessibility check", "info")',
+      );
+      await waitFor('document.querySelector(".toast")');
+      const liveRegion = await evaluate(`({
+        role: document.querySelector(".toast")?.getAttribute("role"),
+        live: document.querySelector(".toast")?.getAttribute("aria-live"),
+        atomic: document.querySelector(".toast")?.getAttribute("aria-atomic")
+      })`);
       assert(
         liveRegion.role === "status" &&
           liveRegion.live === "polite" &&

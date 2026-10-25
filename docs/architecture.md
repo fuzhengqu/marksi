@@ -370,6 +370,24 @@ support, MarkSI falls back to a hidden contenteditable selection and
 handlers own empty-document checks, menu wiring, keyboard shortcuts, and
 success toasts.
 
+## Window chrome
+
+The Tauri window starts with `decorations: false`, and MarkSI draws the title
+bar, menu, document title, theme switch, and minimize/maximize/close controls.
+`Native title bar` is a persisted setting. `src/main.tsx` reads the hydrated
+setting before the first React render and awaits `setDecorations`, so the
+platform frame exists before window-frame memory restores the content size. The
+App effect applies later changes immediately; `TitleBar` hides its window
+controls and drag region and updates the native title to
+`<document><dirty marker> — MarkSI`.
+
+The capability file allows `set-decorations`, `is-decorated`, `title`,
+`set-title`, and the existing window operations. The native state is queried in
+E2E through `isDecorated()` instead of inferring it from CSS. A rejected or
+unsupported decoration change leaves the custom frame usable. Window-frame
+capture listens to resize/move events after the change, so the stored content
+size matches the active frame style.
+
 ## Frontend boundaries
 
 - `src/lib/platform.ts` is the only place that calls Tauri APIs for file IO.

@@ -147,6 +147,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   flatFileList: false,
   localHistory: true,
   largeFileOptimizations: true,
+  nativeTitleBar: false,
   rememberWindowFrame: true,
   restoreSession: true,
   customTheme: "",
@@ -513,6 +514,10 @@ export const useAppStore = create<AppStore>()(
               typeof saved.settings?.largeFileOptimizations === "boolean"
                 ? saved.settings.largeFileOptimizations
                 : true,
+            nativeTitleBar:
+              typeof saved.settings?.nativeTitleBar === "boolean"
+                ? saved.settings.nativeTitleBar
+                : false,
             rememberWindowFrame:
               typeof saved.settings?.rememberWindowFrame === "boolean"
                 ? saved.settings.rememberWindowFrame

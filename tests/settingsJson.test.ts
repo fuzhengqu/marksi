@@ -23,6 +23,7 @@ describe("advanced settings JSON", () => {
         imageAssetFolder: "media/images",
         flatFileList: true,
         loadRemoteImages: true,
+        nativeTitleBar: true,
         theme: "dark",
       }),
       DEFAULT_SETTINGS,
@@ -34,6 +35,7 @@ describe("advanced settings JSON", () => {
     expect(result.settings.imageAssetFolder).toBe("media/images");
     expect(result.settings.flatFileList).toBe(true);
     expect(result.settings.loadRemoteImages).toBe(true);
+    expect(result.settings.nativeTitleBar).toBe(true);
     expect(result.warnings).toContain("Unknown setting ignored: theme");
   });
 

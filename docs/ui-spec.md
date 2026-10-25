@@ -104,6 +104,10 @@ ease-out; honor `prefers-reduced-motion`.
   and restores the hamburger. Escape also closes it. Export, Preferences, and
   Quit MarkSI are File items; Edit contains the copy actions. The menu has no
   per-dropdown footer. About uses only its top-right close button.
+- Native title bar is off by default. When enabled, the custom minimize,
+  maximize, and close controls disappear, the custom drag region is removed, and
+  the operating system frame supplies those controls and Snap Layouts where
+  available. The native title follows the document name and unsaved marker.
 - Sidebar tabs are keyboard reachable and preserve state. An empty workspace
   shows four actions above Recent files: Open file, Open folder, Quick open,
   and New document. There is no footer action row.

@@ -172,6 +172,7 @@ export interface AppSettings {
   flatFileList: boolean;
   localHistory: boolean;
   largeFileOptimizations: boolean;
+  nativeTitleBar: boolean;
   rememberWindowFrame: boolean;
   restoreSession: boolean;
   customTheme: string;

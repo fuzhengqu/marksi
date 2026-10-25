@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { useT } from "../i18n";
-import { isTauri } from "../lib/platform";
+import { isTauri, setWindowTitle } from "../lib/platform";
 import {
   isDarkAppearance,
   resolveTheme,
@@ -21,6 +21,9 @@ export function TitleBar() {
   const t = useT();
   const doc = useAppStore((state) => state.doc);
   const theme = useAppStore((state) => state.theme);
+  const nativeTitleBar = useAppStore(
+    (state) => state.settings.nativeTitleBar,
+  );
   const systemDark = useSystemDark();
   const resolvedTheme = resolveTheme(theme, systemDark);
   const darkAppearance = isDarkAppearance(resolvedTheme);
@@ -60,6 +63,17 @@ export function TitleBar() {
     };
   }, [native]);
 
+  useEffect(() => {
+    if (!native) {
+      return;
+    }
+    void setWindowTitle(
+      `${doc.name}${doc.dirty ? " *" : ""} — MarkSI`,
+    ).catch(() => {
+      // The native title is best-effort on window managers that lock it.
+    });
+  }, [native, doc.name, doc.dirty]);
+
   async function minimize() {
     if (!native) return;
     const { getCurrentWindow } = await import("@tauri-apps/api/window");
@@ -81,8 +95,10 @@ export function TitleBar() {
 
   return (
     <header
-      className={`titlebar ${menuOpen ? "is-menu-open" : ""}`}
-      data-tauri-drag-region="deep"
+      className={`titlebar ${menuOpen ? "is-menu-open" : ""} ${
+        nativeTitleBar ? "has-native-frame" : ""
+      }`}
+      data-tauri-drag-region={nativeTitleBar ? undefined : "deep"}
     >
       <div className="titlebar-left">
         <button
@@ -128,7 +144,7 @@ export function TitleBar() {
           )}
         </button>
 
-        {native ? (
+        {native && !nativeTitleBar ? (
           <div className="window-controls">
             <button
               className="window-button"

@@ -721,6 +721,21 @@ export function SettingsDialog() {
             </div>
             <div className="settings-row">
               <div className="settings-copy">
+                <span>{t("Native title bar")}</span>
+                <small>
+                  {t(
+                    "Use the operating system title bar instead of MarkSI's custom one. Changes take effect immediately.",
+                  )}
+                </small>
+              </div>
+              <Toggle
+                label={t("Native title bar")}
+                checked={settings.nativeTitleBar}
+                onChange={(value) => update("nativeTitleBar", value)}
+              />
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
                 <span>{t("Remember window size and position")}</span>
                 <small>
                   {t(

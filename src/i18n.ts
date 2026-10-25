@@ -580,6 +580,9 @@ const ZH: Record<string, string> = {
   "No account": "无需账户",
   "No telemetry": "无遥测",
   "Third-party notices": "第三方许可声明",
+  "Native title bar": "原生标题栏",
+  "Use the operating system title bar instead of MarkSI's custom one. Changes take effect immediately.":
+    "使用操作系统标题栏代替 MarkSI 自绘标题栏。更改会立即生效。",
 };
 
 const ZH_SEARCH_PHRASES: Record<string, string> = {

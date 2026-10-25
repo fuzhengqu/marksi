@@ -42,7 +42,8 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
 - **Interface**: Chinese and English, system-following or fixed light/dark/
   sepia/high-contrast appearance, local CSS themes, customizable application
   shortcuts, advanced JSON settings, fullscreen and always-on-top,
-  keyboard-accessible dialogs and sidebar, and interface zoom.
+  keyboard-accessible dialogs and sidebar, an optional native title bar, and
+  interface zoom.
 - **Privacy**: no account and no telemetry; documents stay on your machine; raw
   HTML is not executed; remote images are off by default, cached locally only
   when enabled, and can be cleared at any time; images are never uploaded.
