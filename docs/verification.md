@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.38` product version.
+- About dialog close behavior and display of the `0.39` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -137,9 +137,13 @@ The E2E suite currently covers:
   file bytes unchanged) and then as GB18030 (correct Chinese text, clean
   document); an edit saved afterwards keeps the exact GB18030 bytes.
 - Large-file mode: a fixture over 500,000 characters opens with the status
-  badge, no live-preview decorations, and the Source label; disabling the
-  preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 353 ms during the latest run;
+  badge, no live-preview decorations, and the Source label. Switching to
+  reading view shows a labelled confirmation panel with the exact character
+  count and no rendered body; confirming renders the heading, adds the
+  `is-large-document` class, and computes `content-visibility: auto` for the
+  rendered block. Returning to source leaves the buffer unchanged. Disabling
+  the preference restores live preview, and re-enabling it restores the mode.
+  The Windows dev WebView opened the fixture in 208 ms during the latest run;
   repeated runs ranged from 196 to 444 ms.
 - Window flags: View > Toggle fullscreen and F11 both enter and leave real
   window fullscreen, and Always on top toggles the native flag while the
@@ -422,10 +426,12 @@ token sets and Mermaid palettes, not operating-system high-contrast API
 integration; their visual contrast and platform rendering need a manual review
 before release. Large-file mode compares JavaScript string length, so the 500,000 threshold is
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
-check, and emoji suggestions only; reading-view rendering, export, search, and
-outline extraction still process the full document and may be slow for very
-large files. The 196–444 ms range is from one Windows development machine and
-varies with host load;
+check, and emoji suggestions; reading view waits for an explicit confirmation
+before building the full DOM, but the confirmed render, print, PNG export,
+search, export, and outline extraction still process the complete document and
+may be slow for very large files. The confirmation is per reading-view visit and
+resets after leaving reading mode. The 196–444 ms range is from one Windows
+development machine and varies with host load;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

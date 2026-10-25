@@ -39,6 +39,7 @@ import {
 } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
 import type { ResolvedTheme } from "../lib/theme";
+import { shouldConfirmLargePreview } from "../lib/largeFile";
 import { useFocusTrap } from "../lib/useFocusTrap";
 
 interface PreviewPaneProps {
@@ -48,6 +49,8 @@ interface PreviewPaneProps {
   gotoLine: number | null;
   theme: ResolvedTheme;
   textDirection: "ltr" | "rtl";
+  largeDocument: boolean;
+  forceLargePreview: boolean;
   onResizeImage: (
     imageIndex: number,
     width: number | null,
@@ -164,6 +167,8 @@ export function PreviewPane({
   gotoLine,
   theme,
   textDirection,
+  largeDocument,
+  forceLargePreview,
   onResizeImage,
   onFitImage,
   onResetImage,
@@ -183,17 +188,26 @@ export function PreviewPane({
   );
   const resizeLabel = t("Resize image");
   const heightResizeLabel = t("Resize image height");
+  const [confirmedLargePreview, setConfirmedLargePreview] = useState(false);
+  const needsLargePreviewConfirmation = shouldConfirmLargePreview(
+    largeDocument,
+    forceLargePreview,
+    confirmedLargePreview,
+  );
   const html = useMemo(
     () =>
-      renderMarkdown(debouncedContent, {
-        imageResizeLabel: resizeLabel,
-        imageHeightResizeLabel: heightResizeLabel,
-        imageResizable: !readOnlyMode,
-        strictMode,
-      }),
+      needsLargePreviewConfirmation
+        ? ""
+        : renderMarkdown(debouncedContent, {
+            imageResizeLabel: resizeLabel,
+            imageHeightResizeLabel: heightResizeLabel,
+            imageResizable: !readOnlyMode,
+            strictMode,
+          }),
     [
       debouncedContent,
       heightResizeLabel,
+      needsLargePreviewConfirmation,
       readOnlyMode,
       resizeLabel,
       strictMode,
@@ -688,12 +702,53 @@ export function PreviewPane({
         onKeyDown={handleResizeKey}
         onContextMenu={handleContextMenu}
       >
-        <article
-          key={loadRemoteImages ? "remote-images-on" : "remote-images-off"}
-          className="markdown-body"
-          dir={textDirection}
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
+        {needsLargePreviewConfirmation ? (
+          <div
+            className="large-preview-gate"
+            role="region"
+            aria-labelledby="large-preview-title"
+          >
+            <div className="large-preview-mark" aria-hidden="true">
+              {content.length.toLocaleString()}
+            </div>
+            <h2 id="large-preview-title">{t("Large document")}</h2>
+            <p>
+              {t(
+                "This document has {count} characters. Rendering the full reading view can take a while.",
+                { count: content.length.toLocaleString() },
+              )}
+            </p>
+            <div className="large-preview-actions">
+              <button
+                className="button button-primary"
+                onClick={() => setConfirmedLargePreview(true)}
+              >
+                {t("Render reading view")}
+              </button>
+              <button
+                className="button button-quiet"
+                onClick={() => useAppStore.getState().setViewMode("preview")}
+              >
+                {t("Back to source")}
+              </button>
+            </div>
+            <small>
+              {t(
+                "Print and image export render the full document automatically.",
+              )}
+            </small>
+          </div>
+        ) : (
+          <article
+            key={loadRemoteImages ? "remote-images-on" : "remote-images-off"}
+            className={`markdown-body ${
+              largeDocument ? "is-large-document" : ""
+            }`}
+            dir={textDirection}
+            data-large-render={largeDocument ? "true" : undefined}
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        )}
       </section>
 
       {contextMenu ? (

@@ -381,7 +381,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.38"), "About should show version 0.38", state);
+    assert(state.version?.includes("0.39"), "About should show version 0.39", state);
     await clickSelector(".about-notices summary");
     await sleep(180);
     const notices = await evaluate(`(() => {
@@ -2581,6 +2581,58 @@ async function main() {
       assert(!state.live, "live preview decorations should be off", state);
       assert(state.badge.length > 0, "large-file status badge is missing", state);
       assert(elapsed < 15_000, "large file took too long to open", elapsed);
+
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setViewMode("reading")',
+      );
+      await waitFor('document.querySelector(".large-preview-gate")');
+      const gate = await evaluate(`({
+        body: Boolean(document.querySelector(".markdown-body")),
+        text: document.querySelector(".large-preview-gate")?.textContent ?? "",
+        role: document.querySelector(".large-preview-gate")?.getAttribute("role")
+      })`);
+      assert(!gate.body, "large reading view should wait for confirmation", gate);
+      assert(gate.role === "region", "large preview gate should be a labelled region", gate);
+      const formattedCount = new Intl.NumberFormat("en-US").format(
+        state.length,
+      );
+      const formattedCountZh = new Intl.NumberFormat("zh-CN").format(
+        state.length,
+      );
+      assert(
+        gate.text.includes(formattedCount) ||
+          gate.text.includes(formattedCountZh),
+        "large preview gate should show the character count",
+        gate,
+      );
+      await clickSelector(".large-preview-actions .button-primary");
+      await waitFor(
+        'document.querySelector(".markdown-body[data-large-render=\'true\'] h1")',
+      );
+      const rendered = await evaluate(`({
+        heading: document.querySelector(".markdown-body h1")?.textContent,
+        gate: Boolean(document.querySelector(".large-preview-gate")),
+        visibility: getComputedStyle(
+          document.querySelector(".markdown-body h1")
+        ).contentVisibility
+      })`);
+      assert(
+        rendered.heading?.includes("Large document") && !rendered.gate,
+        "confirming should render the large reading view",
+        rendered,
+      );
+      assert(
+        rendered.visibility === "auto",
+        "large reading blocks should use content visibility",
+        rendered,
+      );
+
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setViewMode("preview")',
+      );
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().viewMode === "preview"',
+      );
 
       await evaluate(
         "window.__MARKSI_DEV__.setSettings({ largeFileOptimizations: false })",

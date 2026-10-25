@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   isLargeDocument,
   LARGE_FILE_CHARS,
+  shouldConfirmLargePreview,
 } from "../src/lib/largeFile";
 
 describe("large file mode", () => {
@@ -14,5 +15,12 @@ describe("large file mode", () => {
   it("supports an explicit threshold for focused checks", () => {
     expect(isLargeDocument("abcdef", 6)).toBe(true);
     expect(isLargeDocument("abcde", 6)).toBe(false);
+  });
+
+  it("only gates the first manual large reading render", () => {
+    expect(shouldConfirmLargePreview(true, false, false)).toBe(true);
+    expect(shouldConfirmLargePreview(true, false, true)).toBe(false);
+    expect(shouldConfirmLargePreview(true, true, false)).toBe(false);
+    expect(shouldConfirmLargePreview(false, false, false)).toBe(false);
   });
 });

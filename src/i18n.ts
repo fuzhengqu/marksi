@@ -589,6 +589,13 @@ const ZH: Record<string, string> = {
   Automatic: "自动",
   "Left to right": "从左到右",
   "Right to left": "从右到左",
+  "Large document": "大型文档",
+  "This document has {count} characters. Rendering the full reading view can take a while.":
+    "此文档包含 {count} 个字符。渲染完整阅读视图可能需要一些时间。",
+  "Render reading view": "渲染阅读视图",
+  "Back to source": "返回源码",
+  "Print and image export render the full document automatically.":
+    "打印和图片导出会自动渲染完整文档。",
 };
 
 const ZH_SEARCH_PHRASES: Record<string, string> = {

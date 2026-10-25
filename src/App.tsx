@@ -179,6 +179,7 @@ export default function App() {
   const [encodingOpen, setEncodingOpen] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [themeRevision, setThemeRevision] = useState(0);
+  const [forceLargePreview, setForceLargePreview] = useState(false);
   const savingRef = useRef(false);
   const bootStartedRef = useRef(false);
   const windowFrameRef = useRef<WindowFrame | null>(null);
@@ -736,6 +737,7 @@ export default function App() {
       return false;
     }
     try {
+      setForceLargePreview(true);
       if (state.viewMode !== "reading") {
         state.setViewMode("reading");
       }
@@ -1108,6 +1110,7 @@ export default function App() {
     window.addEventListener("afterprint", cleanup, { once: true });
     window.setTimeout(cleanup, 60_000);
 
+    setForceLargePreview(true);
     if (state.viewMode !== "reading") {
       state.setViewMode("reading");
     }
@@ -1339,6 +1342,12 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (viewMode !== "reading") {
+      setForceLargePreview(false);
+    }
+  }, [viewMode]);
 
   useEffect(() => {
     if (!isTauri()) {
@@ -1910,6 +1919,8 @@ export default function App() {
                 gotoLine={gotoLine}
                 theme={resolvedTheme}
                 textDirection={textDirection}
+                largeDocument={largeFile}
+                forceLargePreview={forceLargePreview}
                 onResizeImage={handleResizeImage}
                 onFitImage={handleFitImage}
                 onResetImage={handleResetImage}

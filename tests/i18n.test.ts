@@ -43,6 +43,7 @@ describe("translate", () => {
     expect(translate("zh-CN", "Native title bar")).toBe("原生标题栏");
     expect(translate("zh-CN", "Text direction")).toBe("文本方向");
     expect(translate("zh-CN", "Right to left")).toBe("从右到左");
+    expect(translate("zh-CN", "Render reading view")).toBe("渲染阅读视图");
     expect(translate("zh-CN", "Custom CSS theme")).toBe("自定义 CSS 主题");
   });
 

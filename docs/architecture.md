@@ -434,11 +434,16 @@ size matches the active frame style.
   theme, Mermaid palettes, clipboard HTML, preview props, and chrome color; the
   stored mode remains System when the user chooses it. `tokens.css` owns each
   built-in palette.
-- `src/lib/largeFile.ts` is a pure threshold helper. The app disables the
-  editor's live-preview decorations, spell check, and emoji suggestions when
-  the document reaches 500,000 characters and the preference is enabled. The
-  status bar exposes the mode; the preference restores the normal editor
-  without changing the document text.
+- `src/lib/largeFile.ts` is a pure threshold and confirmation helper. The app
+  disables the editor's live-preview decorations, spell check, and emoji
+  suggestions when the document reaches 500,000 characters and the preference
+  is enabled. The status bar exposes the mode; the preference restores the
+  normal editor without changing the document text. `shouldConfirmLargePreview`
+  gates the first manual reading render; `PreviewPane` shows the character
+  count and renders only after confirmation. `forceLargePreview` lets print and
+  PNG export bypass the gate, and leaving reading mode clears it. Confirmed
+  blocks get `is-large-document` and CSS `content-visibility: auto`; print CSS
+  restores normal visibility so pagination is not affected.
 - `read_document_with_encoding` resolves labels through encoding_rs, reports a
   matching BOM, and decodes without writing. The frontend offers a fixed
   user-facing list and keeps the canonical encoding name in the document state

@@ -6,3 +6,11 @@ export function isLargeDocument(
 ): boolean {
   return content.length >= threshold;
 }
+
+export function shouldConfirmLargePreview(
+  largeDocument: boolean,
+  forceRender: boolean,
+  alreadyConfirmed: boolean,
+): boolean {
+  return largeDocument && !forceRender && !alreadyConfirmed;
+}

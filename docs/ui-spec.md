@@ -157,7 +157,10 @@ ease-out; honor `prefers-reduced-motion`.
   file takes precedence.
 - Documents over 500,000 characters show a Large file mode badge in the status
   bar and use the Source label while live-preview decorations are off.
-  Preferences > Editor can disable large-file optimizations.
+  Preferences > Editor can disable large-file optimizations. Opening reading
+  view first shows a centered confirmation card with the character count,
+  Render reading view, and Back to source; print and PNG export render the full
+  view without the card.
 - File > Reopen with encoding opens a radio list of supported encodings, with
   the current encoding marked and a warning when the document is dirty. The
   action decodes only; saving remains a separate user action.

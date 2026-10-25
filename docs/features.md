@@ -162,8 +162,14 @@ rejected on save.
 Large-file mode activates at 500,000 characters when enabled in Preferences.
 It turns off live-preview decorations, spell check, and emoji suggestions while
 keeping source editing and the view toggle available. The status bar shows a
-Large file mode badge and labels the editing view as Source. Reading view and
-export remain available but are not optimized by this mode.
+Large file mode badge and labels the editing view as Source. Switching a large
+document to reading view shows a confirmation panel with the exact character
+count instead of immediately building a huge DOM. Confirming renders the full
+sanitized document; Back to source returns without rendering. Rendered blocks
+use CSS content visibility so offscreen sections are not painted. Print and PNG
+export bypass the confirmation because they need the complete reading view, and
+the confirmation state resets after leaving reading mode. The source buffer is
+never changed.
 
 IME composition is handled without interfering with the document: auto-pair,
 smart punctuation, and emoji completion stay inactive while Chinese, Japanese,
@@ -211,7 +217,7 @@ translations are not shipped.
 | Spellcheck | done | M3 |
 | Emoji autocomplete | done | M4 |
 | IME / CJK input coverage | done | M7 |
-| Large-document performance mode | todo | M7 |
+| Large-document performance mode | done | M7 |
 
 ## Markdown
 
