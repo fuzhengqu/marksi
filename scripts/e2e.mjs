@@ -381,7 +381,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.34"), "About should show version 0.34", state);
+    assert(state.version?.includes("0.35"), "About should show version 0.35", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -549,6 +549,79 @@ async function main() {
     assert(state.editable === "false", "reading view editor should be read-only", state);
     await evaluate('window.__MARKSI_DEV__.getState().setViewMode("preview")');
     await sleep(200);
+  });
+
+  await test("renders golden Markdown structures with sanitized HTML", async () => {
+    const source = [
+      "# Golden <script>alert(1)</script>",
+      "",
+      "| A | B |",
+      "|---|---|",
+      "| 1 | 2 |",
+      "",
+      "- [x] done",
+      "- [ ] todo",
+      "",
+      "~~gone~~ and ==marked== H~2~O x^2^",
+      "",
+      "[unsafe](javascript:alert(1)) and [safe](https://example.com)",
+      "",
+      '<div onclick="alert(1)">raw block</div>',
+      "",
+      "Text with a note.[^1]",
+      "",
+      "[^1]: Footnote body.",
+    ].join("\n");
+    await evaluate(
+      `window.__MARKSI_DEV__.getState().setContent(${JSON.stringify(source)})`,
+    );
+    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
+    await waitFor('document.querySelector(".markdown-body table")');
+    const rendered = await evaluate(`(() => {
+      const body = document.querySelector(".markdown-body");
+      return {
+        scripts: body.querySelectorAll("script").length,
+        onclick: body.querySelectorAll("[onclick]").length,
+        javascriptHrefs: Array.from(body.querySelectorAll("a")).filter((link) =>
+          (link.getAttribute("href") ?? "").toLowerCase().startsWith("javascript:")
+        ).length,
+        tableWrapped: Boolean(body.querySelector(".table-scroll > table")),
+        checkboxes: body.querySelectorAll(".task-list-item input[type=checkbox]").length,
+        checked: body.querySelectorAll(".task-list-item input[type=checkbox]:checked").length,
+        strike: body.querySelector("s")?.textContent ?? null,
+        mark: body.querySelector("mark")?.textContent ?? null,
+        sub: body.querySelector("sub")?.textContent ?? null,
+        sup: body.querySelector("sup")?.textContent ?? null,
+        footnote: Boolean(body.querySelector(".footnotes li[id^=footnote]")),
+        safeTarget: body.querySelector('a[href="https://example.com"]')?.getAttribute("target"),
+        safeRel: body.querySelector('a[href="https://example.com"]')?.getAttribute("rel"),
+        rawText: body.textContent?.includes('<div onclick="alert(1)">raw block</div>') ?? false,
+        content: window.__MARKSI_DEV__.getState().doc.content
+      };
+    })()`);
+    assert(rendered.scripts === 0, "raw script survived rendering", rendered);
+    assert(rendered.onclick === 0, "raw event handler survived rendering", rendered);
+    assert(
+      rendered.javascriptHrefs === 0,
+      "javascript link survived rendering",
+      rendered,
+    );
+    assert(rendered.tableWrapped, "table should be wrapped for scrolling", rendered);
+    assert(rendered.checkboxes === 2, "task checkboxes are missing", rendered);
+    assert(rendered.checked === 1, "task checkbox state is wrong", rendered);
+    assert(rendered.strike === "gone", "strikethrough is missing", rendered);
+    assert(rendered.mark === "marked", "highlight is missing", rendered);
+    assert(rendered.sub === "2", "subscript is missing", rendered);
+    assert(rendered.sup === "2", "superscript is missing", rendered);
+    assert(rendered.footnote, "footnote should render", rendered);
+    assert(
+      rendered.safeTarget === "_blank" && rendered.safeRel === "noopener noreferrer",
+      "external link should be hardened",
+      rendered,
+    );
+    assert(rendered.rawText, "raw HTML should render as literal text", rendered);
+    assert(rendered.content === source, "rendering must not rewrite the source");
+    await resetBase();
   });
 
   await test("settings dialog is Chinese and switches English and back", async () => {

@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.34` product version.
+- About dialog close behavior and display of the `0.35` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,7 +139,7 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 201 ms during the release run.
+  Windows dev WebView opened the fixture in 177 ms during the release run.
 - Window flags: View > Toggle fullscreen and F11 both enter and leave real
   window fullscreen, and Always on top toggles the native flag while the
   in-app state follows it.
@@ -203,6 +203,21 @@ and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, and analysis helpers.
+
+Golden Markdown fixtures under `tests/fixtures/markdown/` pair 18 hand-written
+sources with their exact rendered HTML. They cover ATX/setext headings and
+duplicate IDs, emphasis nesting, tight/loose/nested lists, blockquotes, fenced
+and indented code with highlighting, inline/reference/autolink links, image
+placeholders and unsafe sources, aligned tables, strikethrough and autolink
+literals, hard/backslash breaks, escaped raw HTML, footnotes, alerts, TOC,
+front matter, punctuation escapes, lax heading/list normalization, and
+CJK/emoji/bidirectional text. Structural tests add KaTeX HTML/MathML output and
+invalid-math fallback. The fixtures intentionally include `data-source-line` and
+heading IDs, so source-map changes are reviewable too. A real-WebView E2E check
+then renders representative structures through DOMPurify and verifies no
+script/event-handler/javascript-URL survives, task checkboxes, table wrappers,
+footnote output, external-link hardening, and an unchanged source buffer.
+
 Rust tests cover encoding/BOM/CRLF round trips, explicit GB18030 and UTF-8 BOM
 reopening, unknown-encoding rejection, atomic text and binary writes,
 local-history recording/deduplication/retention, path-hash isolation, snapshot
@@ -363,7 +378,7 @@ before release. Large-file mode compares JavaScript string length, so the 500,00
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 201 ms measurement is from one Windows development machine;
+large files. The 177 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

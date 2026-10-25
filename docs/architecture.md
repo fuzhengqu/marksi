@@ -144,7 +144,10 @@ for letterboxed areas.
 
 ## Extended Markdown
 
-`src/lib/markdown.ts` owns the single markdown-it pipeline. Footnote, highlight,
+`src/lib/markdown.ts` owns the single markdown-it pipeline. `renderMarkdownHtml`
+performs the pure, environment-independent render and is the seam used by the
+golden fixtures; `renderMarkdown` then applies DOMPurify and the DOM-only
+enhancements (task lists, footnote handles, table wrappers). Footnote, highlight,
 subscript, superscript, GitHub-alert, and image-attribute behavior comes from
 small MIT-licensed plugins, including `markdown-it-attrs` restricted to image
 widths. The pipeline remains HTML-disabled: raw HTML is escaped before

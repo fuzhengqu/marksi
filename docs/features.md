@@ -228,6 +228,19 @@ and lists inside single- or multi-level blockquotes. Fenced and indented code
 remain literal. Tab-indented list lines are preserved as written rather than
 expanded. The canonical Markdown source is never rewritten.
 
+Rendering compatibility is locked by golden fixtures in
+`tests/fixtures/markdown/`. Hand-written Markdown sources and their exact
+rendered HTML cover headings and duplicate IDs, emphasis nesting, tight and
+loose lists, nested blockquotes, fenced and indented code with highlighting,
+inline/reference/autolinks, images and unsafe sources, tables and alignment,
+autolink literals and strikethrough, hard and backslash breaks, escaped raw
+HTML, footnotes, GitHub alerts, TOC, front matter, punctuation escapes, lax
+mode, and CJK/emoji/bidirectional text. Any parser, renderer, source-map, or
+sanitizer-visible attribute change now produces a reviewable fixture diff. The
+real-WebView E2E suite additionally checks the final sanitized DOM, task-list
+enhancements, table wrappers, external-link hardening, and that rendering never
+rewrites the source.
+
 ## Images
 
 | Feature | Status | Milestone |
@@ -362,7 +375,7 @@ save the imported document to choose its final location.
 | Publication audit CI (Linux) | done | M0 |
 | Full build/test CI (Windows + Linux) | done | M0 |
 | E2E tests | done | M0 |
-| Golden Markdown tests | todo | M2 |
+| Golden Markdown tests | done | M2 |
 
 ## Explicit non-goals
 

@@ -7,10 +7,11 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.34**
-- Technical version: **0.34.0**
+- Product version: **0.35**
+- Technical version: **0.35.0**
 - Foundation milestones M1 and M3 are complete.
-- M2 core is complete; golden Markdown tests remain open.
+- M2 core is complete; golden Markdown fixtures now cover its compatibility
+  edge cases.
 - M4 is complete.
 - M5 is complete with twenty-three done items and one explicitly deferred
   uploader integration.
@@ -24,8 +25,8 @@ The public security and version policies are enforced by
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **106 done, 6 wip,
-8 todo, 2 deferred** across 122 items.
+is the source for exact status values. Current raw count: **107 done, 6 wip,
+7 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
 
@@ -65,7 +66,10 @@ Exit criteria:
 - Golden Markdown fixtures cover CommonMark/GFM edge cases.
 - No known reproducible P0/P1 regression.
 
-Current gap: golden Markdown tests and complete cross-platform export coverage.
+Current gap: complete cross-platform export coverage. Golden fixtures now lock
+CommonMark/GFM rendering, but the CommonMark + GFM row stays `wip` because
+markdown-it is not a certified full-spec implementation and raw HTML remains a
+deferred, sanitized preview path.
 
 ### M3 — Workspace and reliability
 

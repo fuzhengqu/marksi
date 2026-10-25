@@ -496,7 +496,7 @@ function wrapTables(root: Document): void {
   });
 }
 
-export function renderMarkdown(
+export function renderMarkdownHtml(
   source: string,
   options: {
     imageMode?: "preview" | "export";
@@ -520,7 +520,21 @@ export function renderMarkdown(
   };
   const renderingSource =
     options.strictMode === false ? normalizeLaxMarkdown(source) : source;
-  const rendered = md.render(renderingSource, environment);
+  return md.render(renderingSource, environment);
+}
+
+export function renderMarkdown(
+  source: string,
+  options: {
+    imageMode?: "preview" | "export";
+    mathOutput?: MathOutput;
+    imageResizeLabel?: string;
+    imageHeightResizeLabel?: string;
+    imageResizable?: boolean;
+    strictMode?: boolean;
+  } = {},
+): string {
+  const rendered = renderMarkdownHtml(source, options);
   const sanitized = DOMPurify.sanitize(rendered, {
     USE_PROFILES: { html: true, mathMl: true },
     ADD_ATTR: [
