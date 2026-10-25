@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   Braces,
@@ -26,6 +26,7 @@ import {
   parseSettingsJson,
   serializeSettings,
 } from "../lib/settingsJson";
+import { useFocusTrap } from "../lib/useFocusTrap";
 import { ZOOM_MAX, ZOOM_MIN, zoomPercent } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
 import type { AppSettings, Language, Theme } from "../types";
@@ -52,6 +53,8 @@ export function SettingsDialog() {
   const [customThemes, setCustomThemes] = useState<CustomTheme[]>([]);
   const [themesLoading, setThemesLoading] = useState(false);
   const [themesError, setThemesError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(open, dialogRef);
 
   async function loadThemes(): Promise<void> {
     setThemesLoading(true);
@@ -203,10 +206,12 @@ export function SettingsDialog() {
   return (
     <div className="modal-scrim" onMouseDown={() => setOpen(false)}>
       <div
+        ref={dialogRef}
         className="settings-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-title"
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="settings-header">

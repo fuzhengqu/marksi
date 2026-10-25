@@ -1,5 +1,7 @@
+import { useRef } from "react";
 import { History, ShieldCheck } from "lucide-react";
 import { useT } from "../i18n";
+import { useFocusTrap } from "../lib/useFocusTrap";
 import type { DocumentDraft } from "../types";
 
 interface DraftRecoveryProps {
@@ -22,13 +24,17 @@ export function DraftRecovery({
   onDiscard,
 }: DraftRecoveryProps) {
   const t = useT();
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(true, dialogRef);
   return (
     <div className="modal-scrim draft-scrim">
       <div
+        ref={dialogRef}
         className="draft-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="draft-title"
+        tabIndex={-1}
       >
         <div className="draft-icon" aria-hidden="true">
           <History size={22} strokeWidth={1.6} />

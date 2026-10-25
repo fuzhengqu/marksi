@@ -6,6 +6,7 @@ import {
   encodingDisplayName,
   encodingOption,
 } from "../lib/encodings";
+import { useFocusTrap } from "../lib/useFocusTrap";
 import { useAppStore } from "../store/useAppStore";
 
 interface EncodingDialogProps {
@@ -29,6 +30,8 @@ export function EncodingDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const firstRef = useRef<HTMLInputElement | null>(null);
+  const dialogRef = useRef<HTMLFormElement | null>(null);
+  useFocusTrap(open, dialogRef);
 
   useEffect(() => {
     if (!open) {
@@ -78,10 +81,12 @@ export function EncodingDialog({
   return (
     <div className="modal-scrim">
       <form
+        ref={dialogRef}
         className="encoding-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="encoding-title"
+        tabIndex={-1}
         onSubmit={(event) => {
           event.preventDefault();
           void reopen();

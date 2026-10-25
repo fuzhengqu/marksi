@@ -160,6 +160,14 @@ composition events and Chromium's `keyCode 229`. Committed Chinese text and
 full-width punctuation are inserted exactly once. This is verified through real
 WebView composition events, not only synthetic unit tests.
 
+Keyboard accessibility includes a skip link to the editor, focus-visible rings,
+a Tab/Shift+Tab focus trap for every modal dialog, focus restoration to the
+trigger on close, arrow-key navigation between sidebar tabs with `aria-controls`
+and `aria-labelledby` relationships, and polite atomic status announcements for
+toasts. `prefers-reduced-motion` disables transitions and animations. RTL layout
+is not implemented because MarkSI currently ships only left-to-right Chinese and
+English interfaces.
+
 ## Editor
 
 | Feature | Status | Milestone |
@@ -337,7 +345,7 @@ save the imported document to choose its final location.
 | Chinese default / English language switch | done | M5 |
 | Version display and one-step bump | done | M5 |
 | i18n framework (en, zh-Hans, zh-Hant first) | wip | M6 |
-| RTL and accessibility pass | todo | M7 |
+| RTL and accessibility pass | wip | M7 |
 | No telemetry / no account | done | M0 |
 | No activation / no paid gates | done | M0 |
 

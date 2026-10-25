@@ -451,6 +451,7 @@ const ZH: Record<string, string> = {
   "Reset shortcuts": "恢复默认快捷键",
   "Custom shortcuts cover application commands; editor formatting keeps its standard keys.":
     "自定义快捷键适用于应用命令；编辑器格式快捷键仍使用标准按键。",
+  "Skip to editor": "跳到编辑器",
   "File actions": "文件操作",
   Pinned: "已固定",
   "Pin to sidebar": "固定到侧栏",

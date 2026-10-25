@@ -24,7 +24,12 @@ export function Toast() {
     toast.tone === "error" ? AlertCircle : toast.tone === "success" ? CheckCircle2 : Info;
 
   return (
-    <div className={`toast toast-${toast.tone}`} role="status" aria-live="polite">
+    <div
+      className={`toast toast-${toast.tone}`}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <Icon size={16} strokeWidth={1.9} />
       <span>{toast.message}</span>
       <button

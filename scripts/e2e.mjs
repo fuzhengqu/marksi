@@ -381,7 +381,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.33"), "About should show version 0.33", state);
+    assert(state.version?.includes("0.34"), "About should show version 0.34", state);
     await clickSelector(".about-dialog .modal-close");
     await waitFor('!document.querySelector(".about-dialog")');
   });
@@ -1255,6 +1255,148 @@ async function main() {
       await evaluate(
         "window.__MARKSI_DEV__.getState().setSettingsOpen(false)",
       ).catch(() => {});
+      await resetBase();
+    }
+  });
+
+  await test("supports skip links, modal focus, and accessible tabs", async () => {
+    await resetBase();
+
+    async function sendKey(key, code, keyCode, modifiers = 0) {
+      await send("Input.dispatchKeyEvent", {
+        type: "keyDown",
+        key,
+        code,
+        windowsVirtualKeyCode: keyCode,
+        nativeVirtualKeyCode: keyCode,
+        modifiers,
+      });
+      await send("Input.dispatchKeyEvent", {
+        type: "keyUp",
+        key,
+        code,
+        windowsVirtualKeyCode: keyCode,
+        nativeVirtualKeyCode: keyCode,
+        modifiers,
+      });
+      await sleep(180);
+    }
+
+    try {
+      await evaluate(`(() => {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        return true;
+      })()`);
+      const firstFocusable = await evaluate(`(() => {
+        const first = document.querySelector(".app-shell")?.firstElementChild;
+        return {
+          isSkipLink: first?.classList.contains("skip-link") ?? false,
+          label: first?.textContent?.trim() ?? ""
+        };
+      })()`);
+      assert(
+        firstFocusable.isSkipLink && firstFocusable.label.length > 0,
+        "skip link should be the first app element",
+        firstFocusable,
+      );
+      await evaluate('document.querySelector(".skip-link")?.focus()');
+      await waitFor(
+        'document.activeElement?.classList.contains("skip-link")',
+      );
+      await sleep(250);
+      const visibleOpacity = await evaluate(
+        'Number(getComputedStyle(document.querySelector(".skip-link")).opacity)',
+      );
+      assert(
+        visibleOpacity === 1,
+        "skip link should be visible on focus",
+        visibleOpacity,
+      );
+      await sendKey("Enter", "Enter", 13);
+      await waitFor(
+        'document.activeElement?.classList.contains("cm-content")',
+      );
+
+      const tabs = await evaluate(`({
+        tablist: document.querySelector('[role="tablist"]')?.getAttribute("aria-label"),
+        selected: document.querySelector('[role="tab"][aria-selected="true"]')?.id,
+        controls: document.querySelector('[role="tab"][aria-selected="true"]')?.getAttribute("aria-controls"),
+        panel: document.querySelector('[role="tabpanel"]')?.getAttribute("aria-labelledby")
+      })`);
+      assert(
+        tabs.selected === "sidebar-tab-files" &&
+          tabs.controls === "sidebar-panel-files" &&
+          tabs.panel === "sidebar-tab-files",
+        "sidebar tabs should expose tab and panel relationships",
+        tabs,
+      );
+      await evaluate(
+        'document.getElementById("sidebar-tab-files")?.focus()',
+      );
+      await sendKey("ArrowRight", "ArrowRight", 39);
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().sidebarTab === "outline"',
+      );
+      await waitFor(
+        'document.activeElement?.id === "sidebar-tab-outline"',
+      );
+
+      await evaluate(
+        'document.getElementById("sidebar-tab-outline")?.focus()',
+      );
+      await evaluate("window.__MARKSI_DEV__.openSettings()");
+      await waitFor('document.querySelector(".settings-dialog")');
+      await sleep(150);
+      const initialFocusInside = await evaluate(
+        'Boolean(document.activeElement?.closest(".settings-dialog"))',
+      );
+      assert(initialFocusInside, "settings should focus inside the dialog");
+      for (let index = 0; index < 10; index += 1) {
+        await sendKey("Tab", "Tab", 9);
+        const inside = await evaluate(
+          'Boolean(document.activeElement?.closest(".settings-dialog"))',
+        );
+        assert(inside, "Tab should stay inside the modal", index);
+      }
+      await sendKey("Escape", "Escape", 27);
+      await waitFor('!document.querySelector(".settings-dialog")');
+      await waitFor(
+        'document.activeElement?.id === "sidebar-tab-outline"',
+      );
+
+      const liveRegion = await evaluate(`(() => {
+        window.__MARKSI_DEV__.getState().showToast("Accessibility check", "info");
+        return {
+          role: document.querySelector(".toast")?.getAttribute("role"),
+          live: document.querySelector(".toast")?.getAttribute("aria-live"),
+          atomic: document.querySelector(".toast")?.getAttribute("aria-atomic")
+        };
+      })()`);
+      assert(
+        liveRegion.role === "status" &&
+          liveRegion.live === "polite" &&
+          liveRegion.atomic === "true",
+        "toast should be a polite atomic status region",
+        liveRegion,
+      );
+
+      await send("Emulation.setEmulatedMedia", {
+        features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+      });
+      const duration = await evaluate(
+        'getComputedStyle(document.querySelector(".skip-link")).transitionDuration',
+      );
+      assert(
+        Number.parseFloat(duration) < 0.01,
+        "reduced motion should disable transitions",
+        duration,
+      );
+    } finally {
+      await send("Emulation.setEmulatedMedia", { features: [] }).catch(
+        () => {},
+      );
       await resetBase();
     }
   });

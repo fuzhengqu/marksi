@@ -1827,6 +1827,16 @@ export default function App() {
       className={`app-shell ${sidebarOpen ? "has-sidebar" : ""}`}
       data-large-file={largeFile ? "true" : undefined}
     >
+      <a
+        className="skip-link"
+        href="#editor-surface"
+        onClick={(event) => {
+          event.preventDefault();
+          document.querySelector<HTMLElement>(".cm-content")?.focus();
+        }}
+      >
+        {t("Skip to editor")}
+      </a>
       <TitleBar />
       <div className="workspace-shell">
         {sidebarOpen ? (
@@ -1844,6 +1854,8 @@ export default function App() {
         ) : null}
 
         <main
+          id="editor-surface"
+          tabIndex={-1}
           className={`document-area ${viewMode === "reading" ? "is-preview" : ""} ${
             viewMode === "preview" ? "is-live-preview" : ""
           }`}

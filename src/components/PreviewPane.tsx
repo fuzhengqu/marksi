@@ -39,6 +39,7 @@ import {
 } from "../lib/platform";
 import { useAppStore } from "../store/useAppStore";
 import type { ResolvedTheme } from "../lib/theme";
+import { useFocusTrap } from "../lib/useFocusTrap";
 
 interface PreviewPaneProps {
   content: string;
@@ -198,6 +199,8 @@ export function PreviewPane({
   );
   const surfaceRef = useRef<HTMLElement | null>(null);
   const [lightbox, setLightbox] = useState<LightboxImage | null>(null);
+  const lightboxRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(Boolean(lightbox), lightboxRef);
   const [contextMenu, setContextMenu] = useState<ImageContextMenu | null>(null);
   const [zoom, setZoom] = useState(1);
   const baseDirectory = useMemo(
@@ -816,10 +819,12 @@ export function PreviewPane({
 
       {lightbox ? (
         <div
+          ref={lightboxRef}
           className="image-lightbox"
           role="dialog"
           aria-modal="true"
           aria-label={lightbox.alt}
+          tabIndex={-1}
           onMouseDown={() => setLightbox(null)}
         >
           <div

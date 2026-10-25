@@ -415,6 +415,11 @@ success toasts.
   skips `composing`/`compositionStarted`; the emoji completion source now also
   returns nothing during composition. The E2E suite drives real composition
   events through CDP and checks the committed document.
+- `src/lib/focus.ts` owns the focusable-element query and forward/backward
+  wrapping; `useFocusTrap` applies it to every modal, focuses the first control,
+  and restores the previous trigger on close. The sidebar tablist implements
+  manual arrow-key activation with `aria-controls`, while the toast uses
+  `role="status"`, `aria-live="polite"`, and `aria-atomic="true"`.
 - Custom themes are read by Rust from the app data `themes` folder with
   canonical-path containment, a 256 KB limit per file, a 50-file cap, `.css`
   filtering, UTF-8 validation, and deterministic sorting. The frontend sanitizer

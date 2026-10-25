@@ -12,6 +12,7 @@ import {
   pandocFormatInfo,
   type PandocFormat,
 } from "../lib/pandoc";
+import { useFocusTrap } from "../lib/useFocusTrap";
 import { useAppStore } from "../store/useAppStore";
 
 interface PandocDialogProps {
@@ -37,6 +38,8 @@ export function PandocDialog({
   const [detecting, setDetecting] = useState(false);
   const [busy, setBusy] = useState(false);
   const wasOpen = useRef(false);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(open, dialogRef);
 
   useEffect(() => {
     if (!open) {
@@ -140,10 +143,12 @@ export function PandocDialog({
   return (
     <div className="modal-scrim" onMouseDown={() => !busy && onClose()}>
       <div
+        ref={dialogRef}
         className="settings-dialog pandoc-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="pandoc-title"
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="settings-header">

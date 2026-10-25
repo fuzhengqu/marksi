@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import {
   ChevronDown,
@@ -50,6 +51,7 @@ import {
   type FileOperationTarget,
 } from "../lib/fileOps";
 import { isPinned } from "../lib/pins";
+import { useFocusTrap } from "../lib/useFocusTrap";
 import { useAppStore } from "../store/useAppStore";
 import type {
   FileEntry,
@@ -109,6 +111,30 @@ export function Sidebar({
     [doc.content, strictMode],
   );
 
+  function onTabKeyDown(
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    id: SidebarTab,
+  ): void {
+    const index = tabs.findIndex((tab) => tab.id === id);
+    let next = index;
+    if (event.key === "ArrowRight") {
+      next = (index + 1) % tabs.length;
+    } else if (event.key === "ArrowLeft") {
+      next = (index - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") {
+      next = 0;
+    } else if (event.key === "End") {
+      next = tabs.length - 1;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    setSidebarTab(tabs[next].id);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`sidebar-tab-${tabs[next].id}`)?.focus();
+    });
+  }
+
   return (
     <aside className="sidebar">
       <div
@@ -119,10 +145,14 @@ export function Sidebar({
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
+            id={`sidebar-tab-${id}`}
             role="tab"
             aria-selected={sidebarTab === id}
+            aria-controls={`sidebar-panel-${id}`}
+            tabIndex={sidebarTab === id ? 0 : -1}
             className={`sidebar-tab ${sidebarTab === id ? "is-active" : ""}`}
             onClick={() => setSidebarTab(id)}
+            onKeyDown={(event) => onTabKeyDown(event, id)}
             title={t(label)}
           >
             <Icon size={15} strokeWidth={1.8} />
@@ -131,7 +161,13 @@ export function Sidebar({
         ))}
       </div>
 
-      <div className="sidebar-content">
+      <div
+        className="sidebar-content"
+        id={`sidebar-panel-${sidebarTab}`}
+        role="tabpanel"
+        aria-labelledby={`sidebar-tab-${sidebarTab}`}
+        tabIndex={-1}
+      >
         {sidebarTab === "files" ? (
           <FilesPanel
             onNewFile={onNewFile}
@@ -775,6 +811,8 @@ function FileOperationDialog({
 }) {
   const t = useT();
   const { kind, entry } = operation;
+  const dialogRef = useRef<HTMLFormElement | null>(null);
+  useFocusTrap(true, dialogRef);
   const docPath = useAppStore((state) => state.doc.path);
   const docDirty = useAppStore((state) => state.doc.dirty);
   const [value, setValue] = useState(() => {
@@ -899,10 +937,12 @@ function FileOperationDialog({
       }}
     >
       <form
+        ref={dialogRef}
         className="file-op-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="file-op-title"
+        tabIndex={-1}
         onSubmit={(event) => void submit(event)}
       >
         <header className="file-op-header">

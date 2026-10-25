@@ -13,6 +13,7 @@ import {
   exportProfileOptions,
   normalizeExportOptions,
 } from "../lib/exportOptions";
+import { useFocusTrap } from "../lib/useFocusTrap";
 import { useAppStore } from "../store/useAppStore";
 import type {
   ExportMargin,
@@ -59,6 +60,8 @@ export function ExportDialog({
   const [busy, setBusy] = useState(false);
   const profileRef = useRef<HTMLSelectElement>(null);
   const wasOpen = useRef(false);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(open, dialogRef);
 
   useEffect(() => {
     if (open && !wasOpen.current) {
@@ -146,10 +149,12 @@ export function ExportDialog({
   return (
     <div className="modal-scrim" onMouseDown={() => !busy && onClose()}>
       <div
+        ref={dialogRef}
         className="settings-dialog export-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="export-title"
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="settings-header">

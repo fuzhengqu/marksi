@@ -3,6 +3,7 @@ import { CornerDownLeft, FileText, Loader2, Search } from "lucide-react";
 import { useT } from "../i18n";
 import { isTauri, listWorkspaceFiles } from "../lib/platform";
 import { rankQuickOpen, type QuickOpenItem } from "../lib/quickOpen";
+import { useFocusTrap } from "../lib/useFocusTrap";
 import { useAppStore } from "../store/useAppStore";
 
 interface QuickOpenProps {
@@ -21,6 +22,8 @@ export function QuickOpen({ onOpen }: QuickOpenProps) {
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(open, dialogRef);
 
   useEffect(() => {
     if (!open) {
@@ -145,10 +148,12 @@ export function QuickOpen({ onOpen }: QuickOpenProps) {
       role="presentation"
     >
       <div
+        ref={dialogRef}
         className="quick-open"
         role="dialog"
         aria-modal="true"
         aria-label={t("Quick open")}
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="quick-open-search">

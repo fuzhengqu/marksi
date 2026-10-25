@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.33` product version.
+- About dialog close behavior and display of the `0.34` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -139,7 +139,7 @@ The E2E suite currently covers:
 - Large-file mode: a fixture over 500,000 characters opens with the status
   badge, no live-preview decorations, and the Source label; disabling the
   preference restores live preview, and re-enabling it restores the mode. The
-  Windows dev WebView opened the fixture in 197 ms during the release run.
+  Windows dev WebView opened the fixture in 201 ms during the release run.
 - Window flags: View > Toggle fullscreen and F11 both enter and leave real
   window fullscreen, and Always on top toggles the native flag while the
   in-app state follows it.
@@ -166,6 +166,12 @@ The E2E suite currently covers:
   stay inactive. A synthetic composing shortcut is ignored while the same
   non-composing shortcut toggles the sidebar; full-width Chinese punctuation is
   inserted literally.
+- Keyboard accessibility: the skip link is the first app element, becomes
+  visible on focus, and moves focus into the editor. Sidebar tabs expose tab and
+  panel relationships, ArrowRight moves focus and selection, Settings traps Tab
+  inside the dialog, Escape closes it and restores focus to the trigger, the
+  toast is a polite atomic status region, and reduced-motion emulation removes
+  transitions.
 - Pandoc export with the portable Pandoc 3.12.1 executable: version detection,
   real DOCX conversion, ZIP signature and `word/document.xml`, save-dialog
   filter, source retention, and persisted executable path. The check runs only
@@ -341,7 +347,10 @@ OS-level hotkeys are not supported, captured bindings require Ctrl or Meta, and
 duplicate bindings are rejected instead of swapped. IME coverage uses CDP
 composition events in the Windows WebView; the real Microsoft Pinyin candidate
 window, Japanese/Korean IMEs, dead keys, and Linux WebKitGTK composition remain
-manual release checks. Advanced settings JSON is
+manual release checks. Accessibility coverage uses WebView2 keyboard events and
+DOM/ARIA inspection; screen-reader sessions with NVDA, Narrator, or Orca,
+operating-system high-contrast modes, and RTL layouts remain manual or
+unimplemented. Advanced settings JSON is
 not a full configuration-file format: there is no import/export file or schema
 version, unknown keys are ignored with a warning, and applying settings takes
 effect immediately with no undo. Custom CSS themes are read only from the app
@@ -354,7 +363,7 @@ before release. Large-file mode compares JavaScript string length, so the 500,00
 in UTF-16 code units rather than bytes. It reduces editing decorations, spell
 check, and emoji suggestions only; reading-view rendering, export, search, and
 outline extraction still process the full document and may be slow for very
-large files. The 197 ms measurement is from one Windows development machine;
+large files. The 201 ms measurement is from one Windows development machine;
 Linux WebKitGTK behavior remains a manual release check. Pandoc is not bundled, is GPL-2.0-or-later as a separate program, and may fetch
 remote images referenced by the document. The real Pandoc E2E uses a portable
 executable under `.tmp`; on a fresh machine install Pandoc separately and run the

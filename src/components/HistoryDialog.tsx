@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   History,
   Loader2,
@@ -10,6 +10,7 @@ import {
 import { useT } from "../i18n";
 import { encodingDisplayName } from "../lib/encodings";
 import { formatSnapshotSize, snapshotTime } from "../lib/history";
+import { useFocusTrap } from "../lib/useFocusTrap";
 import {
   clearHistory,
   deleteHistorySnapshot,
@@ -37,6 +38,8 @@ export function HistoryDialog({ open, onClose }: HistoryDialogProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(open, dialogRef);
 
   async function reload(preferred?: string): Promise<void> {
     if (!docPath) {
@@ -179,10 +182,12 @@ export function HistoryDialog({ open, onClose }: HistoryDialogProps) {
   return (
     <div className="modal-scrim">
       <div
+        ref={dialogRef}
         className="history-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="history-title"
+        tabIndex={-1}
       >
         <header className="history-header">
           <span className="settings-mark" aria-hidden="true">

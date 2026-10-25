@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   AlignVerticalJustifyCenter,
   Bold,
@@ -48,6 +48,7 @@ import { displayVersion } from "../lib/version";
 import { ZOOM_MAX, ZOOM_MIN } from "../lib/zoom";
 import { isDarkAppearance, resolveTheme, useSystemDark } from "../lib/theme";
 import { useAppStore } from "../store/useAppStore";
+import { useFocusTrap } from "../lib/useFocusTrap";
 import type { CopyFormat } from "../types";
 
 type MenuSection = "file" | "edit" | "format" | "view" | "help";
@@ -603,6 +604,8 @@ interface AboutDialogProps {
 function AboutDialog({ open, onClose }: AboutDialogProps) {
   const t = useT();
   const [version, setVersion] = useState(() => displayVersion());
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(open, dialogRef);
 
   useEffect(() => {
     if (!open) {
@@ -639,10 +642,12 @@ function AboutDialog({ open, onClose }: AboutDialogProps) {
   return (
     <div className="modal-scrim" onMouseDown={onClose}>
       <div
+        ref={dialogRef}
         className="about-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="about-title"
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <button
