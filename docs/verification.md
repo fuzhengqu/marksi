@@ -255,24 +255,29 @@ tree produced six entries for historical MSI and NSIS artifacts, including
 `.github/workflows/release-package.yml` builds unsigned bundles on
 `windows-latest` and `ubuntu-latest` when dispatched manually or when a `v*` tag
 is pushed, writes `SHA256SUMS.txt`, and uploads only final installers and the
-checksum file for 14 days. The 0.35 run completed for both platforms and produced:
+checksum file for 14 days. The 0.36 run completed for both platforms and produced:
 
-- `MarkSI_0.35.0_x64_en-US.msi` (6.88 MiB), SHA256
-  `EB3855AFAE897260747F77F788CC7C241D938A2974965DCDDA69A15407EAEB6F`
-- `MarkSI_0.35.0_x64-setup.exe` (5.60 MiB), SHA256
-  `76E3DAEF717C38C3137113AFBD7BD125AE1167B688ADFBB12E020D46D26CB0F5`
-- `MarkSI_0.35.0_amd64.deb` (8.10 MiB), SHA256
-  `9F3F99BA27B3872BD13C4395E0F10A9CC57468767731E344D0D4E32CB44C65FB`
-- `MarkSI-0.35.0-1.x86_64.rpm` (8.11 MiB), SHA256
-  `F792346A27A292959AC7B0ACE4A58989274F47AC7E95E1F189A66211FFD7C1A1`
-- `MarkSI_0.35.0_amd64.AppImage` (82.81 MiB), SHA256
-  `74452361336BA6608D3B6E614A78617E0D0C2343E1BC606CD09B8C748A75EADF`
+- `MarkSI_0.36.0_x64_en-US.msi` (6.91 MiB), SHA256
+  `7278103A43BCB40E477023CA9038FDC51AC82E11A3FA8972048D03FDEC69965B`
+- `MarkSI_0.36.0_x64-setup.exe` (5.63 MiB), SHA256
+  `C52D2A0CA57D8D135C866DB688451AD3CAF5FEE6040134901BE05EC80493BEBD`
+- `MarkSI_0.36.0_amd64.deb` (8.14 MiB), SHA256
+  `3468D885754BF4BE1E3996C3420A29B57ABCFBAAFF2CFF9B36C474BF48045677`
+- `MarkSI-0.36.0-1.x86_64.rpm` (8.14 MiB), SHA256
+  `CBD03ABBC5AA3959B286E64EEFEDBF54077546A5BFBD74DD52B89B932EA227C6`
+- `MarkSI_0.36.0_amd64.AppImage` (82.86 MiB), SHA256
+  `6FF40AAAFA0B4D0C4199286BE5435208340C435720358A5D448B8320074585B6`
 
 The downloaded artifacts were re-hashed locally; all five matched their
 `SHA256SUMS.txt` entries, and the archive contained no AppImage `AppDir` tree or
-deb staging tarballs. The first 0.31 packaging run exposed those two upload and
-checksum defects, which were fixed before 0.32. The workflow does not sign,
-publish a release, or install the artifacts.
+deb staging tarballs. Each platform artifact also contained a
+`THIRD_PARTY_NOTICES.md` generated for that target: Windows reported 241 Rust
+crates and 90 license texts, Linux reported 316 and 98. Adding the notices file
+changed the upload artifact layout to retain the full
+`src-tauri/target/release/bundle` prefix; checksum paths inside the file are
+still relative to the bundle root. The first 0.31 packaging run exposed two
+upload and checksum defects, which were fixed before 0.32. The workflow does not
+sign, publish a release, or install the artifacts.
 
 ## Third-party notices
 
