@@ -240,18 +240,18 @@ tree produced six entries for historical MSI and NSIS artifacts, including
 `.github/workflows/release-package.yml` builds unsigned bundles on
 `windows-latest` and `ubuntu-latest` when dispatched manually or when a `v*` tag
 is pushed, writes `SHA256SUMS.txt`, and uploads only final installers and the
-checksum file for 14 days. The 0.33 run completed for both platforms and produced:
+checksum file for 14 days. The 0.34 run completed for both platforms and produced:
 
-- `MarkSI_0.33.0_x64_en-US.msi` (6.88 MiB), SHA256
-  `AE55F6D4C589A33A2469676A8947B1A4FC2695EBE6D3EF4D262062A9D653CC08`
-- `MarkSI_0.33.0_x64-setup.exe` (5.60 MiB), SHA256
-  `439529A12A7606FCBC62AD741AEABAEDE896FBC13B3DE9521E1AFE38B4F0192A`
-- `MarkSI_0.33.0_amd64.deb` (8.10 MiB), SHA256
-  `0B45F4E57A41F0DB2BDC03C8B33300CA27144851B0DEA64CA35FEEAEC2549EA9`
-- `MarkSI-0.33.0-1.x86_64.rpm` (8.11 MiB), SHA256
-  `34A332D717E16E634CC275BEF41EE465AEC88570C8B71BDA3ACEEAA0502DD943`
-- `MarkSI_0.33.0_amd64.AppImage` (82.81 MiB), SHA256
-  `15CFC1D1C444DBC85C45B8CF113709F3098FCD6DB1D698E2279E804CED11DD4C`
+- `MarkSI_0.34.0_x64_en-US.msi` (6.88 MiB), SHA256
+  `BA0B82613D256E4C240BF809391A2BE038F8AE08C9F037BF6330C2B0D27718E3`
+- `MarkSI_0.34.0_x64-setup.exe` (5.60 MiB), SHA256
+  `96795A0759302E1D0070BF7F122F49C1CD62529B0039783F1CC241C5DDCEB1AD`
+- `MarkSI_0.34.0_amd64.deb` (8.10 MiB), SHA256
+  `21B67B64A101BC7BEDF09DA3C47CEBEC229912C5E9D64AEC36A049AF56B6E5FC`
+- `MarkSI-0.34.0-1.x86_64.rpm` (8.10 MiB), SHA256
+  `E2EFAD721B574288C9911B2C5D168A5A41C6C8F0F96B192040599A4712FA415E`
+- `MarkSI_0.34.0_amd64.AppImage` (82.81 MiB), SHA256
+  `70FA04813167DDC9B3ECEA1CF28AD19CB046FFE2DD012DEA3DF1B6DC1902E4A4`
 
 The downloaded artifacts were re-hashed locally; all five matched their
 `SHA256SUMS.txt` entries, and the archive contained no AppImage `AppDir` tree or
