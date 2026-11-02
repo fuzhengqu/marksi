@@ -68,6 +68,14 @@ final installers (MSI, NSIS, deb, rpm, AppImage). It produced deb, rpm, and
 AppImage packages on Ubuntu and MSI/NSIS packages on Windows. Code signing is
 not configured.
 
+Linux packaging also includes a Flatpak manifest under `flatpak/` with desktop
+and AppStream metadata. `npm run flatpak:stage` copies the release binary and
+icons into the ignored staging folder; `flatpak-builder` then produces an
+`com.marksi.app` bundle against the GNOME 51 runtime. The Flatpak workflow builds
+and inspects the bundle on Ubuntu, and the release workflow adds it to the Linux
+installers and checksum file. The bundle is unsigned and is not published to a
+Flatpak repository.
+
 The release executable accepts one supported Markdown/text path as its first
 non-flag argument and opens it at startup. Windows installers register Markdown
 extensions (`md`, `markdown`, `mdown`, `mkd`, `mdwn`, `mmd`, `mdx`) with the
@@ -401,7 +409,7 @@ save the imported document to choose its final location.
 |---|---|---|
 | Windows 11 installer (NSIS/MSI) | done | M6 |
 | Linux deb/rpm/AppImage | done | M6 |
-| Flatpak packaging | todo | M7 |
+| Flatpak packaging | wip | M7 |
 | Signed releases / checksums | wip | M6 |
 | Auto-update | todo | M6 |
 | Third-party license notices | done | M0 |

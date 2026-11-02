@@ -9,6 +9,7 @@ const BUNDLE_EXTENSIONS = [
   ".deb",
   ".rpm",
   ".appimage",
+  ".flatpak",
   ".dmg",
 ];
 

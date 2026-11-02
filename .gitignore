@@ -12,6 +12,9 @@ src-tauri/target/
 src-tauri/gen/
 target/
 
+# Generated Flatpak staging
+flatpak/stage/
+
 # Editor / OS
 .vscode/*
 !.vscode/extensions.json

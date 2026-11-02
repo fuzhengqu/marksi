@@ -79,6 +79,11 @@ through the registered file association or run
 `marksi path\to\note.md` from a terminal. Run `npm run release:checksums` to
 write `SHA256SUMS.txt` beside the bundle tree.
 
+On Linux the same directory receives deb, rpm, and AppImage bundles. Flatpak
+metadata lives under `flatpak/`: run `npm run flatpak:stage`, then build with
+`flatpak-builder`. The Flatpak workflow generates and inspects an unsigned
+`.flatpak` bundle in CI.
+
 ## Development
 
 Run `npm test` for unit tests. Please open an issue before larger changes; see

@@ -513,6 +513,13 @@ window starts with an empty document rather than duplicating main state.
   `tauri:build`, then uploads only final installers and the checksum file.
   Signing is intentionally absent because no certificate is bundled or
   configured.
+- Flatpak packaging reuses the Linux release binary instead of building inside
+  the sandbox. `scripts/flatpak.mjs` validates the manifest, desktop entry, and
+  AppStream release version against `package.json`, then stages the binary and
+  four icon sizes under the ignored `flatpak/stage` folder. The manifest targets
+  the GNOME 51 runtime, installs the staged files into `/app`, and grants home
+  filesystem access plus X11/Wayland, IPC, and GPU access. A separate workflow
+  builds the bundle, installs it, and verifies the installed payload.
 - Startup arguments are parsed in Rust for the first existing supported text
   file; `take_startup_file` returns it once from managed state. The frontend
   opens it only when the editor is blank and no recovery draft is pending.

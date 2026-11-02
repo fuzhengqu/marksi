@@ -5,6 +5,7 @@ const packageLockPath = "package-lock.json";
 const cargoPath = "src-tauri/Cargo.toml";
 const cargoLockPath = "src-tauri/Cargo.lock";
 const tauriPath = "src-tauri/tauri.conf.json";
+const metainfoPath = "flatpak/com.marksi.app.metainfo.xml";
 
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 const current = packageJson.version;
@@ -54,6 +55,19 @@ if (tauri.version !== current) {
 }
 tauri.version = next;
 writeFileSync(tauriPath, `${JSON.stringify(tauri, null, 2)}\n`);
+
+const metainfo = readFileSync(metainfoPath, "utf8");
+const releasePattern = /<release version="[^"]+" date="[^"]+"\/>/;
+if (!releasePattern.test(metainfo)) {
+  throw new Error("Could not find the latest release in the AppStream metadata");
+}
+writeFileSync(
+  metainfoPath,
+  metainfo.replace(
+    releasePattern,
+    `<release version="${next}" date="${new Date().toISOString().slice(0, 10)}"/>`,
+  ),
+);
 
 console.log(
   `Version bumped ${current} -> ${next} (About displays ${display}).`,

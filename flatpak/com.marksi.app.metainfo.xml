@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.marksi.app</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>MarkSI</name>
+  <summary>A focused Markdown studio</summary>
+  <summary xml:lang="zh-CN">专注的 Markdown 编辑器</summary>
+  <description>
+    <p>
+      MarkSI is a free, open-source, local-first Markdown editor for Windows and
+      Linux. It combines source, editable live preview, and reading views with
+      workspaces, images, math, Mermaid diagrams, and local-first recovery.
+    </p>
+    <p xml:lang="zh-CN">
+      MarkSI 是一款免费、开源、本地优先的 Markdown 编辑器，提供源码、可编辑实时
+      预览和阅读视图，并支持工作区、图片、数学公式、Mermaid 图表与本地恢复。
+    </p>
+  </description>
+  <launchable type="desktop-id">com.marksi.app.desktop</launchable>
+  <provides>
+    <binary>marksi</binary>
+  </provides>
+  <url type="homepage">https://github.com/fuzhengqu/marksi</url>
+  <url type="bugtracker">https://github.com/fuzhengqu/marksi/issues</url>
+  <developer id="com.marksi.app">
+    <name>MarkSI contributors</name>
+  </developer>
+  <content_rating type="oars-1.1"/>
+  <categories>
+    <category>Office</category>
+    <category>TextEditor</category>
+  </categories>
+  <releases>
+    <release version="0.41.0" date="2026-11-02"/>
+  </releases>
+</component>

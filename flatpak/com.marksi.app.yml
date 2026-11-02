@@ -1,0 +1,40 @@
+app-id: com.marksi.app
+runtime: org.gnome.Platform
+runtime-version: "51"
+sdk: org.gnome.Sdk
+command: marksi
+
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  - --filesystem=home
+  - --talk-name=org.freedesktop.Notifications
+
+modules:
+  - name: marksi
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 marksi /app/bin/marksi
+      - install -Dm644 com.marksi.app.desktop /app/share/applications/com.marksi.app.desktop
+      - install -Dm644 com.marksi.app.metainfo.xml /app/share/metainfo/com.marksi.app.metainfo.xml
+      - install -Dm644 64x64.png /app/share/icons/hicolor/64x64/apps/com.marksi.app.png
+      - install -Dm644 128x128.png /app/share/icons/hicolor/128x128/apps/com.marksi.app.png
+      - install -Dm644 256x256.png /app/share/icons/hicolor/256x256/apps/com.marksi.app.png
+      - install -Dm644 512x512.png /app/share/icons/hicolor/512x512/apps/com.marksi.app.png
+    sources:
+      - type: file
+        path: stage/marksi
+      - type: file
+        path: com.marksi.app.desktop
+      - type: file
+        path: com.marksi.app.metainfo.xml
+      - type: file
+        path: stage/icons/64x64.png
+      - type: file
+        path: stage/icons/128x128.png
+      - type: file
+        path: stage/icons/256x256.png
+      - type: file
+        path: stage/icons/512x512.png

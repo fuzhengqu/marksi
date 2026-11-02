@@ -1,0 +1,118 @@
+name: Flatpak
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "flatpak/**"
+      - "scripts/flatpak.mjs"
+      - "src-tauri/icons/**"
+      - ".github/workflows/flatpak.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  bundle:
+    name: flatpak-builder
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            curl \
+            file \
+            flatpak \
+            flatpak-builder \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libxdo-dev \
+            patchelf \
+            wget
+
+      - name: Install Rust stable
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-flatpak-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-flatpak-cargo-
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Check Flatpak metadata
+        run: npm run flatpak:check
+
+      - name: Build frontend and release binary
+        run: |
+          npm run build
+          cargo build --release --manifest-path src-tauri/Cargo.toml
+
+      - name: Install Flatpak runtime
+        run: |
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y --noninteractive flathub org.gnome.Platform//51 org.gnome.Sdk//51
+
+      - name: Validate AppStream metadata
+        run: appstreamcli validate --no-net flatpak/com.marksi.app.metainfo.xml
+
+      - name: Stage and build the bundle
+        run: |
+          npm run flatpak:stage
+          flatpak-builder \
+            --user \
+            --force-clean \
+            --repo=.tmp/flatpak-repo \
+            --state-dir=.tmp/flatpak-state \
+            .tmp/flatpak-build \
+            flatpak/com.marksi.app.yml
+          version="$(node -p "require('./package.json').version")"
+          mkdir -p src-tauri/target/release/bundle/flatpak
+          flatpak build-bundle \
+            .tmp/flatpak-repo \
+            "src-tauri/target/release/bundle/flatpak/MarkSI_${version}_x86_64.flatpak" \
+            com.marksi.app \
+            --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Inspect the installed bundle
+        run: |
+          bundle="$(find src-tauri/target/release/bundle/flatpak -name '*.flatpak' -print -quit)"
+          flatpak install --user -y --noninteractive "$bundle"
+          flatpak run --command=sh com.marksi.app -c \
+            'test -x /app/bin/marksi && test -f /app/share/applications/com.marksi.app.desktop && test -f /app/share/metainfo/com.marksi.app.metainfo.xml'
+          flatpak run --command=sh com.marksi.app -c \
+            'if ldd /app/bin/marksi | grep "not found"; then echo "Unresolved shared libraries"; exit 1; fi'
+          flatpak info com.marksi.app
+          npm run release:checksums
+          cat src-tauri/target/release/bundle/SHA256SUMS.txt
+
+      - name: Upload Flatpak bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: marksi-flatpak-unsigned
+          path: |
+            src-tauri/target/release/bundle/SHA256SUMS.txt
+            src-tauri/target/release/bundle/flatpak/*.flatpak
+          if-no-files-found: error
+          retention-days: 14

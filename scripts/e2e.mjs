@@ -507,7 +507,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.40"), "About should show version 0.40", state);
+    assert(state.version?.includes("0.41"), "About should show version 0.41", state);
     await clickSelector(".about-notices summary");
     await sleep(180);
     const notices = await evaluate(`(() => {

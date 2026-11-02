@@ -67,6 +67,11 @@ Windows 构建会在 `src-tauri/target/release/bundle/` 下生成 MSI 和 NSIS
 `marksi path\to\note.md` 打开文件。运行 `npm run release:checksums` 可在
 bundle 目录旁生成 `SHA256SUMS.txt`。
 
+Linux 构建同一目录下生成 deb、rpm 和 AppImage。Flatpak 元数据位于
+`flatpak/`：先运行 `npm run flatpak:stage`，再用 `flatpak-builder` 构建；
+`.github/workflows/flatpak.yml` 会在 CI 中生成并检查未签名的 `.flatpak`
+捆绑包。
+
 ## 开发
 
 运行 `npm test` 执行单元测试。较大的改动请先开 issue 讨论；完整检查流程见

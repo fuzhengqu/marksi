@@ -19,14 +19,17 @@ describe("release checksums", () => {
     await mkdir(join(root, "nsis"), { recursive: true });
     await mkdir(join(root, "msi"), { recursive: true });
     await mkdir(join(root, "deb"), { recursive: true });
+    await mkdir(join(root, "flatpak"), { recursive: true });
     await writeFile(join(root, "nsis", "MarkSI-setup.exe"), "setup");
     await writeFile(join(root, "msi", "MarkSI.msi"), "msi");
     await writeFile(join(root, "msi", "notes.txt"), "ignore");
     await writeFile(join(root, "deb", "control.tar.gz"), "staging");
+    await writeFile(join(root, "flatpak", "MarkSI.flatpak"), "flatpak");
     await writeFile(join(root, "linux.AppImage"), "appimage");
 
     const files = await collectBundleFiles(root);
     expect(files.map((path) => path.split(/[\\/]/).pop())).toEqual([
+      "MarkSI.flatpak",
       "linux.AppImage",
       "MarkSI.msi",
       "MarkSI-setup.exe",

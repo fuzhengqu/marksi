@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=MarkSI
+GenericName=Markdown Editor
+Comment=A focused Markdown studio
+Exec=marksi %F
+Icon=com.marksi.app
+Terminal=false
+Categories=Office;TextEditor;
+Keywords=markdown;editor;notes;writing;
+MimeType=text/markdown;text/x-markdown;
+StartupNotify=true

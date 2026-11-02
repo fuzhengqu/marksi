@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.40` product version.
+- About dialog close behavior and display of the `0.41` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -305,6 +305,23 @@ still relative to the bundle root. The first 0.31 packaging run exposed two
 upload and checksum defects, which were fixed before 0.32. The workflow does not
 sign, publish a release, or install the artifacts.
 
+## Flatpak packaging
+
+`flatpak/com.marksi.app.yml`, the desktop entry, and the AppStream metadata use
+the `com.marksi.app` identifier and target the GNOME 51 runtime. The metadata
+check runs on every platform and asserts the manifest command/runtime/permissions,
+the desktop `Exec`/icon/MIME entry, the AppStream ID and launchable entry, and
+that the latest `<release>` version matches `package.json`. The staging test
+copies a stand-in binary and verifies all four staged icon sizes.
+
+The Flatpak workflow runs on Ubuntu, builds the real Tauri release binary,
+stages it, validates the AppStream file, builds an unsigned bundle with
+`flatpak-builder`, installs it, and checks `/app/bin/marksi` plus the installed
+desktop and metainfo files. The release workflow adds that bundle to the Linux
+installers and the shared checksum file. `flatpak-builder` is Linux-only, so the
+Windows development host runs the metadata and staging checks but cannot build
+the bundle locally.
+
 ## Third-party notices
 
 `scripts/notices.mjs` reads production packages from `package-lock.json` and
@@ -333,7 +350,8 @@ and pull requests. Each job installs Node.js 22 and Rust stable, caches the
 Cargo registry, runs `npm ci`, typecheck, Vitest, the frontend build,
 `cargo fmt --check`, and `cargo test`. The Windows job also runs
 `npm run notices:check` after the Rust cache is populated. The existing
-publication-audit workflow remains separate. The real-WebView E2E suite is not
+publication-audit workflow remains separate. A third workflow, Flatpak, builds
+and installs the Flatpak bundle on Ubuntu. The real-WebView E2E suite is not
 run in CI because it needs a desktop WebView session and CDP; it remains part of
 the local release gate. The matrix does not build installers, sign artifacts, or
 test auto-update.
