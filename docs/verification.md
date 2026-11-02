@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.39` product version.
+- About dialog close behavior and display of the `0.40` product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -160,6 +160,14 @@ The E2E suite currently covers:
   with the setting enabled confirmed that the window reopened decorated and the
   custom controls stayed hidden. The saved value is applied before window-frame
   restoration so content height is not reduced on every start.
+- Multiple document windows: press `Ctrl+Shift+N`, wait for two live WebView
+  windows, and connect to the new CDP target. The test verifies its `?window=`
+  identity, an empty document and workspace, and that a main-window recovery
+  draft is neither shown nor consumed. Editing the secondary window writes only
+  its own `marksi-recovery-draft:editor-*` key and leaves the main draft
+  untouched. Making it clean and closing it returns the window count to one and
+  removes the CDP target. Closing a dirty secondary window shows the native
+  unsaved-changes prompt; that prompt itself remains a manual check.
 - Session memory: open a document, attach its workspace folder, switch to source
   view, and wait for the path-only session record; clear the editor and restore
   the session, then verify the document content, workspace file list, and view
@@ -405,7 +413,10 @@ but window-manager behavior such as macOS Spaces or Linux tiling is outside the
 automated gate. Native title bar switching is verified on Windows WebView2.
 Linux window-manager repaint timing, Snap Layouts availability, and mixed-DPI
 frame changes remain manual release checks; the app falls back to the custom
-frame if the platform rejects the decoration change. Custom shortcuts cover application
+frame if the platform rejects the decoration change. Multiple windows are
+verified through two live WebView2 CDP targets; Linux window-manager placement
+and the native unsaved-changes prompt shown when closing a dirty secondary
+window remain manual checks. Custom shortcuts cover application
 commands only; editor formatting keeps fixed CodeMirror bindings, global
 OS-level hotkeys are not supported, captured bindings require Ctrl or Meta, and
 duplicate bindings are rejected instead of swapped. IME coverage uses CDP

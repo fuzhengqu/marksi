@@ -17,7 +17,7 @@ that design decisions do not paint us into a corner.
 | Custom title bar with drag region | done | M1 |
 | Minimize / maximize / close controls | done | M1 |
 | Native title bar option | done | M6 |
-| Multiple document windows | todo | M6 |
+| Multiple document windows | done | M6 |
 | Fullscreen / always on top | done | M6 |
 | Window size/position/session restore | done | M6 |
 | Light / dark appearance | done | M1 |
@@ -73,6 +73,13 @@ non-flag argument and opens it at startup. Windows installers register Markdown
 extensions (`md`, `markdown`, `mdown`, `mkd`, `mdwn`, `mmd`, `mdx`) with the
 application. A second instance is still launched for each file because single
 instance forwarding is not implemented yet.
+
+File > New window (`Ctrl+Shift+N`) opens an independent editor window. Each
+window owns its document, view state, and recovery draft under a per-window
+storage key. Session restore and window-frame memory remain owned by the main
+window, so opening a secondary window neither reopens nor overwrites the main
+session. Secondary windows use the same custom or native title bar preference
+and are covered by the `editor-*` capability scope.
 
 View > Toggle fullscreen (F11) switches the native window state, and Always on
 top keeps MarkSI above other windows. Both expose a check mark while active and

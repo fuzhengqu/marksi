@@ -52,6 +52,11 @@ import {
 import { tNow, useT } from "./i18n";
 import { clampZoom, stepZoom } from "./lib/zoom";
 import {
+  draftStorageKey,
+  isMainWindow,
+  windowKeyFromLocation,
+} from "./lib/windowIdentity";
+import {
   altTextFromFileName,
   buildImageMarkdown,
   fileToBase64,
@@ -77,6 +82,7 @@ import {
   listCustomThemes,
   listDirectory,
   openDocument,
+  openEditorWindow,
   openFolder,
   pandocImport,
   pandocVersion,
@@ -98,6 +104,8 @@ import {
   takeStartupFile,
   windowTitle,
   windowWorkAreas,
+  editorWindowCount,
+  closeEditorWindow,
 } from "./lib/platform";
 import {
   clearWindowFrame,
@@ -154,6 +162,10 @@ function samePath(left: string | null, right: string | null): boolean {
     right.replace(/\\/g, "/").toLowerCase();
 }
 
+const WINDOW_KEY = windowKeyFromLocation(window.location.search);
+const MAIN_WINDOW = isMainWindow(WINDOW_KEY);
+const DRAFT_KEY = draftStorageKey(WINDOW_KEY);
+
 export default function App() {
   const t = useT();
   const doc = useAppStore((state) => state.doc);
@@ -172,7 +184,7 @@ export default function App() {
   );
   const workspacePath = useAppStore((state) => state.workspace?.path ?? null);
   const [draftToRecover, setDraftToRecover] =
-    useState<DocumentDraft | null>(() => loadDraft());
+    useState<DocumentDraft | null>(() => loadDraft(DRAFT_KEY));
   const [exportOpen, setExportOpen] = useState(false);
   const [pandocOpen, setPandocOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -277,6 +289,16 @@ export default function App() {
     });
   }, [confirmDiscard]);
 
+  const handleNewWindow = useCallback(async () => {
+    try {
+      await openEditorWindow(
+        useAppStore.getState().settings.nativeTitleBar,
+      );
+    } catch (error) {
+      useAppStore.getState().showToast(errorMessage(error), "error");
+    }
+  }, []);
+
   const handleOpen = useCallback(async () => {
     if (!(await confirmDiscard())) {
       return;
@@ -372,6 +394,10 @@ export default function App() {
       return;
     }
     bootStartedRef.current = true;
+    if (!MAIN_WINDOW) {
+      setSessionReady(true);
+      return;
+    }
     void (async () => {
       let startupPath: string | null = null;
       try {
@@ -409,6 +435,9 @@ export default function App() {
 
   useEffect(() => {
     if (!isTauri() || !sessionReady) {
+      return;
+    }
+    if (!MAIN_WINDOW) {
       return;
     }
     if (!settings.restoreSession) {
@@ -1135,7 +1164,7 @@ export default function App() {
       return;
     }
     setDraftToRecover(null);
-    clearDraft();
+    clearDraft(DRAFT_KEY);
 
     if (pending.path) {
       try {
@@ -1164,7 +1193,7 @@ export default function App() {
   }
 
   function discardDraft() {
-    clearDraft();
+    clearDraft(DRAFT_KEY);
     setDraftToRecover(null);
   }
 
@@ -1173,13 +1202,13 @@ export default function App() {
       return;
     }
     if (!doc.dirty) {
-      clearDraft();
+      clearDraft(DRAFT_KEY);
       return;
     }
     const timer = window.setTimeout(() => {
       const latest = useAppStore.getState().doc;
       if (!latest.dirty) {
-        clearDraft();
+        clearDraft(DRAFT_KEY);
         return;
       }
       saveDraft({
@@ -1192,7 +1221,7 @@ export default function App() {
         hasBom: latest.hasBom,
         modifiedMs: latest.modifiedMs,
         updatedAt: Date.now(),
-      });
+      }, DRAFT_KEY);
     }, 700);
     return () => window.clearTimeout(timer);
   }, [
@@ -1360,6 +1389,9 @@ export default function App() {
 
   useEffect(() => {
     if (!isTauri()) {
+      return;
+    }
+    if (!MAIN_WINDOW) {
       return;
     }
     if (!settings.rememberWindowFrame) {
@@ -1588,6 +1620,9 @@ export default function App() {
         case "new":
           void handleNew();
           break;
+        case "newWindow":
+          void handleNewWindow();
+          break;
         case "open":
           void handleOpen();
           break;
@@ -1785,6 +1820,10 @@ export default function App() {
         decorated: await isWindowDecorated(),
         title: await windowTitle(),
       }),
+      newWindow: () =>
+        openEditorWindow(useAppStore.getState().settings.nativeTitleBar),
+      windowCount: () => editorWindowCount(),
+      closeWindow: (label: string) => closeEditorWindow(label),
       setWindowFlags: async (fullscreen: boolean, alwaysOnTop: boolean) => {
         await setFullscreen(fullscreen);
         await setAlwaysOnTop(alwaysOnTop);
@@ -1831,6 +1870,7 @@ export default function App() {
     handleOpenPath,
     handleToggleFullscreen,
     handleToggleAlwaysOnTop,
+    handleNewWindow,
     applySavedSession,
     handleSave,
     handleSaveAs,
@@ -1938,6 +1978,7 @@ export default function App() {
       <StatusBar />
       <MenuOverlay
         onNew={handleNew}
+        onNewWindow={() => void handleNewWindow()}
         onOpen={() => void handleOpen()}
         onOpenFolder={() => void handleOpenFolder()}
         onSave={handleSave}

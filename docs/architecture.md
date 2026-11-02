@@ -407,6 +407,23 @@ unsupported decoration change leaves the custom frame usable. Window-frame
 capture listens to resize/move events after the change, so the stored content
 size matches the active frame style.
 
+## Document windows
+
+`src/lib/windowIdentity.ts` parses the `?window=` query value with a strict
+`editor-<timestamp>` pattern and falls back to `main` for missing or unsafe
+values. `src/lib/platform.ts` creates secondary `WebviewWindow` instances with
+the same custom/native frame preference and exposes window counting and closing.
+The capability scope includes `main` and `editor-*`, and grants
+`core:webview:allow-create-webview-window`.
+
+Each window computes its own draft storage key. Main keeps
+`marksi-recovery-draft`; a secondary uses
+`marksi-recovery-draft:editor-<timestamp>`, so recovery prompts and autosaved
+drafts never cross windows. Session restore, startup-file handling, and
+window-frame memory run only in the main window. Settings, recent files, and
+themes remain shared through the common origin, which is why the secondary
+window starts with an empty document rather than duplicating main state.
+
 ## Frontend boundaries
 
 - `src/lib/platform.ts` is the only place that calls Tauri APIs for file IO.

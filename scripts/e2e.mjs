@@ -48,9 +48,17 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function connect() {
   const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
-  const page = targets.find(
+  const pages = targets.filter(
     (target) => target.type === "page" && target.url.includes(origin),
   );
+  const page =
+    pages.find((target) => {
+      try {
+        return !new URL(target.url).searchParams.get("window");
+      } catch {
+        return true;
+      }
+    }) ?? pages[0];
   if (!page) {
     throw new Error(
       `No MarkSI page at ${origin} on CDP port ${port}. Start the dev app and retry.`,
@@ -115,6 +123,111 @@ async function waitFor(expression, timeout = 12_000) {
     await sleep(180);
   }
   throw new Error(`Timed out waiting for: ${expression}`);
+}
+
+async function findEditorWindowTarget(timeout = 15_000) {
+  const started = Date.now();
+  while (Date.now() - started < timeout) {
+    const targets = await (
+      await fetch(`http://127.0.0.1:${port}/json`)
+    ).json();
+    for (const target of targets) {
+      if (target.type !== "page" || !target.url.includes(origin)) {
+        continue;
+      }
+      try {
+        const label = new URL(target.url).searchParams.get("window");
+        if (label && /^editor-\d+$/.test(label)) {
+          return { target, label };
+        }
+      } catch {
+        // Ignore targets whose URL cannot be parsed.
+      }
+    }
+    await sleep(180);
+  }
+  throw new Error("Timed out waiting for an editor window");
+}
+
+async function evaluateInTarget(target, expression) {
+  const targetSocket = new WebSocket(target.webSocketDebuggerUrl);
+  await new Promise((resolveOpen, rejectOpen) => {
+    targetSocket.addEventListener("open", resolveOpen, { once: true });
+    targetSocket.addEventListener("error", rejectOpen, { once: true });
+  });
+  try {
+    const result = await new Promise((resolveMessage, rejectMessage) => {
+      const id = 1;
+      const onMessage = (event) => {
+        const message = JSON.parse(String(event.data));
+        if (message.id !== id) {
+          return;
+        }
+        targetSocket.removeEventListener("message", onMessage);
+        if (message.error) {
+          rejectMessage(new Error(JSON.stringify(message.error)));
+        } else {
+          resolveMessage(message.result);
+        }
+      };
+      targetSocket.addEventListener("message", onMessage);
+      targetSocket.send(
+        JSON.stringify({
+          id,
+          method: "Runtime.evaluate",
+          params: {
+            expression,
+            awaitPromise: true,
+            returnByValue: true,
+            userGesture: true,
+          },
+        }),
+      );
+    });
+    if (result.exceptionDetails) {
+      throw new Error(
+        `${result.exceptionDetails.text}\n${result.exceptionDetails.exception?.description ?? ""}`,
+      );
+    }
+    return result.result?.value;
+  } finally {
+    targetSocket.close();
+  }
+}
+
+async function waitForTarget(target, expression, timeout = 15_000) {
+  const started = Date.now();
+  while (Date.now() - started < timeout) {
+    if (await evaluateInTarget(target, `Boolean(${expression})`)) {
+      return true;
+    }
+    await sleep(180);
+  }
+  throw new Error(`Timed out waiting in ${target.url} for: ${expression}`);
+}
+
+async function waitForNoWindowTarget(label, timeout = 8_000) {
+  const started = Date.now();
+  while (Date.now() - started < timeout) {
+    const targets = await (
+      await fetch(`http://127.0.0.1:${port}/json`)
+    ).json();
+    const present = targets.some((target) => {
+      try {
+        return (
+          target.type === "page" &&
+          new URL(target.url).searchParams.get("window") === label
+        );
+      } catch {
+        return false;
+      }
+    });
+    if (!present) {
+      return true;
+    }
+    await sleep(180);
+  }
+  throw new Error(`Timed out waiting for the ${label} target to close`);
 }
 
 async function waitForFile(path, exists = true, timeout = 8_000) {
@@ -200,6 +313,19 @@ async function keyWithCtrl(key, code, keyCode) {
     windowsVirtualKeyCode: keyCode,
     nativeVirtualKeyCode: keyCode,
     modifiers: 2,
+  };
+  await send("Input.dispatchKeyEvent", { type: "keyDown", ...params });
+  await send("Input.dispatchKeyEvent", { type: "keyUp", ...params });
+  await sleep(220);
+}
+
+async function keyWithCtrlShift(key, code, keyCode) {
+  const params = {
+    key,
+    code,
+    windowsVirtualKeyCode: keyCode,
+    nativeVirtualKeyCode: keyCode,
+    modifiers: 10,
   };
   await send("Input.dispatchKeyEvent", { type: "keyDown", ...params });
   await send("Input.dispatchKeyEvent", { type: "keyUp", ...params });
@@ -381,7 +507,7 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.39"), "About should show version 0.39", state);
+    assert(state.version?.includes("0.40"), "About should show version 0.40", state);
     await clickSelector(".about-notices summary");
     await sleep(180);
     const notices = await evaluate(`(() => {
@@ -1121,6 +1247,135 @@ async function main() {
         "window.__MARKSI_DEV__.setSettings({ nativeTitleBar: false })",
       ).catch(() => {});
       await sleep(250);
+      await resetBase();
+    }
+  });
+
+  await test("opens isolated document windows", async () => {
+    await resetBase();
+    const seedDraft = JSON.stringify({
+      path: null,
+      name: "Main draft.md",
+      content: "# Main draft\n",
+      savedContent: "",
+      encoding: "UTF-8",
+      lineEnding: "LF",
+      hasBom: false,
+      modifiedMs: null,
+      updatedAt: Date.now(),
+    });
+
+    async function closeExtraWindows() {
+      const targets = await (
+        await fetch(`http://127.0.0.1:${port}/json`)
+      ).json().catch(() => []);
+      for (const target of targets) {
+        try {
+          const label = new URL(target.url).searchParams.get("window");
+          if (label && /^editor-\d+$/.test(label)) {
+            await evaluate(
+              `window.__MARKSI_DEV__.closeWindow(${JSON.stringify(label)})`,
+            ).catch(() => {});
+          }
+        } catch {
+          // Ignore targets whose URL cannot be parsed.
+        }
+      }
+    }
+
+    try {
+      await evaluate(
+        `localStorage.setItem("marksi-recovery-draft", ${JSON.stringify(seedDraft)})`,
+      );
+      await clickSelector(".cm-content");
+      await keyWithCtrlShift("N", "KeyN", 78);
+      await waitFor(
+        "(async () => (await window.__MARKSI_DEV__.windowCount()) === 2)()",
+        15_000,
+      );
+
+      const { target, label } = await findEditorWindowTarget();
+      await waitForTarget(target, "Boolean(window.__MARKSI_DEV__)", 20_000);
+      const ownDraftKey = `marksi-recovery-draft:${label}`;
+      const identity = await evaluateInTarget(target, `({
+        search: window.location.search,
+        draftDialog: Boolean(document.querySelector(".draft-dialog")),
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        path: window.__MARKSI_DEV__.getState().doc.path,
+        workspace: window.__MARKSI_DEV__.getState().workspace?.path ?? null,
+        ownDraft: localStorage.getItem(${JSON.stringify(ownDraftKey)}),
+        mainDraft: localStorage.getItem("marksi-recovery-draft")
+      })`);
+      assert(
+        identity.search === `?window=${label}`,
+        "the new window should carry its own identity",
+        identity,
+      );
+      assert(
+        !identity.draftDialog && identity.ownDraft === null,
+        "the new window should not recover the main window's draft",
+        identity,
+      );
+      assert(
+        identity.mainDraft === seedDraft,
+        "opening a window must not consume the main draft",
+        identity,
+      );
+      assert(
+        identity.content === "" &&
+          identity.path === null &&
+          identity.workspace === null,
+        "the new window should start with an empty document",
+        identity,
+      );
+
+      await evaluateInTarget(
+        target,
+        'window.__MARKSI_DEV__.getState().setContent("# 独立窗口\\n\\nSecondary body.")',
+      );
+      await sleep(1_200);
+      const drafts = await evaluateInTarget(target, `({
+        own: localStorage.getItem(${JSON.stringify(ownDraftKey)}),
+        main: localStorage.getItem("marksi-recovery-draft")
+      })`);
+      assert(
+        drafts.own?.includes("独立窗口"),
+        "each window should persist its own recovery draft",
+        drafts,
+      );
+      assert(
+        drafts.main === seedDraft,
+        "a secondary window must not overwrite the main draft",
+        drafts,
+      );
+
+      await evaluateInTarget(
+        target,
+        "window.__MARKSI_DEV__.getState().newDocument()",
+      );
+      await waitForTarget(
+        target,
+        "!window.__MARKSI_DEV__.getState().doc.dirty",
+        5_000,
+      );
+      await evaluate(
+        `window.__MARKSI_DEV__.closeWindow(${JSON.stringify(label)})`,
+      );
+      await waitFor(
+        "(async () => (await window.__MARKSI_DEV__.windowCount()) === 1)()",
+        15_000,
+      );
+      await waitForNoWindowTarget(label, 8_000);
+    } finally {
+      await closeExtraWindows();
+      await evaluate(`(() => {
+        localStorage.removeItem("marksi-recovery-draft");
+        for (const key of Object.keys(localStorage)) {
+          if (key.startsWith("marksi-recovery-draft:")) {
+            localStorage.removeItem(key);
+          }
+        }
+      })()`).catch(() => {});
       await resetBase();
     }
   });

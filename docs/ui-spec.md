@@ -108,6 +108,10 @@ ease-out; honor `prefers-reduced-motion`.
   maximize, and close controls disappear, the custom drag region is removed, and
   the operating system frame supplies those controls and Snap Layouts where
   available. The native title follows the document name and unsaved marker.
+- File > New window (`Ctrl+Shift+N`) opens an independent editor with an empty
+  document. Each window keeps its own recovery draft; the main window keeps
+  session restore and window-frame memory. Closing a dirty secondary window asks
+  before discarding unsaved changes.
 - Sidebar tabs are keyboard reachable and preserve state. An empty workspace
   shows four actions above Recent files: Open file, Open folder, Quick open,
   and New document. There is no footer action row.

@@ -840,6 +840,65 @@ export async function windowTitle(): Promise<string> {
   return getCurrentWindow().title();
 }
 
+export async function openEditorWindow(
+  decorations: boolean,
+): Promise<string> {
+  if (!isTauri()) {
+    throw new Error("Multiple windows are only available in the desktop app.");
+  }
+  const { WebviewWindow } = await import(
+    "@tauri-apps/api/webviewWindow"
+  );
+  const label = `editor-${Date.now()}`;
+  const editor = new WebviewWindow(label, {
+    url: `/?window=${label}`,
+    title: "MarkSI",
+    width: 1_100,
+    height: 760,
+    minWidth: 760,
+    minHeight: 500,
+    center: true,
+    decorations,
+    dragDropEnabled: true,
+  });
+  await new Promise<void>((resolve, reject) => {
+    void editor.once("tauri://created", () => resolve());
+    void editor.once("tauri://error", (event) =>
+      reject(
+        new Error(
+          event.payload
+            ? String(event.payload)
+            : "The editor window could not be created.",
+        ),
+      ),
+    );
+  });
+  return label;
+}
+
+export async function editorWindowCount(): Promise<number> {
+  if (!isTauri()) {
+    return 1;
+  }
+  const { getAllWebviewWindows } = await import(
+    "@tauri-apps/api/webviewWindow"
+  );
+  return (await getAllWebviewWindows()).length;
+}
+
+export async function closeEditorWindow(label: string): Promise<void> {
+  if (!isTauri()) {
+    return;
+  }
+  const { getAllWebviewWindows } = await import(
+    "@tauri-apps/api/webviewWindow"
+  );
+  const editor = (await getAllWebviewWindows()).find(
+    (window) => window.label === label,
+  );
+  await editor?.close();
+}
+
 export async function windowWorkAreas(): Promise<WorkArea[]> {
   if (!isTauri()) {
     return [];

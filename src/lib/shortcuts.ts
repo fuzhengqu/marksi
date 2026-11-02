@@ -9,6 +9,12 @@ export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number];
 
 export const SHORTCUT_DEFINITIONS = [
   { id: "new", label: "New document", group: "File", defaultBinding: "Ctrl+N" },
+  {
+    id: "newWindow",
+    label: "New window",
+    group: "File",
+    defaultBinding: "Ctrl+Shift+N",
+  },
   { id: "open", label: "Open file", group: "File", defaultBinding: "Ctrl+O" },
   {
     id: "openFolder",

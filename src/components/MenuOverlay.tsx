@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import thirdPartyNotices from "../../THIRD_PARTY_NOTICES.md?raw";
 import {
   AlignVerticalJustifyCenter,
+  AppWindow,
   Bold,
   Check,
   ClipboardType,
@@ -68,6 +69,7 @@ const menuSections: Array<{ id: MenuSection; label: string }> = [
 
 interface MenuOverlayProps {
   onNew: () => void;
+  onNewWindow: () => void;
   onOpen: () => void;
   onOpenFolder: () => void;
   onSave: () => void;
@@ -96,6 +98,7 @@ interface MenuOverlayProps {
 
 export function MenuOverlay({
   onNew,
+  onNewWindow,
   onOpen,
   onOpenFolder,
   onSave,
@@ -239,6 +242,12 @@ export function MenuOverlay({
                 label={t("New document")}
                 shortcut={bindingLabel(settings.shortcuts.new)}
                 onClick={() => run(onNew)}
+              />
+              <MenuItem
+                icon={<AppWindow size={16} strokeWidth={1.8} />}
+                label={t("New window")}
+                shortcut={bindingLabel(settings.shortcuts.newWindow)}
+                onClick={() => run(onNewWindow)}
               />
               <MenuItem
                 icon={<FolderOpen size={16} strokeWidth={1.8} />}

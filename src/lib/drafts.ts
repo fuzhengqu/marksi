@@ -6,9 +6,9 @@ function isLineEnding(value: unknown): value is LineEnding {
   return value === "LF" || value === "CRLF";
 }
 
-export function loadDraft(): DocumentDraft | null {
+export function loadDraft(storageKey = DRAFT_KEY): DocumentDraft | null {
   try {
-    const raw = window.localStorage.getItem(DRAFT_KEY);
+    const raw = window.localStorage.getItem(storageKey);
     if (!raw) {
       return null;
     }
@@ -20,11 +20,11 @@ export function loadDraft(): DocumentDraft | null {
       typeof parsed.updatedAt !== "number" ||
       !isLineEnding(parsed.lineEnding)
     ) {
-      window.localStorage.removeItem(DRAFT_KEY);
+      window.localStorage.removeItem(storageKey);
       return null;
     }
     if (parsed.content === parsed.savedContent) {
-      window.localStorage.removeItem(DRAFT_KEY);
+      window.localStorage.removeItem(storageKey);
       return null;
     }
     return {
@@ -45,18 +45,21 @@ export function loadDraft(): DocumentDraft | null {
   }
 }
 
-export function saveDraft(draft: DocumentDraft): boolean {
+export function saveDraft(
+  draft: DocumentDraft,
+  storageKey = DRAFT_KEY,
+): boolean {
   try {
-    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    window.localStorage.setItem(storageKey, JSON.stringify(draft));
     return true;
   } catch {
     return false;
   }
 }
 
-export function clearDraft(): void {
+export function clearDraft(storageKey = DRAFT_KEY): void {
   try {
-    window.localStorage.removeItem(DRAFT_KEY);
+    window.localStorage.removeItem(storageKey);
   } catch {
     // Storage may be unavailable in private or restricted contexts.
   }

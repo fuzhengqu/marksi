@@ -23,6 +23,7 @@ describe("shortcut bindings", () => {
     );
     expect(new Set(bindings).size).toBe(bindings.length);
     expect(DEFAULT_SHORTCUTS.new).toBe("Ctrl+N");
+    expect(DEFAULT_SHORTCUTS.newWindow).toBe("Ctrl+Shift+N");
   });
 
   it("normalizes keyboard events", () => {
