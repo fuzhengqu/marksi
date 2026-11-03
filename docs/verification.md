@@ -75,7 +75,7 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the `0.41` product version.
+- About dialog close behavior and display of the product version.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -83,11 +83,14 @@ The E2E suite currently covers:
 - Opening a Markdown fixture in editable live preview.
 - Live-preview editing, hidden inactive markers, and source retention.
 - Chinese CodeMirror search panel and Escape dismissal.
-- Source / live-preview / reading mode transitions.
+- Source / live-preview / reading mode transitions, and reading content staying
+  clear of the overlay sidebar at narrow window widths.
 - Strict mode on/off behavior for compact ATX headings, lax nested list marker
   indentation, under-indented continuation paragraphs, and quoted lists,
   including the Preferences toggle.
-- Chinese settings, language switch to English and back.
+- Chinese settings, the three-language switch (Simplified, Traditional, English),
+  localized placeholder and untitled names, persisted choice, and return to
+  Simplified Chinese.
 - System appearance: emulated dark and light system preferences update the
   resolved theme live, an explicit Dark choice ignores the system preference,
   the five theme options are present, and system mode can be restored.
@@ -220,11 +223,13 @@ The E2E suite currently covers:
 - Version consistency across npm, Cargo, Tauri, and lockfiles, plus rejection of
   skipped release steps during the publication audit.
 
-Vitest covers formatting, smart typing, emoji catalogs, i18n, version display
-formatting, zoom math, strict-heading and lax-list normalization (including
-continuations, quotes, code safety, and CRLF), front-matter parsing, save-name
-extraction/sanitization, image helpers including document/root path and root
-URL resolution, image-source scanning
+Vitest covers formatting, smart typing, emoji catalogs, i18n dictionary parity
+and interpolation, legacy language-tag normalization, Traditional Chinese
+fallback and search phrases, localized history/document-info labels, version
+display formatting, zoom math, strict-heading and lax-list normalization
+(including continuations, quotes, code safety, and CRLF), front-matter parsing,
+save-name extraction/sanitization, image helpers including document/root path
+and root URL resolution, image-source scanning
 and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change

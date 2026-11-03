@@ -3700,6 +3700,12 @@ body.is-resizing-image[data-resize-axis="height"] * {
     padding-left: var(--sidebar-width);
   }
 
+  /* The overlay sidebar sits above the absolutely positioned preview, so the
+     preview needs its own offset; padding on the parent does not move it. */
+  .app-shell.has-sidebar .preview-surface {
+    left: var(--sidebar-width);
+  }
+
   .status-left > span:nth-child(n + 3),
   .status-right > span:not(.status-cursor) {
     display: none;

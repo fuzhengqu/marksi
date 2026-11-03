@@ -52,6 +52,13 @@ ranges, language codes, automatic-save delays, image folders, export options, an
 shortcut maps are validated locally. Copy and Reload current assist manual
 backup; there is no network or file access in this flow.
 
+Preferences > Appearance offers 简体中文, 繁體中文, and English. Switching updates
+menus, labels, editor search phrases, dates, numbers, the editor placeholder, and
+untitled document names immediately without a restart. Legacy `zh-CN` and `zh-TW`
+values in saved settings or exported JSON map to `zh-Hans` and `zh-Hant`. Any key
+missing from Traditional Chinese falls back to Simplified Chinese, then to the
+English source label.
+
 Preferences > Appearance can load a local CSS theme from the application data
 `themes` folder. The folder is created on demand, contains at most 50 `.css`
 files of up to 256 KB each, and can be opened from Preferences. Selecting a theme
@@ -398,7 +405,7 @@ save the imported document to choose its final location.
 | Advanced JSON settings | done | M6 |
 | Chinese default / English language switch | done | M5 |
 | Version display and one-step bump | done | M5 |
-| i18n framework (en, zh-Hans, zh-Hant first) | wip | M6 |
+| i18n framework (en, zh-Hans, zh-Hant first) | done | M6 |
 | RTL and accessibility pass | done | M7 |
 | No telemetry / no account | done | M0 |
 | No activation / no paid gates | done | M0 |

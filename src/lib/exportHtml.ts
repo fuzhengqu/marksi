@@ -3,6 +3,8 @@ import { buildMetaTags, documentInfoMarkup } from "./exportMetadata";
 import { extractFrontMatter } from "./frontMatter";
 import { buildPageCss, normalizeExportOptions } from "./exportOptions";
 import { renderMermaidMarkup } from "./mermaid";
+import { translate } from "../i18n/dictionary";
+import { documentLanguage } from "./language";
 import type { ExportOptions, Language } from "../types";
 
 export interface ExportDocumentOptions {
@@ -328,7 +330,7 @@ tr:nth-child(even) td { background: #faf9f7; }
 export async function buildStandaloneHtml({
   title,
   content,
-  language = "zh-CN",
+  language = "zh-Hans",
   strictMode = true,
   exportOptions,
 }: ExportDocumentOptions): Promise<string> {
@@ -337,7 +339,8 @@ export async function buildStandaloneHtml({
   const metadata = options.useFrontMatter
     ? frontMatter?.metadata ?? {}
     : {};
-  const documentTitle = (metadata.title || title).trim() || "Untitled";
+  const documentTitle =
+    (metadata.title || title).trim() || translate(language, "Untitled");
   const safeTitle = escapeHtml(documentTitle);
   const metaTags = buildMetaTags(metadata, options.includeMetadataTags);
   const info = documentInfoMarkup(
@@ -355,7 +358,7 @@ export async function buildStandaloneHtml({
     "light",
   );
   return `<!doctype html>
-<html lang="${language === "zh-CN" ? "zh-CN" : "en"}">
+<html lang="${documentLanguage(language)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

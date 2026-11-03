@@ -14,7 +14,7 @@ import {
   Type,
   X,
 } from "lucide-react";
-import { useT } from "../i18n";
+import { LANGUAGE_LABELS, LANGUAGES, useT } from "../i18n";
 import type { CustomTheme } from "../lib/customThemes";
 import {
   clearRemoteImageCache,
@@ -29,7 +29,7 @@ import {
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { ZOOM_MAX, ZOOM_MIN, zoomPercent } from "../lib/zoom";
 import { useAppStore } from "../store/useAppStore";
-import type { AppSettings, Language, Theme } from "../types";
+import type { AppSettings, Theme } from "../types";
 import { ShortcutEditor } from "./ShortcutEditor";
 import { Toggle } from "./Toggle";
 
@@ -353,13 +353,14 @@ export function SettingsDialog() {
                 role="group"
                 aria-label={t("Language")}
               >
-                {(["zh-CN", "en"] as Language[]).map((value) => (
+                {LANGUAGES.map((value) => (
                   <button
                     key={value}
                     className={settings.language === value ? "is-active" : ""}
+                    lang={value}
                     onClick={() => update("language", value)}
                   >
-                    {value === "zh-CN" ? "中文" : "English"}
+                    {LANGUAGE_LABELS[value]}
                   </button>
                 ))}
               </div>

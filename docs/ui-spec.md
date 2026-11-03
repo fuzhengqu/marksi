@@ -20,7 +20,9 @@
 
 - Title bar: 38px, custom drag region, hamburger, wordmark, document title,
   theme toggle, window controls.
-- Sidebar: 270px default, resizable later; tabs Files / Outline / Search.
+- Sidebar: 270px default, resizable later; tabs Files / Outline / Search. Below
+  760px the sidebar overlays the document area and the editor, reading view, and
+  preview shift right by the sidebar width so content stays clear of it.
 - Editor: centered column, max-width 860px; the writing surface is quiet.
 - Status bar: 30px; document facts on the left, counts on the right.
 - No permanent toolbar. Formatting and export live in the overlay menu,
@@ -52,13 +54,14 @@ iconography, spacing, and motion are designed for this project.
 
 Typography:
 
-- UI: `Segoe UI Variable`, `Segoe UI`, Microsoft YaHei UI, Noto Sans CJK SC,
-  PingFang SC, system-ui, sans-serif.
+- UI: `Segoe UI Variable`, `Segoe UI`, Microsoft YaHei UI, Microsoft JhengHei
+  UI, Noto Sans CJK SC/TC, PingFang SC/TC, system-ui, sans-serif.
 - Editor: same family, 16px by default, line-height 1.7. The preference range
   is 14–22px.
-- Interface language: Chinese (`zh-CN`) by default, English available. The
-  preference applies immediately to menus, dialogs, sidebar, status bar, and
-  editor search.
+- Interface language: Simplified Chinese (`zh-Hans`) by default; Traditional
+  Chinese (`zh-Hant`) and English are available. The preference applies
+  immediately to menus, dialogs, sidebar, status bar, editor search, dates, and
+  numbers. Legacy `zh-CN` and `zh-TW` values map to the script codes.
 - Writing column: 860px by default. The preference range is 680–1100px.
 - Interface zoom: 100% by default. The preference range is 80%–160% in 10%
   steps and scales the whole application surface.

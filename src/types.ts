@@ -8,7 +8,7 @@ export type SearchScope = "document" | "workspace";
 
 export type Theme = "light" | "dark" | "sepia" | "contrast" | "system";
 
-export type Language = "zh-CN" | "en";
+export type Language = "zh-Hans" | "zh-Hant" | "en";
 
 export type ViewMode = "source" | "preview" | "reading";
 

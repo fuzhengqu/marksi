@@ -1,3 +1,4 @@
+import { translate } from "../i18n/dictionary";
 import { escapeHtml } from "./htmlEscape";
 import type { Language } from "../types";
 
@@ -14,22 +15,13 @@ function documentInfoEntries(
   metadata: Record<string, string>,
   language: Language,
 ): DocumentInfoEntry[] {
-  const labels =
-    language === "zh-CN"
-      ? {
-          author: "作者",
-          date: "日期",
-          description: "摘要",
-          tags: "标签",
-          keywords: "关键词",
-        }
-      : {
-          author: "Author",
-          date: "Date",
-          description: "Summary",
-          tags: "Tags",
-          keywords: "Keywords",
-        };
+  const labels = {
+    author: translate(language, "Author"),
+    date: translate(language, "Date"),
+    description: translate(language, "Summary"),
+    tags: translate(language, "Tags"),
+    keywords: translate(language, "Keywords"),
+  };
   const fields: Array<[keyof typeof labels, string]> = [
     ["author", cleanInfoValue(metadata.author)],
     ["date", cleanInfoValue(metadata.date)],
@@ -82,8 +74,7 @@ export function documentInfoMarkup(
   if (!entries.length) {
     return "";
   }
-  const label =
-    language === "zh-CN" ? "文档信息" : "Document information";
+  const label = translate(language, "Document information");
   return `<section class="document-info" aria-label="${label}">
 <dl>
 ${entries

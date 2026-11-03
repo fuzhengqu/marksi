@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Eye, Lock, PenLine } from "lucide-react";
 import { getTextStats } from "../editor/analyze";
-import { useT } from "../i18n";
+import { intlLocale, useT } from "../i18n";
 import { encodingDisplayName } from "../lib/encodings";
 import { isLargeDocument } from "../lib/largeFile";
 import { useAppStore } from "../store/useAppStore";
@@ -12,6 +12,7 @@ export function StatusBar() {
   const cursor = useAppStore((state) => state.cursor);
   const viewMode = useAppStore((state) => state.viewMode);
   const readOnlyMode = useAppStore((state) => state.settings.readOnlyMode);
+  const language = useAppStore((state) => state.settings.language);
   const largeFile = useAppStore(
     (state) =>
       state.settings.largeFileOptimizations &&
@@ -87,8 +88,16 @@ export function StatusBar() {
           )}
           <span>{viewMode === "source" ? t("Preview") : t("Source")}</span>
         </button>
-        <span>{t("{count} words", { count: stats.words.toLocaleString() })}</span>
-        <span>{t("{count} chars", { count: stats.chars.toLocaleString() })}</span>
+        <span>
+          {t("{count} words", {
+            count: stats.words.toLocaleString(intlLocale(language)),
+          })}
+        </span>
+        <span>
+          {t("{count} chars", {
+            count: stats.chars.toLocaleString(intlLocale(language)),
+          })}
+        </span>
         <span className="status-cursor">
           {t("Ln {line}, Col {column}", {
             line: cursor.line,

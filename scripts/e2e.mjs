@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
@@ -11,6 +11,9 @@ const origin = process.env.MARKSI_E2E_ORIGIN ?? "localhost:1420";
 const fixtureDir = resolve(".tmp/e2e-fixtures");
 const markdownFixture = resolve(fixtureDir, "fixture.md");
 const imageFixture = resolve(fixtureDir, "icon.png");
+const appVersion = JSON.parse(readFileSync(resolve("package.json"), "utf8"))
+  .version;
+const productVersion = appVersion.replace(/^0\.(\d+)\.0$/, "0.$1");
 const pandocExecutable = resolve(
   ".tmp/pandoc/portable/pandoc-3.12.1/pandoc.exe",
 );
@@ -365,6 +368,57 @@ async function resetBase({ clearContent = true } = {}) {
   await sleep(220);
 }
 
+async function prepareImageDrag(axis) {
+  await evaluate(`(() => {
+    const state = window.__MARKSI_DEV__.getState();
+    if (state.sidebarOpen) state.toggleSidebar();
+    document.querySelector('.image-resize-handle[data-axis="${axis}"]')
+      ?.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
+  })()`);
+  await sleep(260);
+  const point = await evaluate(`(() => {
+    const handle = document.querySelector('.image-resize-handle[data-axis="${axis}"]');
+    if (!handle) return null;
+    const box = handle.getBoundingClientRect();
+    const x = box.left + box.width / 2;
+    const y = box.top + box.height / 2;
+    return { x, y, viewport: { width: innerWidth, height: innerHeight } };
+  })()`);
+  assert(point, `image ${axis} handle missing`, point);
+  assert(
+    point.x > 0 &&
+      point.x < point.viewport.width &&
+      point.y > 0 &&
+      point.y < point.viewport.height,
+    `image ${axis} handle should be inside the viewport`,
+    point,
+  );
+  // Hovering the frame makes the handle interactive before the drag starts.
+  await send("Input.dispatchMouseEvent", {
+    type: "mouseMoved",
+    x: point.x,
+    y: point.y,
+  });
+  await sleep(180);
+  const topmost = await evaluate(`(() => {
+    const handle = document.querySelector('.image-resize-handle[data-axis="${axis}"]');
+    const box = handle.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      box.left + box.width / 2,
+      box.top + box.height / 2,
+    );
+    return {
+      hovered: document.querySelector(".markdown-image-frame:hover") !== null,
+      topmost: hit === handle || handle.contains(hit),
+      hitTag: hit?.tagName ?? null,
+      hitClass: typeof hit?.className === "string" ? hit.className : null,
+      pointerEvents: getComputedStyle(handle).pointerEvents,
+    };
+  })()`);
+  assert(topmost.topmost, `image ${axis} handle is covered`, topmost);
+  return point;
+}
+
 async function reloadApp() {
   await resetBase();
   await evaluate('localStorage.removeItem("marksi-recovery-draft")');
@@ -409,7 +463,7 @@ async function main() {
       focused: document.activeElement?.classList.contains("cm-content") ?? false,
       tabs: Array.from(document.querySelectorAll(".sidebar-tab span")).map((node) => node.textContent)
     })`);
-    assert(state.language === "zh-CN", "html lang should be zh-CN", state);
+    assert(state.language === "zh-Hans", "html lang should be zh-Hans", state);
     assert(state.viewMode === "preview", "default view should be preview", state);
     assert(state.name === "未命名.md", "default name should be Chinese", state);
     assert(!state.welcome, "welcome overlay must not be shown", state);
@@ -507,7 +561,11 @@ async function main() {
     })`);
     assert(state.buttons.length === 1, "about should have one close control", state);
     assert(!state.bottom, "about footer button must be removed", state);
-    assert(state.version?.includes("0.41"), "About should show version 0.41", state);
+    assert(
+      state.version?.includes(productVersion),
+      `About should show version ${productVersion}`,
+      state,
+    );
     await clickSelector(".about-notices summary");
     await sleep(180);
     const notices = await evaluate(`(() => {
@@ -696,6 +754,22 @@ async function main() {
     })`);
     assert(state.overlay && state.body, "reading view should render", state);
     assert(state.editable === "false", "reading view editor should be read-only", state);
+    const geometry = await evaluate(`(() => {
+      const sidebar = document.querySelector(".sidebar").getBoundingClientRect();
+      const preview = document.querySelector(".preview-surface").getBoundingClientRect();
+      return {
+        sidebarOpen: window.__MARKSI_DEV__.getState().sidebarOpen,
+        sidebarRight: sidebar.right,
+        previewLeft: preview.left,
+        viewport: innerWidth
+      };
+    })()`);
+    assert(
+      !geometry.sidebarOpen ||
+        geometry.previewLeft >= geometry.sidebarRight - 1,
+      "reading view must not sit under the open sidebar",
+      geometry,
+    );
     await evaluate('window.__MARKSI_DEV__.getState().setViewMode("preview")');
     await sleep(200);
   });
@@ -773,15 +847,21 @@ async function main() {
     await resetBase();
   });
 
-  await test("settings dialog is Chinese and switches English and back", async () => {
+  await test("settings switches Simplified, Traditional, and English", async () => {
     await evaluate('window.__MARKSI_DEV__.getState().setSettingsOpen(true)');
     await waitFor('document.querySelector(".settings-dialog")');
     const zh = await evaluate(`({
       title: document.querySelector("#settings-title")?.textContent,
       languageButtons: Array.from(document.querySelectorAll(".segmented-control button")).map((node) => node.textContent)
     })`);
-    assert(zh.title === "偏好设置", "settings title should be Chinese", zh);
-    assert(zh.languageButtons.includes("中文"), "Chinese language option missing", zh);
+    assert(zh.title === "偏好设置", "settings title should be Simplified Chinese", zh);
+    assert(
+      zh.languageButtons.includes("简体中文") &&
+        zh.languageButtons.includes("繁體中文") &&
+        zh.languageButtons.includes("English"),
+      "all three language options are required",
+      zh,
+    );
     const direction = await evaluate(`({
       value: document.querySelector(".text-direction-select")?.value ?? null,
       options: Array.from(
@@ -797,21 +877,66 @@ async function main() {
       direction,
     );
     await evaluate(`(() => {
+      const button = Array.from(document.querySelectorAll(".segmented-control button")).find((node) => node.textContent === "繁體中文");
+      button?.click();
+    })()`);
+    await sleep(300);
+    const hant = await evaluate(`({
+      lang: document.documentElement.lang,
+      title: document.querySelector("#settings-title")?.textContent,
+      name: window.__MARKSI_DEV__.getState().doc.name,
+      placeholder: document.querySelector(".cm-placeholder")?.textContent,
+      direction: Array.from(
+        document.querySelector(".text-direction-select")?.options ?? []
+      ).map((option) => option.textContent),
+      stored: JSON.parse(localStorage.getItem("marksi-preferences") || "{}").state?.settings?.language
+    })`);
+    assert(hant.lang === "zh-Hant", "html lang should switch to zh-Hant", hant);
+    assert(hant.title === "偏好設定", "settings should switch to Traditional Chinese", hant);
+    assert(hant.name === "未命名.md", "Traditional Chinese keeps the Chinese untitled name", hant);
+    assert(
+      hant.placeholder === "開始寫作。Markdown 就足夠了。",
+      "editor placeholder should use Traditional Chinese",
+      hant,
+    );
+    assert(
+      hant.direction.includes("自動") &&
+        hant.direction.includes("從左到右") &&
+        hant.direction.includes("從右到左"),
+      "Traditional text direction options are missing",
+      hant,
+    );
+    assert(hant.stored === "zh-Hant", "language choice should persist", hant);
+    await evaluate(`(() => {
       const button = Array.from(document.querySelectorAll(".segmented-control button")).find((node) => node.textContent === "English");
       button?.click();
     })()`);
-    await sleep(250);
+    await sleep(300);
     const en = await evaluate(`({
       lang: document.documentElement.lang,
-      title: document.querySelector("#settings-title")?.textContent
+      title: document.querySelector("#settings-title")?.textContent,
+      name: window.__MARKSI_DEV__.getState().doc.name,
+      stored: JSON.parse(localStorage.getItem("marksi-preferences") || "{}").state?.settings?.language
     })`);
     assert(en.lang === "en", "html lang should switch to en", en);
     assert(en.title === "Preferences", "settings should switch to English", en);
+    assert(en.name === "Untitled.md", "English untitled name is required", en);
+    assert(en.stored === "en", "English choice should persist", en);
     await evaluate(`(() => {
-      const button = Array.from(document.querySelectorAll(".segmented-control button")).find((node) => node.textContent === "中文");
+      const button = Array.from(document.querySelectorAll(".segmented-control button")).find((node) => node.textContent === "简体中文");
       button?.click();
     })()`);
-    await sleep(200);
+    await sleep(300);
+    const restored = await evaluate(`({
+      lang: document.documentElement.lang,
+      title: document.querySelector("#settings-title")?.textContent,
+      name: window.__MARKSI_DEV__.getState().doc.name,
+      stored: JSON.parse(localStorage.getItem("marksi-preferences") || "{}").state?.settings?.language
+    })`);
+    assert(restored.lang === "zh-Hans", "html lang should return to zh-Hans", restored);
+    assert(restored.title === "偏好设置", "settings should return to Simplified Chinese", restored);
+    assert(restored.name === "未命名.md", "Simplified Chinese untitled name is required", restored);
+    assert(restored.stored === "zh-Hans", "Simplified Chinese choice should persist", restored);
     await clickSelector(".settings-close");
     await waitFor('!document.querySelector(".settings-dialog")');
   });
@@ -948,7 +1073,7 @@ async function main() {
         'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"]\')',
       );
       await evaluate(
-        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"] .shortcut-record\')?.scrollIntoView({ block: "center" })',
+        'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"] .shortcut-record\')?.scrollIntoView({ block: "center", behavior: "instant" })',
       );
       await evaluate(
         'document.querySelector(\'.shortcut-editor [data-shortcut="toggleSidebar"] .shortcut-record\')?.click()',
@@ -1025,7 +1150,7 @@ async function main() {
       await evaluate("window.__MARKSI_DEV__.openSettings()");
       await waitFor('document.querySelector(".reset-shortcuts")');
       await evaluate(
-        'document.querySelector(".reset-shortcuts")?.scrollIntoView({ block: "center" })',
+        'document.querySelector(".reset-shortcuts")?.scrollIntoView({ block: "center", behavior: "instant" })',
       );
       await evaluate('document.querySelector(".reset-shortcuts")?.click()');
       await waitFor(
@@ -1106,8 +1231,26 @@ async function main() {
       "window.__MARKSI_DEV__.setSettings({ rememberWindowFrame: false })",
     );
     await sleep(250);
-    const first = { x: 120, y: 90, width: 1020, height: 700, maximized: false };
-    const second = { x: 200, y: 120, width: 1120, height: 740, maximized: false };
+    const areas = await evaluate(
+      `(async () => (await import("/src/lib/platform.ts")).windowWorkAreas())()`,
+    );
+    const area = areas?.[0] ?? { x: 0, y: 0, width: 1600, height: 1000 };
+    const width = Math.min(1020, Math.max(640, area.width - 120));
+    const height = Math.min(700, Math.max(480, area.height - 160));
+    const first = {
+      x: area.x + 60,
+      y: area.y + 80,
+      width,
+      height,
+      maximized: false,
+    };
+    const second = {
+      x: area.x + 20,
+      y: area.y + 40,
+      width: Math.min(width, area.width - 40),
+      height: Math.min(height, area.height - 80),
+      maximized: false,
+    };
     const close = (actual, expected) =>
       Math.abs(actual.x - expected.x) <= 3 &&
       Math.abs(actual.y - expected.y) <= 3 &&
@@ -1131,9 +1274,10 @@ async function main() {
         { savedFrame, minimized },
       );
       assert(
-        savedFrame.width >= 900 && savedFrame.height >= 600,
+        savedFrame.width >= Math.min(900, area.width) &&
+          savedFrame.height >= Math.min(600, area.height),
         "saved window should keep a usable content size",
-        savedFrame,
+        { savedFrame, area },
       );
 
       await evaluate(
@@ -1706,7 +1850,7 @@ async function main() {
       await evaluate("window.__MARKSI_DEV__.openSettings()");
       await waitFor('document.querySelector(".settings-json-open")');
       await evaluate(
-        'document.querySelector(".settings-json-open")?.scrollIntoView({ block: "center" })',
+        'document.querySelector(".settings-json-open")?.scrollIntoView({ block: "center", behavior: "instant" })',
       );
       await evaluate('document.querySelector(".settings-json-open")?.click()');
       await waitFor('document.querySelector(".settings-json-text")');
@@ -3197,6 +3341,11 @@ async function main() {
       );
       const html = await readFile(exportPath, "utf8");
       assert(html.includes("# Custom export") || html.includes("Custom export"), "custom export HTML missing", html.slice(0, 400));
+      assert(
+        html.includes('<html lang="zh-Hans">'),
+        "exported HTML should use the current script code",
+        html.slice(0, 400),
+      );
       const marker = await readFile(markerPath, "utf8");
       assert(
         marker.includes(exportPath),
@@ -3927,15 +4076,12 @@ async function main() {
       return {
         widthAttribute: image?.getAttribute("width"),
         width: image?.getBoundingClientRect().width ?? null,
-        handle: Boolean(document.querySelector(".image-resize-handle"))
+        handle: Boolean(document.querySelector('.image-resize-handle[data-axis="width"]'))
       };
     })()`);
     assert(before.widthAttribute === "120", "width attribute was not rendered", before);
     assert(before.handle, "image resize handle missing", before);
-    const handlePoint = await evaluate(`(() => {
-      const box = document.querySelector(".image-resize-handle").getBoundingClientRect();
-      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
-    })()`);
+    const handlePoint = await prepareImageDrag("width");
     await send("Input.dispatchMouseEvent", {
       type: "mouseMoved",
       x: handlePoint.x,
@@ -4036,10 +4182,7 @@ async function main() {
       const box = image.getBoundingClientRect();
       return { height: box.height, width: box.width };
     })()`);
-    const heightHandlePoint = await evaluate(`(() => {
-      const box = document.querySelector('.image-resize-handle[data-axis="height"]').getBoundingClientRect();
-      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
-    })()`);
+    const heightHandlePoint = await prepareImageDrag("height");
     await send("Input.dispatchMouseEvent", {
       type: "mouseMoved",
       x: heightHandlePoint.x,

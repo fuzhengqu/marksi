@@ -41,6 +41,22 @@ describe("advanced settings JSON", () => {
     expect(result.warnings).toContain("Unknown setting ignored: theme");
   });
 
+  it("maps legacy language tags to script codes", () => {
+    const simplified = parseSettingsJson(
+      JSON.stringify({ language: "zh-CN" }),
+      DEFAULT_SETTINGS,
+    );
+    expect(simplified.settings.language).toBe("zh-Hans");
+    expect(simplified.warnings).toEqual([]);
+
+    const traditional = parseSettingsJson(
+      JSON.stringify({ language: "zh-TW" }),
+      DEFAULT_SETTINGS,
+    );
+    expect(traditional.settings.language).toBe("zh-Hant");
+    expect(traditional.warnings).toEqual([]);
+  });
+
   it("keeps current values and warns for invalid fields", () => {
     const result = parseSettingsJson(
       JSON.stringify({

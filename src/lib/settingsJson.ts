@@ -1,8 +1,9 @@
 import { normalizeExportOptions } from "./exportOptions";
 import { normalizeRelativeFolder } from "./fileOps";
+import { normalizeLanguage } from "./language";
 import { normalizeShortcuts } from "./shortcuts";
 import { clampZoom, ZOOM_MAX, ZOOM_MIN } from "./zoom";
-import type { AppSettings, Language } from "../types";
+import type { AppSettings } from "../types";
 
 const BOOLEAN_KEYS = [
   "spellcheck",
@@ -119,10 +120,13 @@ export function parseSettingsJson(
   const settings: AppSettings = { ...current };
 
   if (input.language !== undefined) {
-    if (input.language === "zh-CN" || input.language === "en") {
-      settings.language = input.language as Language;
+    const language = normalizeLanguage(input.language);
+    if (language) {
+      settings.language = language;
     } else {
-      warnings.push("language must be \"zh-CN\" or \"en\".");
+      warnings.push(
+        'language must be "zh-Hans", "zh-Hant", or "en".',
+      );
     }
   }
 

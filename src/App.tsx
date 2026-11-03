@@ -49,7 +49,7 @@ import {
   shouldRestoreSession,
   type SessionSnapshot,
 } from "./lib/session";
-import { tNow, useT } from "./i18n";
+import { tNow, untitledName, useT } from "./i18n";
 import { clampZoom, stepZoom } from "./lib/zoom";
 import {
   draftStorageKey,
@@ -203,8 +203,7 @@ export default function App() {
     if (state.doc.path || state.doc.dirty || state.doc.content) {
       return;
     }
-    const name =
-      settings.language === "zh-CN" ? "未命名.md" : "Untitled.md";
+    const name = untitledName(settings.language);
     if (state.doc.name !== name) {
       useAppStore.setState({ doc: { ...state.doc, name } });
     }

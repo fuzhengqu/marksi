@@ -19,6 +19,7 @@ import {
   normalizeTheme,
   systemPrefersDark,
 } from "../lib/theme";
+import { normalizeLanguage, untitledName } from "../lib/language";
 import type {
   AppSettings,
   CursorPosition,
@@ -122,7 +123,7 @@ interface AppStore {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  language: "zh-CN",
+  language: "zh-Hans",
   editorFontSize: 16,
   contentWidth: 860,
   zoomLevel: 1,
@@ -212,10 +213,7 @@ export const useAppStore = create<AppStore>()(
         set((state) => ({
           doc: {
             ...emptyDocument,
-            name:
-              state.settings.language === "zh-CN"
-                ? "未命名.md"
-                : "Untitled.md",
+            name: untitledName(state.settings.language),
           },
           cursor: { line: 1, column: 1 },
           viewMode: "preview",
@@ -422,10 +420,7 @@ export const useAppStore = create<AppStore>()(
             return {
               doc: {
                 ...emptyDocument,
-                name:
-                  state.settings.language === "zh-CN"
-                    ? "未命名.md"
-                    : "Untitled.md",
+                name: untitledName(state.settings.language),
               },
               recent,
               pinned,
@@ -476,6 +471,9 @@ export const useAppStore = create<AppStore>()(
           settings: {
             ...DEFAULT_SETTINGS,
             ...(saved.settings ?? {}),
+            language:
+              normalizeLanguage(saved.settings?.language) ??
+              DEFAULT_SETTINGS.language,
             exportOptions: normalizeExportOptions(
               saved.settings?.exportOptions,
             ),

@@ -265,19 +265,34 @@ inventories. The committed copy is the Windows-target snapshot and is checked by
 
 ## Interface localization
 
-`src/i18n.ts` owns the English source labels, the Simplified Chinese
-dictionary, interpolation, and CodeMirror search-panel phrases. The persisted
-`AppSettings.language` defaults to `zh-CN`; the Settings dialog can switch to
-English immediately without a restart. Components subscribe through `useT()`,
-while event handlers use `tNow()` so native confirmations and toasts follow the
-current language. New untitled documents are named `未命名.md` in Chinese and
-`Untitled.md` in English. When an unsaved document opens the save dialog,
-`src/lib/saveName.ts` extracts the first level-one heading (ATX or setext,
-ignoring front matter and fenced code), strips inline Markdown, sanitizes
-platform-invalid characters and Windows device names, and adds `.md` when
-needed. Without an H1 it keeps the localized untitled filename. Existing
-documents continue to use their current filename for Save As. The document HTML export sets its `lang` attribute
-from the same setting.
+`src/lib/language.ts` defines the supported interface languages (`zh-Hans`,
+`zh-Hant`, and `en`), their display labels, `Intl` locales, legacy-tag
+normalization, and the localized untitled filename. `src/i18n/locales/` holds
+the Simplified and Traditional dictionaries plus CodeMirror search-panel
+phrases. `src/i18n/dictionary.ts` performs pure lookups with a
+`zh-Hant → zh-Hans → English source` fallback chain, and `src/i18n/index.ts`
+adds the `useT()` hook and `tNow()` for event handlers.
+
+The persisted `AppSettings.language` defaults to `zh-Hans`. Saved settings that
+still contain `zh-CN` or `zh-TW` are normalized during store hydration and when
+applying settings JSON, so upgrades do not reset the interface language. The
+Settings dialog lists all three languages; switching applies immediately
+without a restart. Dates use `zh-CN`, `zh-TW`, or `en` from `Intl`, numbers use
+the same locale, and both the document `lang` attribute and exported HTML use
+the script code (`zh-Hans` or `zh-Hant`).
+
+New untitled documents are named `未命名.md` in either Chinese script and
+`Untitled.md` in English; the exported HTML title fallback is localized too.
+When an unsaved document opens the save dialog, `src/lib/saveName.ts` extracts
+the first level-one heading (ATX or setext, ignoring front matter and fenced
+code), strips inline Markdown, sanitizes platform-invalid characters and
+Windows device names, and adds `.md` when needed. Without an H1 it keeps the
+localized untitled filename. Existing documents continue to use their current
+filename for Save As.
+
+The Traditional Chinese draft was generated once from the Simplified dictionary
+with OpenCC `s2twp` and then reviewed for Taiwan terminology; OpenCC is not a
+runtime or build dependency.
 
 ## Editor view modes
 
@@ -568,8 +583,12 @@ window starts with an empty document rather than duplicating main state.
   formatting; it has no DOM or Tauri dependency.
 - `src/lib/mermaid.ts` owns lazy Mermaid loading, theme variables, SVG
   sanitization, and diagram hydration for reading/export/clipboard markup.
-- `src/i18n.ts` owns the bilingual dictionary, interpolation, and editor phrase
-  localization; it is covered by unit tests.
+- `src/lib/language.ts` owns the supported-language list, legacy-tag
+  normalization, `Intl` locales, HTML `lang` values, and untitled names; it is
+  covered by unit tests.
+- `src/i18n/` owns the Simplified and Traditional dictionaries, the fallback
+  lookup, interpolation, React hook, and editor search-panel phrases; keys and
+  placeholders are covered by unit tests.
 - `src/editor/livePreview.ts` owns the source-preserving live-preview
   decorations.
 - `src/lib/clipboardText.ts` owns plain-text clipboard writes and the legacy

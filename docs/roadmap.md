@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.41**
-- Technical version: **0.41.0**
+- Product version: **0.42**
+- Technical version: **0.42.0**
 - Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
@@ -19,14 +19,15 @@ The public security and version policies are enforced by
   the shortcut editor, Windows installer validation, CLI open, file
   associations, window flags, multiple document windows, window and session
   memory, the native title bar, advanced JSON settings, release checksums,
-  Linux packages, and the Windows/Linux build-test matrix. M7 has started with
-  IME/CJK input coverage, a keyboard/focus accessibility pass, document-level
-  RTL support, a large-document reading confirmation, and Flatpak packaging.
+  Linux packages, the Windows/Linux build-test matrix, and the three-language
+  i18n framework. M7 has started with IME/CJK input coverage, a keyboard/focus
+  accessibility pass, document-level RTL support, a large-document reading
+  confirmation, and Flatpak packaging.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **113 done, 4 wip,
+is the source for exact status values. Current raw count: **114 done, 3 wip,
 3 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
@@ -132,9 +133,9 @@ Entry criteria:
 Status: in progress. System appearance, additional themes, user CSS themes, the
 shortcut editor, Windows installer validation, Linux packages, CLI open, file
 associations, window flags, multiple document windows, window/session memory,
-the native title bar option, and advanced JSON settings are complete. Release
-checksums are automated; code signing, auto-update, single-instance forwarding,
-and default Snap Layouts remain open.
+the native title bar option, advanced JSON settings, and the three-language i18n
+framework are complete. Release checksums are automated; code signing,
+auto-update, single-instance forwarding, and default Snap Layouts remain open.
 
 ### M7 — Performance, accessibility, and internationalization depth
 

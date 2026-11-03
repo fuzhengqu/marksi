@@ -38,7 +38,7 @@ describe("buildMetaTags", () => {
 
 describe("documentInfoMarkup", () => {
   it("renders localized, escaped entries", () => {
-    const html = documentInfoMarkup(metadata, "zh-CN", true);
+    const html = documentInfoMarkup(metadata, "zh-Hans", true);
     expect(html).toContain('class="document-info"');
     expect(html).toContain('aria-label="文档信息"');
     expect(html).toContain("<dt>作者</dt>");
@@ -49,6 +49,15 @@ describe("documentInfoMarkup", () => {
     expect(html).toContain("<dt>标签</dt>");
     expect(html).toContain("<dt>关键词</dt>");
     expect(html).not.toContain("<script>alert(1)</script>");
+  });
+
+  it("renders Traditional Chinese labels", () => {
+    const html = documentInfoMarkup(metadata, "zh-Hant", true);
+    expect(html).toContain('aria-label="文件資訊"');
+    expect(html).toContain("<dt>作者</dt>");
+    expect(html).toContain("<dt>日期</dt>");
+    expect(html).toContain("<dt>標籤</dt>");
+    expect(html).toContain("<dt>關鍵字</dt>");
   });
 
   it("uses English labels and summary fallback", () => {

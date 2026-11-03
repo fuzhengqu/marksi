@@ -16,7 +16,7 @@ import {
   editorContentAttributes,
 } from "../editor/setup";
 import { livePreview } from "../editor/livePreview";
-import { searchPhrases } from "../i18n";
+import { searchPhrases, translate } from "../i18n";
 import { clearImageSize, setImageFit, setImageSize } from "../lib/imageSize";
 import { minimalTextChange } from "../lib/textChange";
 import { smartTyping } from "../editor/smartTyping";
@@ -198,9 +198,10 @@ export function EditorPane({
         ),
         placeholderCompartment.of(
           placeholder(
-            languageRef.current === "zh-CN"
-              ? "开始写作。Markdown 足矣。"
-              : "Start writing. Markdown is all you need.",
+            translate(
+              languageRef.current,
+              "Start writing. Markdown is all you need.",
+            ),
           ),
         ),
       ],
@@ -308,9 +309,10 @@ export function EditorPane({
       ),
       placeholderCompartment.reconfigure(
         placeholder(
-          language === "zh-CN"
-            ? "开始写作。Markdown 足矣。"
-            : "Start writing. Markdown is all you need.",
+          translate(
+            language,
+            "Start writing. Markdown is all you need.",
+          ),
         ),
       ),
     ];
@@ -482,9 +484,10 @@ export function EditorPane({
             ),
             placeholderCompartment.of(
               placeholder(
-                languageRef.current === "zh-CN"
-                  ? "开始写作。Markdown 足矣。"
-                  : "Start writing. Markdown is all you need.",
+                translate(
+                  languageRef.current,
+                  "Start writing. Markdown is all you need.",
+                ),
               ),
             ),
           ],

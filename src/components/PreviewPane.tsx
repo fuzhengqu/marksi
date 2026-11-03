@@ -18,7 +18,7 @@ import {
   Scan,
   X,
 } from "lucide-react";
-import { useT } from "../i18n";
+import { intlLocale, useT } from "../i18n";
 import { clampImageHeight, clampImageWidth } from "../lib/imageSize";
 import {
   directoryName,
@@ -176,6 +176,7 @@ export function PreviewPane({
   const t = useT();
   const debouncedContent = useDebouncedValue(content, 90);
   const readOnlyMode = useAppStore((state) => state.settings.readOnlyMode);
+  const language = useAppStore((state) => state.settings.language);
   const strictMode = useAppStore((state) => state.settings.strictMode);
   const loadRemoteImages = useAppStore(
     (state) => state.settings.loadRemoteImages,
@@ -709,13 +710,17 @@ export function PreviewPane({
             aria-labelledby="large-preview-title"
           >
             <div className="large-preview-mark" aria-hidden="true">
-              {content.length.toLocaleString()}
+              {content.length.toLocaleString(intlLocale(language))}
             </div>
             <h2 id="large-preview-title">{t("Large document")}</h2>
             <p>
               {t(
                 "This document has {count} characters. Rendering the full reading view can take a while.",
-                { count: content.length.toLocaleString() },
+                {
+                  count: content.length.toLocaleString(
+                    intlLocale(language),
+                  ),
+                },
               )}
             </p>
             <div className="large-preview-actions">

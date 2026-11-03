@@ -12,6 +12,14 @@ describe("history formatting", () => {
 
   it("handles unknown snapshot times", () => {
     expect(snapshotTime(0, "en")).toBe("Unknown time");
-    expect(snapshotTime(Number.NaN, "zh-CN")).toContain("未知");
+    expect(snapshotTime(Number.NaN, "zh-Hans")).toBe("未知时间");
+    expect(snapshotTime(-1, "zh-Hant")).toBe("未知時間");
+  });
+
+  it("formats snapshot times with the selected locale", () => {
+    const savedAt = Date.UTC(2024, 0, 2, 3, 4, 5);
+    for (const language of ["zh-Hans", "zh-Hant", "en"] as const) {
+      expect(snapshotTime(savedAt, language)).toContain("2024");
+    }
   });
 });

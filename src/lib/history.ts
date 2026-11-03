@@ -1,3 +1,7 @@
+import { translate } from "../i18n/dictionary";
+import type { Language } from "../types";
+import { intlLocale } from "./language";
+
 export function formatSnapshotSize(bytes: number): string {
   const safe = Number.isFinite(bytes) && bytes > 0 ? bytes : 0;
   if (safe < 1024) {
@@ -9,18 +13,12 @@ export function formatSnapshotSize(bytes: number): string {
   return `${(safe / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function snapshotTime(
-  savedAt: number,
-  language: "zh-CN" | "en",
-): string {
+export function snapshotTime(savedAt: number, language: Language): string {
   if (!Number.isFinite(savedAt) || savedAt <= 0) {
-    return language === "zh-CN" ? "未知时间" : "Unknown time";
+    return translate(language, "Unknown time");
   }
-  return new Date(savedAt).toLocaleString(
-    language === "zh-CN" ? "zh-CN" : "en",
-    {
-      dateStyle: "medium",
-      timeStyle: "short",
-    },
-  );
+  return new Date(savedAt).toLocaleString(intlLocale(language), {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }

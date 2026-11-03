@@ -41,7 +41,8 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   (Pandoc is not bundled); copy as Markdown, HTML, or plain text.
 - **Reliability**: optional autosave for named documents, unsaved-work recovery,
   and external-change notices.
-- **Interface**: Chinese and English, system-following or fixed light/dark/
+- **Interface**: Simplified Chinese, Traditional Chinese, and English;
+  system-following or fixed light/dark/
   sepia/high-contrast appearance, local CSS themes, customizable application
   shortcuts, advanced JSON settings, multiple document windows, fullscreen and
   always-on-top, keyboard-accessible dialogs and sidebar, an optional native

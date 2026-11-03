@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { History, ShieldCheck } from "lucide-react";
-import { useT } from "../i18n";
+import { intlLocale, useT } from "../i18n";
 import { useFocusTrap } from "../lib/useFocusTrap";
+import { useAppStore } from "../store/useAppStore";
 import type { DocumentDraft } from "../types";
 
 interface DraftRecoveryProps {
@@ -24,6 +25,7 @@ export function DraftRecovery({
   onDiscard,
 }: DraftRecoveryProps) {
   const t = useT();
+  const language = useAppStore((state) => state.settings.language);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   useFocusTrap(true, dialogRef);
   return (
@@ -51,7 +53,7 @@ export function DraftRecovery({
             {draft.name}
           </span>
           <span>
-            {new Date(draft.updatedAt).toLocaleString(undefined, {
+            {new Date(draft.updatedAt).toLocaleString(intlLocale(language), {
               dateStyle: "medium",
               timeStyle: "short",
             })}
