@@ -281,20 +281,22 @@ tree produced six entries for historical MSI and NSIS artifacts, including
 `.github/workflows/release-package.yml` builds unsigned bundles on
 `windows-latest` and `ubuntu-latest` when dispatched manually or when a `v*` tag
 is pushed, writes `SHA256SUMS.txt`, and uploads only final installers and the
-checksum file for 14 days. The 0.40 run completed for both platforms and produced:
+checksum file for 14 days. The 0.41 run completed for both platforms and produced:
 
-- `MarkSI_0.40.0_x64_en-US.msi` (6.92 MiB), SHA256
-  `88DD2A3A319B271583D8401248286209E8A8120C50FFA80D7973AEA6DD0837DA`
-- `MarkSI_0.40.0_x64-setup.exe` (5.64 MiB), SHA256
-  `BE4DEA39A0F7062A026725BEF2FDB385036E7DF9618C07AB815CC6292A6841E5`
-- `MarkSI_0.40.0_amd64.deb` (8.15 MiB), SHA256
-  `B3BAAC19368A038237905E318A4F08D93234384BB77C421CC21647B614595E40`
-- `MarkSI-0.40.0-1.x86_64.rpm` (8.15 MiB), SHA256
-  `5B5C9620C5D1CC7AADE6C302A34EC498C457166099A883DBBC21343E78D2EEC4`
-- `MarkSI_0.40.0_amd64.AppImage` (82.87 MiB), SHA256
-  `4BC40EE8615D5A081D080E8642D5B7B6423DCE3C7A1418F8B1391899E70E3972`
+- `MarkSI_0.41.0_x64_en-US.msi` (6.92 MiB), SHA256
+  `8E34A3DF60C21D16802287F441890F0C2C53AD8604F437103D38B61C1FE8182A`
+- `MarkSI_0.41.0_x64-setup.exe` (5.65 MiB), SHA256
+  `2C466F2F273C9E6B378F846AA8AF5C16D3D30B1033C3BFFE5813D269AA279574`
+- `MarkSI_0.41.0_amd64.deb` (8.15 MiB), SHA256
+  `06439773793362452AA070D41B5C269BF3A8DBD99FF6126036E1C5C3D4A0C2F7`
+- `MarkSI-0.41.0-1.x86_64.rpm` (8.15 MiB), SHA256
+  `1A91F247F75EC7B03DAFE1A4DCBCDFEB842DB8FF89C8F22CEE6529ACD942C2F8`
+- `MarkSI_0.41.0_amd64.AppImage` (82.88 MiB), SHA256
+  `D254441123B458A9DA42930C232F7997AB1320ED4D05E3CBE96AA2DDD31FD3B4`
+- `MarkSI_0.41.0_x86_64.flatpak` (6.04 MiB), SHA256
+  `5DE9329CA670C65162B59EAB9E045F30313F87BBB928F2E98AA6FA624485D06E`
 
-The downloaded artifacts were re-hashed locally; all five matched their
+The downloaded artifacts were re-hashed locally; all six matched their
 `SHA256SUMS.txt` entries, and the archive contained no AppImage `AppDir` tree or
 deb staging tarballs. Each platform artifact also contained a
 `THIRD_PARTY_NOTICES.md` generated for that target: Windows reported 241 Rust
@@ -317,10 +319,13 @@ copies a stand-in binary and verifies all four staged icon sizes.
 The Flatpak workflow runs on Ubuntu, builds the real Tauri release binary,
 stages it, validates the AppStream file, builds an unsigned bundle with
 `flatpak-builder`, installs it, and checks `/app/bin/marksi` plus the installed
-desktop and metainfo files. The release workflow adds that bundle to the Linux
-installers and the shared checksum file. `flatpak-builder` is Linux-only, so the
-Windows development host runs the metadata and staging checks but cannot build
-the bundle locally.
+desktop and metainfo files. It also runs `ldd` inside the sandbox and fails on
+unresolved shared libraries. The release workflow builds the same bundle after
+the Linux installers, adds it to the shared checksum file, and uploads it with
+the Linux artifact. The 0.41 run completed both paths and the downloaded
+`.flatpak` matched its `SHA256SUMS.txt` entry. `flatpak-builder` is Linux-only,
+so the Windows development host runs the metadata and staging checks but cannot
+build the bundle locally.
 
 ## Third-party notices
 

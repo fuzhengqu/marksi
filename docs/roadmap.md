@@ -26,7 +26,7 @@ The public security and version policies are enforced by
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **112 done, 5 wip,
+is the source for exact status values. Current raw count: **113 done, 4 wip,
 3 todo, 2 deferred** across 122 items.
 
 ## Milestone definitions
