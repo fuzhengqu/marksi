@@ -301,9 +301,26 @@ checksum file for 14 days. The 0.41 run completed for both platforms and produce
 - `MarkSI_0.41.0_x86_64.flatpak` (6.04 MiB), SHA256
   `5DE9329CA670C65162B59EAB9E045F30313F87BBB928F2E98AA6FA624485D06E`
 
-The downloaded artifacts were re-hashed locally; all six matched their
+The 0.42 run repeated the same package set. The downloaded artifacts were
+re-hashed locally and all six matched the uploaded `SHA256SUMS.txt` entries:
+
+- `MarkSI_0.42.0_x64_en-US.msi` (6.93 MiB), SHA256
+  `0C3DF1FC949CA8F294AD3772055E78614EA4F481CB26FC45F022EC563A3B42F5`
+- `MarkSI_0.42.0_x64-setup.exe` (5.65 MiB), SHA256
+  `1904C9A3395B7DB24CA5057E8C04CE875D65C653CF37F27907E5CCFD9214FC34`
+- `MarkSI_0.42.0_amd64.deb` (8.15 MiB), SHA256
+  `56413AB27ABAE492F3DE2CDA063CBA3B6F3019FDB8A0FA62C9AADA9E25E4DE51`
+- `MarkSI-0.42.0-1.x86_64.rpm` (8.16 MiB), SHA256
+  `469AB665A052CFF3B5E0185D05E7CED3F9257A0178D6CB18047AC139D72443B0`
+- `MarkSI_0.42.0_amd64.AppImage` (82.88 MiB), SHA256
+  `2FD93F565E49385BEA01C473A7566C7CDBD81274FCEBF2BE83511CAA221213F9`
+- `MarkSI_0.42.0_x86_64.flatpak` (6.04 MiB), SHA256
+  `A23959F82FF8E75491FB5FD769F550B6DAD46DB1D500F7DB0A77FAE363F5D24F`
+
+For 0.41, the downloaded artifacts were re-hashed locally; all six matched their
 `SHA256SUMS.txt` entries, and the archive contained no AppImage `AppDir` tree or
-deb staging tarballs. Each platform artifact also contained a
+deb staging tarballs. The 0.42 archives were inspected the same way and kept the
+same layout. Each platform artifact also contained a
 `THIRD_PARTY_NOTICES.md` generated for that target: Windows reported 241 Rust
 crates and 90 license texts, Linux reported 316 and 98. Adding the notices file
 changed the upload artifact layout to retain the full
@@ -327,8 +344,8 @@ stages it, validates the AppStream file, builds an unsigned bundle with
 desktop and metainfo files. It also runs `ldd` inside the sandbox and fails on
 unresolved shared libraries. The release workflow builds the same bundle after
 the Linux installers, adds it to the shared checksum file, and uploads it with
-the Linux artifact. The 0.41 run completed both paths and the downloaded
-`.flatpak` matched its `SHA256SUMS.txt` entry. `flatpak-builder` is Linux-only,
+the Linux artifact. The 0.41 and 0.42 runs completed both paths and the
+downloaded `.flatpak` matched its `SHA256SUMS.txt` entry in each run. `flatpak-builder` is Linux-only,
 so the Windows development host runs the metadata and staging checks but cannot
 build the bundle locally.
 
