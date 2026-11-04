@@ -17,6 +17,7 @@ import {
 } from "../editor/setup";
 import { livePreview } from "../editor/livePreview";
 import { searchPhrases, translate } from "../i18n";
+import { clearImageCache } from "../lib/imageLoader";
 import { clearImageSize, setImageFit, setImageSize } from "../lib/imageSize";
 import { minimalTextChange } from "../lib/textChange";
 import { smartTyping } from "../editor/smartTyping";
@@ -31,6 +32,11 @@ import type { Language } from "../types";
 interface EditorPaneProps {
   content: string;
   documentKey: string;
+  documentPath: string | null;
+  workspacePath: string | null;
+  imageRootPath: string;
+  imageRootUrl: string;
+  loadRemoteImages: boolean;
   gotoLine: number | null;
   active: boolean;
   readOnly: boolean;
@@ -77,6 +83,11 @@ function editableExtensions(readOnly: boolean) {
 export function EditorPane({
   content,
   documentKey,
+  documentPath,
+  workspacePath,
+  imageRootPath,
+  imageRootUrl,
+  loadRemoteImages,
   gotoLine,
   active,
   readOnly,
@@ -102,6 +113,13 @@ export function EditorPane({
   const smartPunctuationRef = useRef(smartPunctuation);
   const emojiAutocompleteRef = useRef(emojiAutocomplete);
   const livePreviewRef = useRef(livePreviewMode);
+  const livePreviewOptionsRef = useRef({
+    documentPath,
+    workspacePath,
+    imageRootPath,
+    imageRootUrl,
+    loadRemoteImages,
+  });
   const languageRef = useRef(language);
   const [editableCompartment] = useState(() => new Compartment());
   const [focusModeCompartment] = useState(() => new Compartment());
@@ -145,13 +163,25 @@ export function EditorPane({
     smartPunctuationRef.current = smartPunctuation;
     emojiAutocompleteRef.current = emojiAutocomplete;
     livePreviewRef.current = livePreviewMode;
+    livePreviewOptionsRef.current = {
+      documentPath,
+      workspacePath,
+      imageRootPath,
+      imageRootUrl,
+      loadRemoteImages,
+    };
     languageRef.current = language;
   }, [
     autoPair,
+    documentPath,
     emojiAutocomplete,
+    imageRootPath,
+    imageRootUrl,
     language,
     livePreviewMode,
+    loadRemoteImages,
     smartPunctuation,
+    workspacePath,
   ]);
 
   useEffect(() => {
@@ -191,7 +221,9 @@ export function EditorPane({
           }),
         ),
         livePreviewCompartment.of(
-          livePreviewRef.current ? livePreview() : [],
+          livePreviewRef.current
+            ? livePreview(livePreviewOptionsRef.current)
+            : [],
         ),
         phrasesCompartment.of(
           EditorState.phrases.of(searchPhrases(languageRef.current)),
@@ -293,10 +325,30 @@ export function EditorPane({
     }
     view.dispatch({
       effects: livePreviewCompartment.reconfigure(
-        livePreviewMode ? livePreview() : [],
+        livePreviewMode
+          ? livePreview({
+              documentPath,
+              workspacePath,
+              imageRootPath,
+              imageRootUrl,
+              loadRemoteImages,
+            })
+          : [],
       ),
     });
-  }, [livePreviewCompartment, livePreviewMode]);
+  }, [
+    documentPath,
+    imageRootPath,
+    imageRootUrl,
+    livePreviewCompartment,
+    livePreviewMode,
+    loadRemoteImages,
+    workspacePath,
+  ]);
+
+  useEffect(() => {
+    clearImageCache();
+  }, [documentPath]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -477,7 +529,9 @@ export function EditorPane({
               }),
             ),
             livePreviewCompartment.of(
-              livePreviewRef.current ? livePreview() : [],
+              livePreviewRef.current
+                ? livePreview(livePreviewOptionsRef.current)
+                : [],
             ),
             phrasesCompartment.of(
               EditorState.phrases.of(searchPhrases(languageRef.current)),

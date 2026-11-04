@@ -21,19 +21,19 @@ import {
 import { intlLocale, useT } from "../i18n";
 import { clampImageHeight, clampImageWidth } from "../lib/imageSize";
 import {
+  clearImageCache,
+  imagePathCandidates,
+  loadImageSource,
+} from "../lib/imageLoader";
+import {
   directoryName,
   resolveImageRootPath,
-  resolveImageRootUrl,
-  resolveLocalImagePath,
-  resolveRootImagePath,
 } from "../lib/images";
 import { renderMarkdown } from "../lib/markdown";
 import { renderMermaidDiagrams } from "../lib/mermaid";
 import {
-  isTauri,
   openExternal,
   openLocalPath,
-  readImageDataUrl,
   remoteImageDataUrl,
   revealLocalPath,
 } from "../lib/platform";
@@ -84,7 +84,6 @@ interface ImageContextMenu {
   fit: string | null;
 }
 
-const imageCache = new Map<string, Promise<string>>();
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4;
 
@@ -101,30 +100,6 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 
 function messageFor(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
-}
-
-function loadCachedImage(path: string): Promise<string> {
-  let request = imageCache.get(path);
-  if (!request) {
-    request = readImageDataUrl(path);
-    imageCache.set(path, request);
-    void request.catch(() => imageCache.delete(path));
-  }
-  return request;
-}
-
-async function loadFirstImage(
-  candidates: string[],
-): Promise<{ source: string; path: string; remote: boolean }> {
-  let lastError: unknown = null;
-  for (const path of candidates) {
-    try {
-      return { source: await loadCachedImage(path), path, remote: false };
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError ?? new Error("Image path is not local.");
 }
 
 function replaceWithImagePlaceholder(
@@ -236,7 +211,7 @@ export function PreviewPane({
   );
 
   useEffect(() => {
-    imageCache.clear();
+    clearImageCache();
   }, [documentPath]);
 
   useEffect(() => {
@@ -255,43 +230,17 @@ export function PreviewPane({
 
     images.forEach((image) => {
       const raw = image.dataset.marksiSrc ?? "";
-      if (!isTauri()) {
-        replaceWithImagePlaceholder(
-          image,
-          "Local images are available in the desktop app.",
-        );
-        return;
-      }
-
-      const primary = resolveLocalImagePath(raw, baseDirectory);
-      const root = resolveRootImagePath(raw, rootDirectory);
-      const remote = loadRemoteImages
-        ? resolveImageRootUrl(imageRootUrl, raw)
-        : null;
-      const rootFirst = /^[/\\]/.test(raw.trim());
-      const candidates = [
-        ...new Set(
-          (rootFirst ? [root, primary] : [primary, root]).filter(
-            (value): value is string => Boolean(value),
-          ),
-        ),
-      ];
-      if (!candidates.length && !remote) {
-        replaceWithImagePlaceholder(image, raw || "Image path is not local.");
-        return;
-      }
-
-      void loadFirstImage(candidates)
-        .catch(async (error) => {
-          if (!remote) {
-            throw error;
-          }
-          return {
-            source: await remoteImageDataUrl(remote),
-            path: remote,
-            remote: true,
-          };
-        })
+      const candidates = imagePathCandidates(
+        raw,
+        baseDirectory,
+        rootDirectory,
+      );
+      void loadImageSource(raw, {
+        baseDirectory,
+        rootDirectory,
+        rootUrl: imageRootUrl,
+        loadRemote: loadRemoteImages,
+      })
         .then(({ source, path, remote: loadedRemote }) => {
           if (cancelled || !image.isConnected) {
             return;
@@ -314,7 +263,7 @@ export function PreviewPane({
             replaceWithImagePlaceholder(
               image,
               `Could not load ${
-                candidates.length ? candidates.join(" or ") : remote
+                candidates.length ? candidates.join(" or ") : raw
               }: ${messageFor(error)}`,
             );
           }

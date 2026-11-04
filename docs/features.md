@@ -309,12 +309,19 @@ rewrites the source.
 | Remote image cache (opt-in) | done | M5 |
 | Image root path mode | done | M5 |
 | Image root URL mode | done | M5 |
+| Inline local images in live preview | done | M7 |
 | Uploader integration (PicGo/PicList/custom) | deferred | M5 |
 
 Image resizing stores width and optional height in the canonical Markdown
 attribute block. Width-only images preserve their aspect ratio; explicit height
 is also supported. Contain/cover fit and original-size reset are available from
 the image context menu and are preserved in HTML export and print.
+
+The editable live preview renders local images inline on inactive lines. The
+active line keeps its Markdown source visible for precise editing, and clicking
+an inline image moves the caret to that source line. Remote images stay inert
+placeholders in the live preview until remote image loading is enabled, and
+images inside code fences remain literal text.
 
 ## Export and import
 

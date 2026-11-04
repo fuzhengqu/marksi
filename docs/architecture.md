@@ -106,6 +106,16 @@ loads. If remote image loading is enabled, an optional http/https root URL is a
 final fallback for relative images; that fetch uses the same validated remote
 cache. This is a read-only resolution aid and never rewrites the Markdown.
 
+The reading preview and the editable live preview share `lib/imageLoader.ts`.
+It classifies the destination, enforces the remote opt-in, builds the
+document/root candidate order, reads through the shared data-URL cache, and only
+then tries the remote root URL. The live preview scans Markdown image spans
+(including reference images) with the same source scanner used for image
+resizing, skips fenced and inline code, and replaces an inactive image span with
+a CodeMirror widget. The widget loads its data URL, honors width/height/fit
+attributes, keeps remote images inert until opted in, and reveals the source
+when clicked. Both surfaces clear the image cache when the document changes.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set

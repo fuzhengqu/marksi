@@ -64,6 +64,54 @@ describe("findImageOccurrences", () => {
     expect(findImageOccurrences("![missing][nope]")).toHaveLength(0);
   });
 
+  it("parses inline destinations, angle brackets, titles, and escapes", () => {
+    const source = [
+      '![one](one.png "Title")',
+      "![two](<folder/two image.png>)",
+      "![three](folder/three\\(draft\\).png)",
+      "![four](folder/nested(1).png)",
+      "![empty]()",
+    ].join("\n");
+    const destinations = findImageOccurrences(source).map(
+      (occurrence) => occurrence.destination,
+    );
+    expect(destinations).toEqual([
+      "one.png",
+      "folder/two image.png",
+      "folder/three(draft).png",
+      "folder/nested(1).png",
+      "",
+    ]);
+  });
+
+  it("resolves reference image destinations and keeps the first definition", () => {
+    const source = [
+      "![full][one]",
+      "![collapsed][]",
+      "![shortcut]",
+      "",
+      '[one]: <folder/one image.png> "First"',
+      "[one]: ignored.png",
+      "[collapsed]: collapsed.png",
+      "[shortcut]: shortcut.png",
+    ].join("\n");
+    const destinations = findImageOccurrences(source).map(
+      (occurrence) => occurrence.destination,
+    );
+    expect(destinations).toEqual([
+      "folder/one image.png",
+      "collapsed.png",
+      "shortcut.png",
+    ]);
+  });
+
+  it("skips malformed inline destinations instead of misaligning images", () => {
+    expect(findImageOccurrences("![bad](<unclosed)")).toHaveLength(0);
+    expect(
+      findImageOccurrences("![good](good.png)\n![bad](<unclosed)"),
+    ).toHaveLength(1);
+  });
+
   it("excludes footnote bodies so main images keep their render index", () => {
     const source = [
       "[^1]: foot ![foot](foot.png)",

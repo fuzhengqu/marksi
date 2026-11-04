@@ -1930,6 +1930,11 @@ export default function App() {
           <EditorPane
             content={doc.content}
             documentKey={doc.path ?? "untitled"}
+            documentPath={doc.path}
+            workspacePath={workspacePath}
+            imageRootPath={settings.imageRootPath}
+            imageRootUrl={settings.imageRootUrl}
+            loadRemoteImages={settings.loadRemoteImages}
             gotoLine={gotoLine}
             active={viewMode !== "reading"}
             readOnly={viewMode === "reading" || settings.readOnlyMode}

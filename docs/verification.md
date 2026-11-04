@@ -60,11 +60,13 @@ A change is deliverable only when all of these are true:
    checked when the task touched files.
 7. Known limitations are recorded rather than presented as verified.
 
-Image resizing supports width and height but not fit modes such as contain or
-cover. Drag resizing in the text-first live-preview surface and image HTML blocks
-are not implemented or claimed. Automated coverage of image sizing uses local
-fixture assets; native image picker and OS file dialogs remain in the manual
-release checklist.
+Image resizing supports width, height, and contain/cover fit from the reading
+view. Drag resizing in the text-first live-preview surface and image HTML blocks
+are not implemented or claimed. The editable live preview renders local images
+inline but does not expose resize handles there; clicking an image returns to
+its Markdown source. Automated coverage of image sizing uses local fixture
+assets; native image picker and OS file dialogs remain in the manual release
+checklist.
 
 ## Current automated coverage
 
@@ -82,6 +84,10 @@ The E2E suite currently covers:
   complete save/write flow still runs.
 - Opening a Markdown fixture in editable live preview.
 - Live-preview editing, hidden inactive markers, and source retention.
+- Live-preview inline images: a local image with a width attribute renders as a
+  data URL on an inactive line, clicking it reveals the Markdown source and
+  focuses that line, and a remote image stays an inert placeholder until remote
+  loading is explicitly enabled.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.

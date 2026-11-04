@@ -725,6 +725,150 @@ async function main() {
     );
   });
 
+  await test("live preview renders local images and reveals source on click", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-image.md");
+    const remoteUrl = "https://example.com/pixel.png";
+    const pixel =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
+    const source = [
+      "# Live image",
+      "",
+      "Before ![icon](icon.png){width=120} after.",
+      "",
+      `![remote](${remoteUrl})`,
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await waitFor(
+        'document.querySelector(".cm-live-image.is-loaded img.cm-live-image-media")',
+        10_000,
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().sidebarOpen && window.__MARKSI_DEV__.getState().toggleSidebar()',
+      );
+      await sleep(250);
+
+      const state = await evaluate(`(() => {
+        const root = document.querySelector(".cm-live-image.is-loaded");
+        const image = root?.querySelector("img.cm-live-image-media");
+        return {
+          alt: image?.alt ?? null,
+          width: image?.getAttribute("width") ?? null,
+          src: image?.getAttribute("src")?.slice(0, 22) ?? null,
+          sourceHidden: !document.querySelector(".cm-content")?.textContent?.includes("![icon]"),
+          remoteLabel: document.querySelector(".cm-live-image.is-remote .cm-live-image-mark")?.textContent ?? null,
+          remoteImage: Boolean(document.querySelector(".cm-live-image.is-remote img")),
+          remoteTitle: document.querySelector(".cm-live-image.is-remote")?.getAttribute("title") ?? null
+        };
+      })()`);
+      assert(state.alt === "icon", "live image alt text is wrong", state);
+      assert(state.width === "120", "live image width attribute is missing", state);
+      assert(
+        state.src?.startsWith("data:image/"),
+        "live image should resolve to a local data URL",
+        state,
+      );
+      assert(
+        state.sourceHidden,
+        "inactive image line should hide its Markdown source",
+        state,
+      );
+      assert(
+        state.remoteLabel === "REMOTE" && !state.remoteImage,
+        "remote image should stay inert without opt-in",
+        state,
+      );
+      assert(
+        state.remoteTitle === remoteUrl,
+        "remote image widget should keep its source",
+        state,
+      );
+
+      const point = await evaluate(`(() => {
+        const root = document.querySelector(".cm-live-image.is-loaded");
+        root?.scrollIntoView({ block: "center", behavior: "instant" });
+        const box = root?.getBoundingClientRect();
+        return box
+          ? { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+          : null;
+      })()`);
+      assert(point, "live image is not visible", point);
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseMoved",
+        x: point.x,
+        y: point.y,
+      });
+      await send("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        x: point.x,
+        y: point.y,
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+      });
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        x: point.x,
+        y: point.y,
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+      });
+      await sleep(350);
+      const revealed = await evaluate(`({
+        widget: Boolean(document.querySelector(".cm-live-image.is-loaded")),
+        source: document.querySelector(".cm-content")?.textContent?.includes("![icon]") ?? false,
+        line: window.__MARKSI_DEV__.getState().cursor?.line ?? null
+      })`);
+      assert(
+        !revealed.widget && revealed.source,
+        "clicking a live image should reveal its Markdown source",
+        revealed,
+      );
+      assert(revealed.line === 3, "clicking the image should focus its line", revealed);
+
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setRemoteImageLoaderForTests(async () => ${JSON.stringify(pixel)});
+        window.__MARKSI_DEV__.setSettings({ loadRemoteImages: true });
+      })()`);
+      await waitFor(
+        'Array.from(document.querySelectorAll(".cm-live-image.is-loaded img")).some((image) => image.title === ' +
+          JSON.stringify(remoteUrl) +
+          ")",
+        10_000,
+      );
+      const optedIn = await evaluate(`({
+        remoteWidgets: document.querySelectorAll(".cm-live-image.is-remote").length,
+        remoteLoaded: Array.from(document.querySelectorAll(".cm-live-image img")).some((image) => image.title === ${JSON.stringify(remoteUrl)})
+      })`);
+      assert(
+        optedIn.remoteWidgets === 0 && optedIn.remoteLoaded,
+        "live remote image should load after explicit opt-in",
+        optedIn,
+      );
+    } finally {
+      await evaluate(`(async () => {
+        const platform = await import("/src/lib/platform.ts");
+        platform.setRemoteImageLoaderForTests(null);
+        window.__MARKSI_DEV__.setSettings({ loadRemoteImages: false });
+      })()`).catch(() => {});
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

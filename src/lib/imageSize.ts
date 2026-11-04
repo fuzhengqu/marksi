@@ -10,12 +10,17 @@ interface TextRange {
   end: number;
 }
 
-interface ImageOccurrence {
+export interface ImageOccurrence {
   from: number;
   to: number;
   attrsFrom: number | null;
   attrsTo: number | null;
   alt: string;
+  /**
+   * Parsed image destination. Backslash escapes are removed, but percent
+   * encoding is kept so the existing path resolver can decode it once.
+   */
+  destination: string | null;
 }
 
 function normalizeAlt(alt: string): string {
@@ -223,11 +228,77 @@ function normalizeReferenceLabel(label: string): string {
   return label.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
+function unescapeDestination(value: string): string {
+  return value.replace(/\\([\\`*{}\[\]()#+\-.!_>~|"'])/g, "$1");
+}
+
+/**
+ * Reads the destination at the start of an image/link target. Titles after the
+ * destination are ignored; the caller already knows where the closing
+ * parenthesis is. Returns an empty string for an explicitly empty destination.
+ */
+function parseDestination(content: string): string | null {
+  let cursor = 0;
+  while (
+    content[cursor] === " " ||
+    content[cursor] === "\t" ||
+    content[cursor] === "\n"
+  ) {
+    cursor += 1;
+  }
+  if (cursor >= content.length) {
+    return "";
+  }
+
+  if (content[cursor] === "<") {
+    let end = cursor + 1;
+    while (end < content.length && content[end] !== ">") {
+      if (content[end] === "\\") {
+        end += 1;
+      }
+      end += 1;
+    }
+    if (content[end] !== ">") {
+      return null;
+    }
+    return unescapeDestination(content.slice(cursor + 1, end));
+  }
+
+  let depth = 0;
+  let end = cursor;
+  for (; end < content.length; end += 1) {
+    const character = content[end];
+    if (character === "\\") {
+      end += 1;
+      continue;
+    }
+    if (character === "(") {
+      depth += 1;
+      continue;
+    }
+    if (character === ")") {
+      if (depth === 0) {
+        break;
+      }
+      depth -= 1;
+      continue;
+    }
+    if (
+      (character === " " || character === "\t" || character === "\n") &&
+      depth === 0
+    ) {
+      break;
+    }
+  }
+  const destination = content.slice(cursor, end);
+  return destination ? unescapeDestination(destination) : "";
+}
+
 function collectReferenceDefinitions(
   source: string,
   ignored: TextRange[],
-): { labels: Set<string>; ranges: TextRange[] } {
-  const labels = new Set<string>();
+): { labels: Map<string, string>; ranges: TextRange[] } {
+  const labels = new Map<string, string>();
   const ranges: TextRange[] = [];
   let lineStart = 0;
 
@@ -238,10 +309,16 @@ function collectReferenceDefinitions(
     }
     if (!isIgnored(ignored, lineStart)) {
       const line = source.slice(lineStart, lineEnd).replace(/\r$/, "");
-      const match = /^ {0,3}\[([^\]\n]+)\]:[ \t]*(?:<[^>\n]*>|\S+)/.exec(line);
+      const match = /^ {0,3}\[([^\]\n]+)\]:[ \t]*(.*)$/.exec(line);
       if (match && !match[1].startsWith("^")) {
-        labels.add(normalizeReferenceLabel(match[1]));
-        ranges.push({ start: lineStart, end: lineEnd });
+        const destination = parseDestination(match[2]);
+        if (destination !== null) {
+          const label = normalizeReferenceLabel(match[1]);
+          if (!labels.has(label)) {
+            labels.set(label, destination);
+          }
+          ranges.push({ start: lineStart, end: lineEnd });
+        }
       }
     }
 
@@ -363,24 +440,38 @@ export function findImageOccurrences(source: string): ImageOccurrence[] {
     const alt = source.slice(index + 2, labelEnd);
     const following = source[labelEnd + 1];
     let imageEnd = -1;
+    let destination: string | null = null;
 
     if (following === "(") {
       const destinationEnd = findClosingParen(source, labelEnd + 2);
       if (destinationEnd >= 0) {
-        imageEnd = destinationEnd + 1;
+        destination = parseDestination(
+          source.slice(labelEnd + 2, destinationEnd),
+        );
+        if (destination !== null) {
+          imageEnd = destinationEnd + 1;
+        }
       }
     } else if (following === "[") {
       const referenceEnd = findClosingBracket(source, labelEnd + 2);
       if (referenceEnd >= 0) {
         const rawLabel = source.slice(labelEnd + 2, referenceEnd);
         const referenceLabel = rawLabel.trim() ? rawLabel : alt;
-        if (references.labels.has(normalizeReferenceLabel(referenceLabel))) {
+        const resolved = references.labels.get(
+          normalizeReferenceLabel(referenceLabel),
+        );
+        if (resolved !== undefined) {
           imageEnd = referenceEnd + 1;
+          destination = resolved;
         }
       }
-    } else if (references.labels.has(normalizeReferenceLabel(alt))) {
-      // Shortcut reference image: ![alt] with a matching definition.
-      imageEnd = labelEnd + 1;
+    } else {
+      const resolved = references.labels.get(normalizeReferenceLabel(alt));
+      if (resolved !== undefined) {
+        // Shortcut reference image: ![alt] with a matching definition.
+        imageEnd = labelEnd + 1;
+        destination = resolved;
+      }
     }
 
     if (imageEnd < 0) {
@@ -411,6 +502,7 @@ export function findImageOccurrences(source: string): ImageOccurrence[] {
       attrsFrom,
       attrsTo,
       alt,
+      destination,
     });
     index = Math.max(imageEnd, attrsTo ?? imageEnd) - 1;
   }

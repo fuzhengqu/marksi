@@ -212,8 +212,11 @@ ease-out; honor `prefers-reduced-motion`.
   fences, Mermaid diagrams, and math. It is read-only; the status bar returns
   to source, and the View menu can open it from any mode.
 - Live preview is intentionally text-first: rendering complex blocks inline is
-  an ongoing M5/M6 polish area, while the reading view remains the complete
-  rendered representation.
+  an ongoing M7 polish area, while the reading view remains the complete
+  rendered representation. Local images on inactive lines already render
+  inline; clicking one moves the caret to its Markdown source line. Remote
+  images stay inert placeholders until remote loading is enabled, and images
+  inside code fences remain literal text.
 
 ## Writing modes
 
@@ -374,6 +377,12 @@ ease-out; honor `prefers-reduced-motion`.
   cache. No uploader or automatic upload exists.
 - Local images render inline in preview. Remote images, unsafe sources, and
   missing files render as labelled placeholders by default.
+- The editable live preview also renders local images inline on inactive
+  lines. Width, height, and fit attributes are honored; the active line keeps
+  its source visible. Clicking an inline image selects the start of its
+  Markdown source so it can be edited. Images inside code fences are not
+  rendered. Remote images show a compact placeholder until remote loading is
+  enabled, and then use the same remote cache as the reading view.
 - Preferences > Images has an off-by-default "Load remote images" toggle. When
   enabled, http/https placeholders are replaced with locally cached data URLs.
   Turning it off immediately restores placeholders. A "Clear cache" action

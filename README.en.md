@@ -31,8 +31,9 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   live-preview work for large documents; large reading views show a character
   count and wait for confirmation before rendering.
 - **Images**: insert, drag and drop, or paste; document-relative assets and an
-  optional root path; lightbox; width and height resizing; contain/cover fit and
-  original-size reset.
+  optional root path; lightbox; inline local images in the editable live
+  preview with click-to-edit source; width and height resizing; contain/cover
+  fit and original-size reset.
 - **Export and copy**: standalone HTML with document, print, minimal, or custom
   profiles; front matter metadata and page setup controls; print or save as PDF
   through the system print dialog; an optional user-configured export command
