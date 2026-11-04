@@ -323,10 +323,26 @@ re-hashed locally and all six matched the uploaded `SHA256SUMS.txt` entries:
 - `MarkSI_0.42.0_x86_64.flatpak` (6.04 MiB), SHA256
   `A23959F82FF8E75491FB5FD769F550B6DAD46DB1D500F7DB0A77FAE363F5D24F`
 
+The 0.43 run repeated the same package set. The downloaded artifacts were
+re-hashed locally and all six matched the uploaded `SHA256SUMS.txt` entries:
+
+- `MarkSI_0.43.0_x64_en-US.msi` (6.93 MiB), SHA256
+  `811F745F02A8AEA39A14D4EE1F7C69A968942CE6DFE6532B8ADE1300BBC5D323`
+- `MarkSI_0.43.0_x64-setup.exe` (5.65 MiB), SHA256
+  `0109ECCA52474927AC73BC5842F8AC07FCA5B41B75F49B4A7F00C86FB8CD358D`
+- `MarkSI_0.43.0_amd64.deb` (8.15 MiB), SHA256
+  `87C070FE1059FA409F27945CCA7141A95AF5187EF787EEA3C06C4BD92E86F8C0`
+- `MarkSI-0.43.0-1.x86_64.rpm` (8.16 MiB), SHA256
+  `22CAB206FD3ED741A4F0CC2C047DCC5D3CD7948C19C259CACA1BFD8226F4AC4E`
+- `MarkSI_0.43.0_amd64.AppImage` (82.87 MiB), SHA256
+  `57509A2CC0680DD1EA6C98290F74C5DA7DE45EFA2D21FBCB8ECED6E93ECBF456`
+- `MarkSI_0.43.0_x86_64.flatpak` (6.05 MiB), SHA256
+  `F6770E5BACF1FDF4339029313A5A0837C59C9B86DB0876C065B63CC4F3B546AB`
+
 For 0.41, the downloaded artifacts were re-hashed locally; all six matched their
 `SHA256SUMS.txt` entries, and the archive contained no AppImage `AppDir` tree or
-deb staging tarballs. The 0.42 archives were inspected the same way and kept the
-same layout. Each platform artifact also contained a
+deb staging tarballs. The 0.42 and 0.43 archives were inspected the same way and
+kept the same layout. Each platform artifact also contained a
 `THIRD_PARTY_NOTICES.md` generated for that target: Windows reported 241 Rust
 crates and 90 license texts, Linux reported 316 and 98. Adding the notices file
 changed the upload artifact layout to retain the full
