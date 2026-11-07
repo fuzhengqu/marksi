@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.43**
-- Technical version: **0.43.0**
+- Product version: **0.44**
+- Technical version: **0.44.0**
 - Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
@@ -22,14 +22,14 @@ The public security and version policies are enforced by
   Linux packages, the Windows/Linux build-test matrix, and the three-language
   i18n framework. M7 has started with IME/CJK input coverage, a keyboard/focus
   accessibility pass, document-level RTL support, a large-document reading
-  confirmation, Flatpak packaging, and inline local images in the editable
-  live preview.
+  confirmation, Flatpak packaging, inline local images in the editable live
+  preview, and interactive task list checkboxes.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **115 done, 3 wip,
-3 todo, 2 deferred** across 123 items.
+is the source for exact status values. Current raw count: **116 done, 3 wip,
+3 todo, 2 deferred** across 124 items.
 
 ## Milestone definitions
 
@@ -145,8 +145,8 @@ Flatpak packaging.
 
 Status: in progress. IME/CJK composition coverage, the keyboard/focus
 accessibility pass, document-level RTL support, the large-document reading
-confirmation, Flatpak packaging, and inline local images in the live preview are
-complete.
+confirmation, Flatpak packaging, inline local images in the live preview, and
+interactive task list checkboxes are complete.
 
 ## Delivery rules
 

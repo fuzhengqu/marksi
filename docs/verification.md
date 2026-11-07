@@ -88,6 +88,10 @@ The E2E suite currently covers:
   data URL on an inactive line, clicking it reveals the Markdown source and
   focuses that line, and a remote image stays an inert placeholder until remote
   loading is explicitly enabled.
+- Live-preview task checkboxes: unchecked and checked GFM markers render with
+  the correct accessible state, pointer and Space activation rewrite only the
+  marker, the localized label is present, and a task marker inside a code fence
+  stays literal.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.

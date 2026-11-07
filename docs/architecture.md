@@ -116,6 +116,12 @@ a CodeMirror widget. The widget loads its data URL, honors width/height/fit
 attributes, keeps remote images inert until opted in, and reveals the source
 when clicked. Both surfaces clear the image cache when the document changes.
 
+GFM task markers come from the same Lezer tree. On inactive lines the live
+preview replaces the three-character `[ ]`/`[x]` marker with an accessible
+checkbox widget. Activating it with the pointer or Space/Enter rewrites only
+that marker as one undoable transaction, so the canonical Markdown and undo
+history stay intact. Markers inside code fences never receive a widget.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set

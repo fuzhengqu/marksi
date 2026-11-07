@@ -214,8 +214,10 @@ ease-out; honor `prefers-reduced-motion`.
 - Live preview is intentionally text-first: rendering complex blocks inline is
   an ongoing M7 polish area, while the reading view remains the complete
   rendered representation. Local images on inactive lines already render
-  inline; clicking one moves the caret to its Markdown source line. Remote
-  images stay inert placeholders until remote loading is enabled, and images
+  inline; clicking one moves the caret to its Markdown source line. GFM task
+  markers on inactive lines render as checkboxes; clicking one or pressing
+  Space/Enter rewrites `[ ]` or `[x]` in place. Remote images stay inert
+  placeholders until remote loading is enabled, and images or task markers
   inside code fences remain literal text.
 
 ## Writing modes

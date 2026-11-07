@@ -21,6 +21,11 @@ import {
   imageWidthFromAttributes,
   type ImageOccurrence,
 } from "../lib/imageSize";
+import {
+  isTaskMarker,
+  taskMarkerChecked,
+  toggleTaskMarker,
+} from "../lib/taskList";
 
 export interface LivePreviewOptions {
   documentPath: string | null;
@@ -28,6 +33,7 @@ export interface LivePreviewOptions {
   imageRootPath: string;
   imageRootUrl: string;
   loadRemoteImages: boolean;
+  taskToggleLabel: string;
 }
 
 const EMPTY_OPTIONS: LivePreviewOptions = {
@@ -36,6 +42,7 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   imageRootPath: "",
   imageRootUrl: "",
   loadRemoteImages: false,
+  taskToggleLabel: "Toggle task",
 };
 
 const hidden = Decoration.replace({});
@@ -239,6 +246,65 @@ class LiveImageWidget extends WidgetType {
   }
 }
 
+class LiveTaskWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly checked: boolean,
+    readonly label: string,
+  ) {
+    super();
+  }
+
+  eq(other: LiveTaskWidget): boolean {
+    return (
+      this.from === other.from &&
+      this.checked === other.checked &&
+      this.label === other.label
+    );
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const control = document.createElement("span");
+    control.className = `cm-live-task${this.checked ? " is-checked" : ""}`;
+    control.setAttribute("role", "checkbox");
+    control.setAttribute("aria-checked", String(this.checked));
+    control.setAttribute("aria-label", this.label);
+    control.title = this.label;
+    control.tabIndex = 0;
+
+    const box = document.createElement("span");
+    box.className = "cm-live-task-box";
+    box.setAttribute("aria-hidden", "true");
+    control.append(box);
+
+    const toggle = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const marker = view.state.doc.sliceString(this.from, this.from + 3);
+      const next = toggleTaskMarker(marker);
+      if (!next) {
+        return;
+      }
+      view.dispatch({
+        changes: { from: this.from, to: this.from + 3, insert: next },
+      });
+      view.focus();
+    };
+
+    control.addEventListener("mousedown", toggle);
+    control.addEventListener("keydown", (event) => {
+      if (event.key === " " || event.key === "Enter") {
+        toggle(event);
+      }
+    });
+    return control;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 function collectImages(view: EditorView): ImageOccurrence[] {
   const source = view.state.doc.toString();
   return source.includes("![") ? findImageOccurrences(source) : [];
@@ -340,6 +406,23 @@ function buildDecorations(
               });
             }
             break;
+          case "TaskMarker": {
+            const marker = view.state.doc.sliceString(node.from, node.to);
+            if (isTaskMarker(marker)) {
+              ranges.push({
+                from: node.from,
+                to: node.to,
+                decoration: Decoration.replace({
+                  widget: new LiveTaskWidget(
+                    node.from,
+                    taskMarkerChecked(marker),
+                    options.taskToggleLabel,
+                  ),
+                }),
+              });
+            }
+            break;
+          }
         }
       },
     });

@@ -119,6 +119,7 @@ export function EditorPane({
     imageRootPath,
     imageRootUrl,
     loadRemoteImages,
+    taskToggleLabel: translate(language, "Toggle task"),
   });
   const languageRef = useRef(language);
   const [editableCompartment] = useState(() => new Compartment());
@@ -169,6 +170,7 @@ export function EditorPane({
       imageRootPath,
       imageRootUrl,
       loadRemoteImages,
+      taskToggleLabel: translate(language, "Toggle task"),
     };
     languageRef.current = language;
   }, [
@@ -332,6 +334,7 @@ export function EditorPane({
               imageRootPath,
               imageRootUrl,
               loadRemoteImages,
+              taskToggleLabel: translate(language, "Toggle task"),
             })
           : [],
       ),
@@ -340,6 +343,7 @@ export function EditorPane({
     documentPath,
     imageRootPath,
     imageRootUrl,
+    language,
     livePreviewCompartment,
     livePreviewMode,
     loadRemoteImages,

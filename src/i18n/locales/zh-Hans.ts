@@ -11,6 +11,7 @@ export const zhHans: Record<string, string> = {
   "Restore": "还原",
   "Maximize": "最大化",
   "Close": "关闭",
+  "Toggle task": "切换任务",
   "Files": "文件",
   "Outline": "大纲",
   "Search": "搜索",

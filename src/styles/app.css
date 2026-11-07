@@ -1453,6 +1453,57 @@
   white-space: nowrap;
 }
 
+/* Task list checkboxes in the editable live preview. */
+.cm-live-task {
+  display: inline-flex;
+  width: 17px;
+  height: 17px;
+  margin: 0 3px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  vertical-align: -3px;
+  cursor: pointer;
+  outline: none;
+}
+
+.cm-live-task-box {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  transition:
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.cm-live-task:hover .cm-live-task-box {
+  border-color: var(--accent);
+}
+
+.cm-live-task.is-checked .cm-live-task-box {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.cm-live-task.is-checked .cm-live-task-box::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 3px;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.cm-live-task:focus-visible .cm-live-task-box {
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
 .editor-host .cm-gutters {
   display: none;
 }
@@ -2163,6 +2214,10 @@ body.is-resizing-image[data-resize-axis="height"] * {
   }
 
   .editor-host .cm-line {
+    transition: none;
+  }
+
+  .cm-live-task-box {
     transition: none;
   }
 }

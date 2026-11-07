@@ -224,6 +224,7 @@ translations are not shipped.
 | Syntax highlighting | done | M1 |
 | Live preview / hybrid rendering | wip | M2/M5 |
 | Editable source-based live preview | done | M5 |
+| Task list checkboxes in live preview | done | M7 |
 | Reading view (rendered, read-only) | done | M5 |
 | Source mode toggle | done | M2 |
 | Formatting shortcuts | done | M2 |
@@ -322,6 +323,11 @@ active line keeps its Markdown source visible for precise editing, and clicking
 an inline image moves the caret to that source line. Remote images stay inert
 placeholders in the live preview until remote image loading is enabled, and
 images inside code fences remain literal text.
+
+GFM task markers on inactive lines become accessible checkboxes. Activating a
+checkbox rewrites the three-character marker (`[ ]` or `[x]`) as one undoable
+edit; the active line keeps its literal marker for precise editing, and task
+markers inside code fences are not rendered.
 
 ## Export and import
 

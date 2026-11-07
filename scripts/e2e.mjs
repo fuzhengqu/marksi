@@ -869,6 +869,137 @@ async function main() {
     }
   });
 
+  await test("live preview task checkboxes toggle source", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-tasks.md");
+    const source = [
+      "# Tasks",
+      "",
+      "- [ ] first",
+      "- [x] second",
+      "",
+      "```md",
+      "- [ ] code",
+      "```",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await waitFor(
+        'document.querySelectorAll(".cm-live-task").length === 2',
+        10_000,
+      );
+
+      const initial = await evaluate(`({
+        checked: Array.from(document.querySelectorAll(".cm-live-task")).map((node) => node.getAttribute("aria-checked")),
+        labels: Array.from(document.querySelectorAll(".cm-live-task")).map((node) => node.getAttribute("aria-label")),
+        codeSource: document.querySelector(".cm-content")?.textContent?.includes("[ ] code") ?? false
+      })`);
+      assert(
+        initial.checked.join(",") === "false,true",
+        "task checkboxes should reflect the source state",
+        initial,
+      );
+      assert(
+        initial.labels.every((label) => label === "切换任务"),
+        "task checkboxes should use the localized label",
+        initial,
+      );
+      assert(
+        initial.codeSource,
+        "task markers inside code fences must stay literal",
+        initial,
+      );
+
+      const point = await evaluate(`(() => {
+        const task = document.querySelector(".cm-live-task");
+        task?.scrollIntoView({ block: "center", behavior: "instant" });
+        const box = task?.getBoundingClientRect();
+        return box
+          ? { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+          : null;
+      })()`);
+      assert(point, "task checkbox is not visible", point);
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseMoved",
+        x: point.x,
+        y: point.y,
+      });
+      await send("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        x: point.x,
+        y: point.y,
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+      });
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        x: point.x,
+        y: point.y,
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+      });
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.content.includes("- [x] first")',
+        10_000,
+      );
+      const clicked = await evaluate(`({
+        checked: Array.from(document.querySelectorAll(".cm-live-task")).map((node) => node.getAttribute("aria-checked")),
+        content: window.__MARKSI_DEV__.getState().doc.content
+      })`);
+      assert(
+        clicked.checked[0] === "true" && clicked.content.includes("- [x] first"),
+        "clicking a task checkbox should update the Markdown source",
+        clicked,
+      );
+
+      await evaluate(
+        'document.querySelectorAll(".cm-live-task")[1]?.focus()',
+      );
+      await send("Input.dispatchKeyEvent", {
+        type: "keyDown",
+        key: " ",
+        code: "Space",
+        windowsVirtualKeyCode: 32,
+        nativeVirtualKeyCode: 32,
+      });
+      await send("Input.dispatchKeyEvent", {
+        type: "keyUp",
+        key: " ",
+        code: "Space",
+        windowsVirtualKeyCode: 32,
+        nativeVirtualKeyCode: 32,
+      });
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().doc.content.includes("- [ ] second")',
+        10_000,
+      );
+      const keyboard = await evaluate(`({
+        checked: Array.from(document.querySelectorAll(".cm-live-task")).map((node) => node.getAttribute("aria-checked")),
+        widgets: document.querySelectorAll(".cm-live-task").length
+      })`);
+      assert(
+        keyboard.checked[1] === "false" && keyboard.widgets === 2,
+        "Space should toggle a focused task checkbox without leaving the line",
+        keyboard,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);
