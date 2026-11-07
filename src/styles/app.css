@@ -1453,6 +1453,53 @@
   white-space: nowrap;
 }
 
+/* Heading hierarchy in the editable live preview. */
+.cm-live-preview .cm-line.cm-live-heading {
+  color: var(--fg);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.34;
+}
+
+.cm-live-preview .cm-line.cm-live-h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.24em;
+  border-bottom: 1px solid var(--border);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.05em;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.22;
+}
+
+.cm-live-preview .cm-line.cm-live-h2 {
+  padding-top: 0.44em;
+  padding-bottom: 0.1em;
+  font-size: 1.55em;
+  font-weight: 680;
+}
+
+.cm-live-preview .cm-line.cm-live-h3 {
+  padding-top: 0.34em;
+  font-size: 1.29em;
+}
+
+.cm-live-preview .cm-line.cm-live-h4 {
+  padding-top: 0.28em;
+  font-size: 1.12em;
+}
+
+.cm-live-preview .cm-line.cm-live-h5 {
+  padding-top: 0.22em;
+  font-size: 1.01em;
+}
+
+.cm-live-preview .cm-line.cm-live-h6 {
+  padding-top: 0.18em;
+  color: var(--fg-muted);
+  font-size: 0.96em;
+}
+
 /* Task list checkboxes in the editable live preview. */
 .cm-live-task {
   display: inline-flex;

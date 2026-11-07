@@ -1,5 +1,9 @@
 import { syntaxTree } from "@codemirror/language";
-import { RangeSetBuilder, type Extension } from "@codemirror/state";
+import {
+  RangeSetBuilder,
+  type Extension,
+  type Range,
+} from "@codemirror/state";
 import {
   Decoration,
   EditorView,
@@ -21,6 +25,7 @@ import {
   imageWidthFromAttributes,
   type ImageOccurrence,
 } from "../lib/imageSize";
+import { headingClassForNode } from "../lib/headings";
 import {
   isTaskMarker,
   taskMarkerChecked,
@@ -444,6 +449,71 @@ function buildDecorations(
   return builder.finish();
 }
 
+function buildHeadingDecorations(view: EditorView): DecorationSet {
+  const activeLines = new Set<number>();
+  for (const range of view.state.selection.ranges) {
+    const first = view.state.doc.lineAt(range.from).number;
+    const last = view.state.doc.lineAt(range.to).number;
+    for (let line = first; line <= last; line += 1) {
+      activeLines.add(line);
+    }
+  }
+
+  const ranges: Range<Decoration>[] = [];
+  const seen = new Set<number>();
+  syntaxTree(view.state).iterate({
+    enter(node) {
+      const className = headingClassForNode(node.name);
+      if (!className) {
+        return;
+      }
+      const start = view.state.doc.lineAt(node.from);
+      const end = view.state.doc.lineAt(Math.max(node.from, node.to - 1));
+      if (activeLines.has(start.number) || activeLines.has(end.number)) {
+        return;
+      }
+      if (seen.has(start.number)) {
+        return;
+      }
+      if (
+        !view.visibleRanges.some(
+          (range) => start.from <= range.to && start.to >= range.from,
+        )
+      ) {
+        return;
+      }
+      seen.add(start.number);
+      ranges.push(Decoration.line({ class: className }).range(start.from));
+    },
+  });
+  return Decoration.set(ranges);
+}
+
+function createHeadingPreviewPlugin() {
+  return ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+
+      constructor(view: EditorView) {
+        this.decorations = buildHeadingDecorations(view);
+      }
+
+      update(update: ViewUpdate): void {
+        if (
+          update.docChanged ||
+          update.selectionSet ||
+          update.viewportChanged
+        ) {
+          this.decorations = buildHeadingDecorations(update.view);
+        }
+      }
+    },
+    {
+      decorations: (plugin) => plugin.decorations,
+    },
+  );
+}
+
 function createLivePreviewPlugin(options: LivePreviewOptions) {
   return ViewPlugin.fromClass(
     class {
@@ -482,14 +552,16 @@ function createLivePreviewPlugin(options: LivePreviewOptions) {
 /**
  * Hides Markdown punctuation on inactive lines so the source editor reads like
  * a live preview while remaining fully editable. The active line keeps its
- * syntax visible for precise editing. Local images render inline; remote
- * images stay inert until the user enables remote loading in Preferences.
+ * syntax visible for precise editing. Headings gain their reading-view
+ * hierarchy, local images render inline, and remote images stay inert until
+ * the user enables remote loading in Preferences.
  */
 export function livePreview(
   options: LivePreviewOptions = EMPTY_OPTIONS,
 ): Extension {
   return [
     EditorView.editorAttributes.of({ class: "cm-live-preview" }),
+    createHeadingPreviewPlugin(),
     createLivePreviewPlugin(options),
   ];
 }

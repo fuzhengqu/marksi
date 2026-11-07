@@ -224,6 +224,7 @@ translations are not shipped.
 | Syntax highlighting | done | M1 |
 | Live preview / hybrid rendering | wip | M2/M5 |
 | Editable source-based live preview | done | M5 |
+| Heading hierarchy in live preview | done | M7 |
 | Task list checkboxes in live preview | done | M7 |
 | Reading view (rendered, read-only) | done | M5 |
 | Source mode toggle | done | M2 |
@@ -328,6 +329,11 @@ GFM task markers on inactive lines become accessible checkboxes. Activating a
 checkbox rewrites the three-character marker (`[ ]` or `[x]`) as one undoable
 edit; the active line keeps its literal marker for precise editing, and task
 markers inside code fences are not rendered.
+
+ATX and Setext headings on inactive lines render with the reading view's
+hierarchy: level-specific sizes and weights, a serif display face and rule for
+H1, and muted text for H6. The active heading line returns to its literal
+source, and heading-like text inside code fences stays unstyled.
 
 ## Export and import
 

@@ -1000,6 +1000,118 @@ async function main() {
     }
   });
 
+  await test("live preview styles heading hierarchy", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-headings.md");
+    const source = [
+      "# Alpha heading",
+      "",
+      "## Beta heading",
+      "",
+      "### Gamma heading",
+      "",
+      "Body text.",
+      "",
+      "```md",
+      "# Not a heading",
+      "```",
+      "",
+      "Setext title",
+      "============",
+      "",
+      "> ## Quoted heading",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(8)");
+      await waitFor(
+        'document.querySelectorAll(".cm-line.cm-live-heading").length === 5',
+        10_000,
+      );
+
+      const styles = await evaluate(`(() => {
+        const lines = Array.from(document.querySelectorAll(".cm-line"));
+        const lineWith = (text) => lines.find((node) => node.textContent?.includes(text));
+        const h1 = lineWith("Alpha heading");
+        const h3 = lineWith("Gamma heading");
+        const body = lineWith("Body text.");
+        const code = lineWith("# Not a heading");
+        const setext = lineWith("Setext title");
+        const quoted = lineWith("Quoted heading");
+        const size = (node) => node ? parseFloat(getComputedStyle(node).fontSize) : 0;
+        return {
+          h1: size(h1),
+          h3: size(h3),
+          body: size(body),
+          h1Weight: h1 ? parseInt(getComputedStyle(h1).fontWeight, 10) : 0,
+          h1SourceHidden: !h1?.textContent?.includes("#"),
+          codeHeading: code?.classList.contains("cm-live-heading") ?? null,
+          setextHeading: setext?.classList.contains("cm-live-h1") ?? null,
+          quotedHeading: quoted?.classList.contains("cm-live-h2") ?? null
+        };
+      })()`);
+      assert(
+        styles.h1 > styles.h3 && styles.h3 > styles.body,
+        "heading levels should decrease in size down to body text",
+        styles,
+      );
+      assert(
+        styles.h1Weight >= 600,
+        "live preview headings should be bold",
+        styles,
+      );
+      assert(
+        styles.h1SourceHidden,
+        "inactive heading lines should hide their Markdown marker",
+        styles,
+      );
+      assert(
+        styles.codeHeading === false,
+        "heading-like text inside a code fence must stay literal",
+        styles,
+      );
+      assert(
+        styles.setextHeading === true,
+        "Setext headings should receive the same hierarchy",
+        styles,
+      );
+      assert(
+        styles.quotedHeading === true,
+        "headings inside block quotes should keep their level",
+        styles,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(1)");
+      await waitFor(
+        'document.querySelectorAll(".cm-line.cm-live-heading").length === 4',
+        10_000,
+      );
+      const active = await evaluate(`({
+        firstLine: document.querySelector(".cm-line")?.textContent ?? "",
+        headings: document.querySelectorAll(".cm-live-heading").length
+      })`);
+      assert(
+        active.firstLine.includes("# Alpha heading") &&
+          active.headings === 4,
+        "the active heading line should reveal its source and lose its heading style",
+        active,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

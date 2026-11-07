@@ -122,6 +122,14 @@ checkbox widget. Activating it with the pointer or Space/Enter rewrites only
 that marker as one undoable transaction, so the canonical Markdown and undo
 history stay intact. Markers inside code fences never receive a widget.
 
+Heading hierarchy uses a second, line-only decoration pass over the same tree.
+`ATXHeading1`-`ATXHeading6` and `SetextHeading1`/`SetextHeading2` add level
+classes to the heading line while it is inactive and visible. The pass skips
+the heading's start and end lines when either is active, so selecting a Setext
+heading reveals both its text and underline source. Line decorations do not
+touch the text ranges used by the inline replacement pass, which keeps the two
+preview layers independent.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set
