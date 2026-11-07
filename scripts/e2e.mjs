@@ -1048,12 +1048,23 @@ async function main() {
         const code = lineWith("# Not a heading");
         const setext = lineWith("Setext title");
         const quoted = lineWith("Quoted heading");
-        const size = (node) => node ? parseFloat(getComputedStyle(node).fontSize) : 0;
+        const textTarget = (node) =>
+          Array.from(node?.querySelectorAll("span") ?? []).find(
+            (span) => span.textContent,
+          ) ?? node;
+        const size = (node) => {
+          const target = textTarget(node);
+          return target ? parseFloat(getComputedStyle(target).fontSize) : 0;
+        };
+        const weight = (node) => {
+          const target = textTarget(node);
+          return target ? parseInt(getComputedStyle(target).fontWeight, 10) : 0;
+        };
         return {
           h1: size(h1),
           h3: size(h3),
           body: size(body),
-          h1Weight: h1 ? parseInt(getComputedStyle(h1).fontWeight, 10) : 0,
+          h1Weight: weight(h1),
           h1SourceHidden: !h1?.textContent?.includes("#"),
           codeHeading: code?.classList.contains("cm-live-heading") ?? null,
           setextHeading: setext?.classList.contains("cm-live-h1") ?? null,
@@ -1063,6 +1074,11 @@ async function main() {
       assert(
         styles.h1 > styles.h3 && styles.h3 > styles.body,
         "heading levels should decrease in size down to body text",
+        styles,
+      );
+      assert(
+        styles.h1 <= styles.body * 2.3,
+        "live preview heading sizes must not compound with syntax highlighting",
         styles,
       );
       assert(

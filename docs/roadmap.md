@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.45**
-- Technical version: **0.45.0**
+- Product version: **0.46**
+- Technical version: **0.46.0**
 - Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
@@ -24,7 +24,7 @@ The public security and version policies are enforced by
   accessibility pass, document-level RTL support, a large-document reading
   confirmation, Flatpak packaging, inline local images in the editable live
   preview, interactive task list checkboxes, and live-preview heading
-  hierarchy.
+  hierarchy with corrected scaling.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
@@ -147,8 +147,8 @@ Flatpak packaging.
 Status: in progress. IME/CJK composition coverage, the keyboard/focus
 accessibility pass, document-level RTL support, the large-document reading
 confirmation, Flatpak packaging, inline local images in the live preview,
-interactive task list checkboxes, and live-preview heading hierarchy are
-complete.
+interactive task list checkboxes, and live-preview heading hierarchy with
+corrected scaling are complete.
 
 ## Delivery rules
 

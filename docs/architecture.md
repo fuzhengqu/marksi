@@ -128,7 +128,10 @@ classes to the heading line while it is inactive and visible. The pass skips
 the heading's start and end lines when either is active, so selecting a Setext
 heading reveals both its text and underline source. Line decorations do not
 touch the text ranges used by the inline replacement pass, which keeps the two
-preview layers independent.
+preview layers independent. Heading text size and weight stay owned by the
+Markdown highlight style; line classes only add block spacing, the H1 rule and
+serif face, and the H6 muted color, so the two layers cannot multiply the type
+scale.
 
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,

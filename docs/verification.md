@@ -93,9 +93,10 @@ The E2E suite currently covers:
   marker, the localized label is present, and a task marker inside a code fence
   stays literal.
 - Live-preview heading hierarchy: ATX levels shrink toward body text, H1 is
-  bold, Setext and block-quoted headings receive their level, a code-fence
-  line stays unstyled, and the active heading line reveals its source marker
-  and loses its heading class.
+  bold, sizes stay within the reading-view scale without compounding with
+  syntax highlighting, Setext and block-quoted headings receive their level, a
+  code-fence line stays unstyled, and the active heading line reveals its
+  source marker and loses its heading class.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.

@@ -332,7 +332,9 @@ markers inside code fences are not rendered.
 
 ATX and Setext headings on inactive lines render with the reading view's
 hierarchy: level-specific sizes and weights, a serif display face and rule for
-H1, and muted text for H6. The active heading line returns to its literal
+H1, and muted text for H6. Heading text size and weight come from the Markdown
+highlight style; line decorations add spacing, rules, and the H1 face without
+compounding the type scale. The active heading line returns to its literal
 source, and heading-like text inside code fences stays unstyled.
 
 ## Export and import
