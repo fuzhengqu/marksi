@@ -216,10 +216,13 @@ ease-out; honor `prefers-reduced-motion`.
   rendered representation. Local images on inactive lines already render
   inline; clicking one moves the caret to its Markdown source line. ATX and
   Setext headings on inactive lines use the reading view's size and weight
-  hierarchy, while the active heading line returns to literal source. GFM task
-  markers on inactive lines render as checkboxes; clicking one or pressing
-  Space/Enter rewrites `[ ]` or `[x]` in place. Remote images stay inert
-  placeholders until remote loading is enabled, and images, task markers, or
+  hierarchy, while the active heading line returns to literal source. Block
+  quotes on inactive lines hide their `>` markers and show an accent rule,
+  subtle background, and nested indentation. Horizontal rules render as a
+  centered divider until the line is activated. GFM task markers on inactive
+  lines render as checkboxes; clicking one or pressing Space/Enter rewrites
+  `[ ]` or `[x]` in place. Remote images stay inert placeholders until remote
+  loading is enabled, and images, task markers, quote markers, rules, or
   heading-like text inside code fences remain literal text.
 
 ## Writing modes

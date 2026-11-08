@@ -133,6 +133,15 @@ Markdown highlight style; line classes only add block spacing, the H1 rule and
 serif face, and the H6 muted color, so the two layers cannot multiply the type
 scale.
 
+Block quotes use the same line-only approach. A quote-depth pass walks
+`Blockquote` ancestors, records the deepest level per visible line, and adds a
+clamped `cm-live-quote` class. The inline pass hides each `QuoteMark` on
+inactive lines, while the line class supplies the accent rule, background, and
+indentation. Horizontal rules replace the visible marker range with an inline
+separator widget; activating the line reveals the canonical source. Neither
+path changes the document text, and neither applies inside fenced code because
+the syntax tree exposes those lines as code text.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set

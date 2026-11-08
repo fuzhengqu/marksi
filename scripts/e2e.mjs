@@ -1128,6 +1128,146 @@ async function main() {
     }
   });
 
+  await test("live preview styles block quotes and horizontal rules", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-blocks.md");
+    const source = [
+      "> Quoted text",
+      ">",
+      "> > Nested quote",
+      "",
+      "---",
+      "",
+      "Body text.",
+      "",
+      "```md",
+      "> not a quote",
+      "---",
+      "```",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(7)");
+      await waitFor(
+        'document.querySelectorAll(".cm-line.cm-live-quote").length === 3',
+        10_000,
+      );
+
+      const state = await evaluate(`(() => {
+        const lines = Array.from(document.querySelectorAll(".cm-line"));
+        const lineWith = (text) => lines.find((node) => node.textContent?.includes(text));
+        const outer = lineWith("Quoted text");
+        const nested = lineWith("Nested quote");
+        const codeQuote = lineWith("not a quote");
+        const rule = document.querySelector(".cm-live-rule");
+        const border = (node) => node ? parseFloat(getComputedStyle(node).borderLeftWidth) : 0;
+        const padding = (node) => node ? parseFloat(getComputedStyle(node).paddingLeft) : 0;
+        return {
+          quoteCount: document.querySelectorAll(".cm-line.cm-live-quote").length,
+          outerText: outer?.textContent ?? null,
+          nestedText: nested?.textContent ?? null,
+          outerBorder: border(outer),
+          outerPadding: padding(outer),
+          nestedPadding: padding(nested),
+          outerBackground: outer ? getComputedStyle(outer).backgroundColor : null,
+          codeQuoteClass: codeQuote?.classList.contains("cm-live-quote") ?? null,
+          rulePresent: Boolean(rule),
+          ruleRole: rule?.getAttribute("role") ?? null,
+          ruleBorder: rule ? parseFloat(getComputedStyle(rule, "::before").borderTopWidth) : 0,
+          literalRules: lines.filter((node) => node.textContent?.trim() === "---").length
+        };
+      })()`);
+      assert(
+        state.quoteCount === 3,
+        "inactive block quote lines should receive quote chrome",
+        state,
+      );
+      assert(
+        state.outerText === "Quoted text" && state.nestedText === "Nested quote",
+        "inactive quote lines should hide their Markdown markers",
+        state,
+      );
+      assert(
+        state.outerBorder > 0 && state.outerPadding > 0,
+        "block quotes should show a rule and inset text",
+        state,
+      );
+      assert(
+        state.nestedPadding > state.outerPadding,
+        "nested block quotes should indent further",
+        state,
+      );
+      assert(
+        state.outerBackground !== "rgba(0, 0, 0, 0)",
+        "block quotes should use a subtle background",
+        state,
+      );
+      assert(
+        state.codeQuoteClass === false,
+        "quote-like text inside a code fence must stay literal",
+        state,
+      );
+      assert(
+        state.rulePresent && state.ruleRole === "separator" && state.ruleBorder > 0,
+        "inactive horizontal rules should render as dividers",
+        state,
+      );
+      assert(
+        state.literalRules === 1,
+        "only the horizontal rule inside the code fence should stay literal",
+        state,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(1)");
+      await waitFor(
+        'Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("> Quoted text"))',
+        10_000,
+      );
+      const active = await evaluate(`(() => {
+        const line = Array.from(document.querySelectorAll(".cm-line")).find((node) => node.textContent?.includes("> Quoted text"));
+        return {
+          text: line?.textContent ?? null,
+          quote: line?.classList.contains("cm-live-quote") ?? null
+        };
+      })()`);
+      assert(
+        active.text === "> Quoted text" && active.quote === true,
+        "the active quote line should reveal its marker while keeping quote chrome",
+        active,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-rule")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        '!document.querySelector(".cm-live-rule") && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.trim() === "---")',
+        10_000,
+      );
+      const revealed = await evaluate(`({
+        rulePresent: Boolean(document.querySelector(".cm-live-rule")),
+        literalRules: Array.from(document.querySelectorAll(".cm-line")).filter((node) => node.textContent?.trim() === "---").length
+      })`);
+      assert(
+        !revealed.rulePresent && revealed.literalRules === 2,
+        "activating a rule should reveal its Markdown source",
+        revealed,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

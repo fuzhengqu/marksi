@@ -97,6 +97,11 @@ The E2E suite currently covers:
   syntax highlighting, Setext and block-quoted headings receive their level, a
   code-fence line stays unstyled, and the active heading line reveals its
   source marker and loses its heading class.
+- Live-preview block quotes and horizontal rules: inactive quote lines hide
+  their markers, show an accent rule, background, and deeper nested
+  indentation; inactive rules render as a divider and reveal their Markdown
+  source when activated; quote and rule markers inside a code fence stay
+  literal.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.

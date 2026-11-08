@@ -1453,6 +1453,45 @@
   white-space: nowrap;
 }
 
+/* Block quotes and horizontal rules in the editable live preview. */
+.cm-live-preview .cm-line.cm-live-quote {
+  padding-left: 0.9em;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--fg-muted);
+}
+
+.cm-live-preview .cm-line.cm-live-quote-2 {
+  padding-left: 1.8em;
+}
+
+.cm-live-preview .cm-line.cm-live-quote-3 {
+  padding-left: 2.7em;
+}
+
+.cm-live-rule {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  height: 1.2em;
+  vertical-align: middle;
+  outline: none;
+}
+
+.cm-live-rule::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--border);
+}
+
+.cm-live-rule:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
 /* Heading hierarchy in the editable live preview. Text size and weight come
    from the Markdown highlight style; these line classes add block chrome. */
 .cm-live-preview .cm-line.cm-live-heading {

@@ -225,6 +225,7 @@ translations are not shipped.
 | Live preview / hybrid rendering | wip | M2/M5 |
 | Editable source-based live preview | done | M5 |
 | Heading hierarchy in live preview | done | M7 |
+| Block quotes and horizontal rules in live preview | done | M7 |
 | Task list checkboxes in live preview | done | M7 |
 | Reading view (rendered, read-only) | done | M5 |
 | Source mode toggle | done | M2 |
@@ -336,6 +337,12 @@ H1, and muted text for H6. Heading text size and weight come from the Markdown
 highlight style; line decorations add spacing, rules, and the H1 face without
 compounding the type scale. The active heading line returns to its literal
 source, and heading-like text inside code fences stays unstyled.
+
+Block quotes on inactive lines hide their `>` markers and show the reading
+view's accent rule, subtle background, and muted text; nested quotes indent
+further. Horizontal rules render as a centered divider and reveal their
+`---`/`***`/`___` source when the line is activated. Quote-like text and rule
+markers inside code fences stay literal.
 
 ## Export and import
 

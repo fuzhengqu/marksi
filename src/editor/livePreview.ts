@@ -12,6 +12,7 @@ import {
   type DecorationSet,
   type ViewUpdate,
 } from "@codemirror/view";
+import { blockquoteDepth, quoteClassForDepth } from "../lib/blocks";
 import {
   classifyImageSource,
   directoryName,
@@ -310,6 +311,43 @@ class LiveTaskWidget extends WidgetType {
   }
 }
 
+class LiveRuleWidget extends WidgetType {
+  constructor(readonly from: number) {
+    super();
+  }
+
+  eq(other: LiveRuleWidget): boolean {
+    return this.from === other.from;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const rule = document.createElement("span");
+    rule.className = "cm-live-rule";
+    rule.setAttribute("role", "separator");
+    rule.tabIndex = 0;
+
+    const reveal = (event: Event) => {
+      event.preventDefault();
+      view.dispatch({
+        selection: { anchor: this.from },
+        scrollIntoView: true,
+      });
+      view.focus();
+    };
+    rule.addEventListener("mousedown", reveal);
+    rule.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        reveal(event);
+      }
+    });
+    return rule;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 function collectImages(view: EditorView): ImageOccurrence[] {
   const source = view.state.doc.toString();
   return source.includes("![") ? findImageOccurrences(source) : [];
@@ -391,6 +429,26 @@ function buildDecorations(
               decoration: hidden,
             });
             break;
+          case "QuoteMark":
+            if (view.state.doc.sliceString(node.to, node.to + 1) === " ") {
+              hideTo += 1;
+            }
+            ranges.push({
+              from: node.from,
+              to: hideTo,
+              decoration: hidden,
+            });
+            break;
+          case "HorizontalRule": {
+            ranges.push({
+              from: node.from,
+              to: node.to,
+              decoration: Decoration.replace({
+                widget: new LiveRuleWidget(node.from),
+              }),
+            });
+            break;
+          }
           case "EmphasisMark":
           case "StrikethroughMark":
           case "LinkMark":
@@ -489,6 +547,69 @@ function buildHeadingDecorations(view: EditorView): DecorationSet {
   return Decoration.set(ranges);
 }
 
+function buildBlockDecorations(view: EditorView): DecorationSet {
+  const quoteDepths = new Map<number, number>();
+  const visible = view.visibleRanges;
+  const isVisible = (from: number, to: number) =>
+    visible.some((range) => from <= range.to && to >= range.from);
+
+  syntaxTree(view.state).iterate({
+    enter(node) {
+      if (node.name !== "Blockquote") {
+        return;
+      }
+      const ancestors: string[] = [];
+      let parent = node.node.parent;
+      while (parent) {
+        ancestors.push(parent.name);
+        parent = parent.parent;
+      }
+      const depth = blockquoteDepth(ancestors);
+      const start = view.state.doc.lineAt(node.from);
+      const end = view.state.doc.lineAt(Math.max(node.from, node.to - 1));
+      for (let number = start.number; number <= end.number; number += 1) {
+        const line = view.state.doc.line(number);
+        if (!isVisible(line.from, line.to)) {
+          continue;
+        }
+        if (depth > (quoteDepths.get(line.from) ?? 0)) {
+          quoteDepths.set(line.from, depth);
+        }
+      }
+    },
+  });
+
+  const ranges: Range<Decoration>[] = [];
+  for (const [from, depth] of quoteDepths) {
+    ranges.push(
+      Decoration.line({ class: quoteClassForDepth(depth) }).range(from),
+    );
+  }
+  ranges.sort((left, right) => left.from - right.from);
+  return Decoration.set(ranges);
+}
+
+function createBlockPreviewPlugin() {
+  return ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet;
+
+      constructor(view: EditorView) {
+        this.decorations = buildBlockDecorations(view);
+      }
+
+      update(update: ViewUpdate): void {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = buildBlockDecorations(update.view);
+        }
+      }
+    },
+    {
+      decorations: (plugin) => plugin.decorations,
+    },
+  );
+}
+
 function createHeadingPreviewPlugin() {
   return ViewPlugin.fromClass(
     class {
@@ -553,14 +674,16 @@ function createLivePreviewPlugin(options: LivePreviewOptions) {
  * Hides Markdown punctuation on inactive lines so the source editor reads like
  * a live preview while remaining fully editable. The active line keeps its
  * syntax visible for precise editing. Headings gain their reading-view
- * hierarchy, local images render inline, and remote images stay inert until
- * the user enables remote loading in Preferences.
+ * hierarchy, block quotes gain a quote rule, horizontal rules become dividers,
+ * local images render inline, and remote images stay inert until the user
+ * enables remote loading in Preferences.
  */
 export function livePreview(
   options: LivePreviewOptions = EMPTY_OPTIONS,
 ): Extension {
   return [
     EditorView.editorAttributes.of({ class: "cm-live-preview" }),
+    createBlockPreviewPlugin(),
     createHeadingPreviewPlugin(),
     createLivePreviewPlugin(options),
   ];
