@@ -1,9 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   extractFrontMatter,
+  frontMatterLineCount,
+  frontMatterSummary,
   frontMatterTitle,
   parseFrontMatterMetadata,
 } from "../src/lib/frontMatter";
+
+function lineReader(source: string) {
+  const lines = source.split(/\r?\n/);
+  return (lineNumber: number) => lines[lineNumber - 1] ?? "";
+}
 
 describe("extractFrontMatter", () => {
   it("removes leading YAML metadata and keeps the Markdown body", () => {
@@ -75,5 +82,73 @@ describe("parseFrontMatterMetadata", () => {
     expect(
       parseFrontMatterMetadata("# comment\n\ntitle: 'A title'"),
     ).toEqual({ title: "A title" });
+  });
+});
+
+describe("frontMatterLineCount", () => {
+  it("returns the closing delimiter line of a leading block", () => {
+    const source = ["---", "title: Notes", "tags: [a]", "---", "Body"].join(
+      "\n",
+    );
+    expect(frontMatterLineCount(5, lineReader(source))).toBe(4);
+  });
+
+  it("accepts a BOM, CRLF input, and a dot closing delimiter", () => {
+    const source = "\uFEFF---\r\ntitle: Notes\r\n...\r\nBody";
+    expect(frontMatterLineCount(4, lineReader(source))).toBe(3);
+  });
+
+  it("accepts trailing spaces on delimiters", () => {
+    const source = ["---   ", "title: Notes", "---\t", "Body"].join("\n");
+    expect(frontMatterLineCount(4, lineReader(source))).toBe(3);
+  });
+
+  it("rejects blocks that do not start at the first line or never close", () => {
+    expect(frontMatterLineCount(3, lineReader("# Body\n---\ntitle: x"))).toBe(
+      0,
+    );
+    expect(frontMatterLineCount(3, lineReader("---\ntitle: x\nBody"))).toBe(0);
+    expect(frontMatterLineCount(1, lineReader("---"))).toBe(0);
+    expect(frontMatterLineCount(0, lineReader(""))).toBe(0);
+  });
+
+  it("stops at the first closing delimiter", () => {
+    const source = ["---", "---", "---", "Body"].join("\n");
+    expect(frontMatterLineCount(4, lineReader(source))).toBe(2);
+  });
+
+  it("requires a bare delimiter line", () => {
+    expect(
+      frontMatterLineCount(3, lineReader("---\ntitle: x\n--- trailing")),
+    ).toBe(0);
+  });
+});
+
+describe("frontMatterSummary", () => {
+  const source = [
+    "---",
+    "title: Notes",
+    "author: Ada",
+    "tags: [markdown]",
+    "empty:",
+    "---",
+    "Body",
+  ].join("\n");
+
+  it("lists non-empty metadata in source order", () => {
+    expect(frontMatterSummary(source)).toEqual([
+      { key: "title", value: "Notes" },
+      { key: "author", value: "Ada" },
+      { key: "tags", value: "[markdown]" },
+    ]);
+  });
+
+  it("caps entries and returns nothing without front matter", () => {
+    expect(frontMatterSummary(source, 2)).toEqual([
+      { key: "title", value: "Notes" },
+      { key: "author", value: "Ada" },
+    ]);
+    expect(frontMatterSummary(source, 0)).toEqual([]);
+    expect(frontMatterSummary("# Body")).toEqual([]);
   });
 });

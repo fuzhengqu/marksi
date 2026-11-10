@@ -13,6 +13,7 @@ export const zhHans: Record<string, string> = {
   "Close": "关闭",
   "Toggle task": "切换任务",
   "Table": "表格",
+  "Front matter": "文档信息",
   "Files": "文件",
   "Outline": "大纲",
   "Search": "搜索",

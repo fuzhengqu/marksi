@@ -1547,6 +1547,132 @@ async function main() {
     }
   });
 
+  await test("live preview renders front matter as a card", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-front-matter.md");
+    const source = [
+      "---",
+      "title: Field Notes",
+      "author: Ada Lovelace",
+      "tags: [markdown, notes]",
+      "---",
+      "",
+      "# Body",
+      "",
+      "First paragraph.",
+      "",
+      "---",
+      "",
+      "After rule.",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(13)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-frontmatter").length === 1',
+        10_000,
+      );
+
+      const state = await evaluate(`(() => {
+        const card = document.querySelector(".cm-live-frontmatter");
+        const entries = Array.from(card?.querySelectorAll("dl > dt") ?? []).map((key) => [
+          key.textContent,
+          key.nextElementSibling?.textContent ?? ""
+        ]);
+        const lines = Array.from(document.querySelectorAll(".cm-line"));
+        return {
+          cards: document.querySelectorAll(".cm-live-frontmatter").length,
+          badge: card?.querySelector(".cm-live-frontmatter-badge")?.textContent ?? null,
+          entries,
+          sourceVisible: lines.some((node) => node.textContent?.includes("title: Field Notes")),
+          rules: document.querySelectorAll(".cm-live-rule").length
+        };
+      })()`);
+      assert(state.cards === 1, "front matter should render one card", state);
+      assert(state.badge === "YAML", "the card should carry a YAML badge", state);
+      assert(
+        JSON.stringify(state.entries) ===
+          JSON.stringify([
+            ["title", "Field Notes"],
+            ["author", "Ada Lovelace"],
+            ["tags", "[markdown, notes]"],
+          ]),
+        "the card should list metadata in source order",
+        state,
+      );
+      assert(
+        state.sourceVisible === false,
+        "front matter source should be hidden",
+        state,
+      );
+      assert(
+        state.rules === 1,
+        "only the body rule should render as a divider",
+        state,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-frontmatter")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        '!document.querySelector(".cm-live-frontmatter") && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("title: Field Notes"))',
+        10_000,
+      );
+      const revealed = await evaluate(`(() => {
+        const lines = Array.from(document.querySelectorAll(".cm-line"));
+        const titleLine = lines.find((node) => node.textContent?.includes("title: Field Notes"));
+        return {
+          cards: document.querySelectorAll(".cm-live-frontmatter").length,
+          titleVisible: Boolean(titleLine),
+          titleHeading: titleLine?.classList.contains("cm-live-heading") ?? null,
+          rules: document.querySelectorAll(".cm-live-rule").length
+        };
+      })()`);
+      assert(
+        revealed.cards === 0 && revealed.titleVisible === true,
+        "clicking the card should reveal front matter source",
+        revealed,
+      );
+      assert(
+        revealed.titleHeading === false,
+        "front matter source must not be styled as a heading",
+        revealed,
+      );
+      assert(
+        revealed.rules === 1,
+        "front matter delimiters must not become dividers",
+        revealed,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(13)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-frontmatter").length === 1',
+        10_000,
+      );
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "front matter preview must not rewrite the document",
+        content,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

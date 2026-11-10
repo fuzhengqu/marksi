@@ -228,6 +228,7 @@ translations are not shipped.
 | Block quotes and horizontal rules in live preview | done | M7 |
 | Code block cards and language badges in live preview | done | M7 |
 | Tables in live preview | done | M7 |
+| Front matter card in live preview | done | M7 |
 | Task list checkboxes in live preview | done | M7 |
 | Reading view (rendered, read-only) | done | M5 |
 | Source mode toggle | done | M2 |
@@ -358,6 +359,12 @@ table or placing the caret on any of its lines reveals the Markdown source.
 Tables inside code fences, block quotes, and list items keep their source
 layout. Remote images inside rendered tables stay inert, and very large
 documents fall back to table source to protect typing performance.
+
+Leading YAML front matter on inactive lines renders as a compact metadata card
+with a YAML badge and up to six key/value rows. Clicking the card or placing the
+caret inside the block reveals the original YAML. Front matter delimiters are
+never styled as horizontal rules or headings, while `---` rules in the document
+body keep their normal divider treatment.
 
 ## Export and import
 

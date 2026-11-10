@@ -113,6 +113,11 @@ The E2E suite currently covers:
   a fenced table stays literal inside its code card, clicking the widget
   reveals the source, moving away restores the widget, and the document text is
   unchanged.
+- Live-preview front matter: an inactive leading YAML block renders one card
+  with a YAML badge and metadata rows in source order; the YAML stays hidden,
+  only a body `---` rule renders as a divider, clicking the card reveals the
+  original YAML without heading styling, moving away restores the card, and the
+  document text is unchanged.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.

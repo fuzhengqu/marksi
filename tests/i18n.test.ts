@@ -82,6 +82,8 @@ describe("translate", () => {
   it("localizes live-preview labels", () => {
     expect(translate("zh-Hans", "Table")).toBe("表格");
     expect(translate("zh-Hant", "Table")).toBe("表格");
+    expect(translate("zh-Hans", "Front matter")).toBe("文档信息");
+    expect(translate("zh-Hant", "Front matter")).toBe("文件資訊");
   });
 
   it("returns the source label for English", () => {

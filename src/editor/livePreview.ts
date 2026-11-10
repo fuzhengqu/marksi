@@ -25,8 +25,14 @@ import {
   resolveImageRootPath,
 } from "../lib/images";
 import { loadImageSource } from "../lib/imageLoader";
+import {
+  frontMatterLineCount,
+  frontMatterSummary,
+  type FrontMatterEntry,
+} from "../lib/frontMatter";
 import { renderMarkdown } from "../lib/markdown";
-import { tableIsActive, tablePreviewLimit } from "../lib/tables";
+import { rangeIsActive } from "../lib/selection";
+import { tablePreviewLimit } from "../lib/tables";
 import {
   findImageOccurrences,
   imageFitFromAttributes,
@@ -49,6 +55,7 @@ export interface LivePreviewOptions {
   loadRemoteImages: boolean;
   taskToggleLabel: string;
   tableLabel: string;
+  frontMatterLabel: string;
 }
 
 const EMPTY_OPTIONS: LivePreviewOptions = {
@@ -59,6 +66,7 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   loadRemoteImages: false,
   taskToggleLabel: "Toggle task",
   tableLabel: "Table",
+  frontMatterLabel: "Front matter",
 };
 
 const hidden = Decoration.replace({});
@@ -467,9 +475,103 @@ class LiveTableWidget extends WidgetType {
   }
 }
 
+class LiveFrontMatterWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly to: number,
+    readonly entries: readonly FrontMatterEntry[],
+    readonly label: string,
+  ) {
+    super();
+  }
+
+  eq(other: LiveFrontMatterWidget): boolean {
+    return (
+      this.from === other.from &&
+      this.to === other.to &&
+      this.label === other.label &&
+      this.entries.length === other.entries.length &&
+      this.entries.every(
+        (entry, index) =>
+          entry.key === other.entries[index].key &&
+          entry.value === other.entries[index].value,
+      )
+    );
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const card = document.createElement("div");
+    card.className = "cm-live-frontmatter";
+    card.contentEditable = "false";
+    card.spellcheck = false;
+    card.tabIndex = 0;
+    card.setAttribute("role", "group");
+    card.setAttribute("aria-label", this.label);
+
+    const header = document.createElement("div");
+    header.className = "cm-live-frontmatter-header";
+    const title = document.createElement("span");
+    title.className = "cm-live-frontmatter-title";
+    title.textContent = this.label;
+    const badge = document.createElement("span");
+    badge.className = "cm-live-frontmatter-badge";
+    badge.textContent = "YAML";
+    header.append(title, badge);
+    card.append(header);
+
+    if (this.entries.length > 0) {
+      const list = document.createElement("dl");
+      list.className = "cm-live-frontmatter-list";
+      for (const entry of this.entries) {
+        const key = document.createElement("dt");
+        key.textContent = entry.key;
+        const value = document.createElement("dd");
+        value.textContent = entry.value;
+        list.append(key, value);
+      }
+      card.append(list);
+    }
+
+    const reveal = (event: Event) => {
+      event.preventDefault();
+      view.dispatch({
+        selection: { anchor: this.from },
+        scrollIntoView: true,
+      });
+      view.focus();
+    };
+    card.addEventListener("mousedown", reveal);
+    card.addEventListener("click", (event) => {
+      event.preventDefault();
+    });
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        reveal(event);
+      }
+    });
+    return card;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 function collectImages(view: EditorView): ImageOccurrence[] {
   const source = view.state.doc.toString();
   return source.includes("![") ? findImageOccurrences(source) : [];
+}
+
+/**
+ * Returns the end offset of a leading YAML front matter block, or 0 when the
+ * document has none. Live-preview decorations skip this range so YAML is never
+ * styled as headings or horizontal rules.
+ */
+function frontMatterEnd(state: EditorState): number {
+  const lineCount = frontMatterLineCount(state.doc.lines, (lineNumber) =>
+    state.doc.line(lineNumber).text,
+  );
+  return lineCount === 0 ? 0 : state.doc.line(lineCount).to;
 }
 
 function buildDecorations(
@@ -485,9 +587,13 @@ function buildDecorations(
       activeLines.add(line);
     }
   }
+  const frontMatterTo = frontMatterEnd(view.state);
 
   const ranges: DecorationRange[] = [];
   for (const image of images) {
+    if (image.from < frontMatterTo) {
+      continue;
+    }
     if (activeLines.has(view.state.doc.lineAt(image.from).number)) {
       continue;
     }
@@ -531,6 +637,9 @@ function buildDecorations(
       from: visible.from,
       to: visible.to,
       enter(node) {
+        if (node.from < frontMatterTo) {
+          return;
+        }
         const lineNumber = view.state.doc.lineAt(node.from).number;
         if (activeLines.has(lineNumber)) {
           return;
@@ -662,8 +771,12 @@ function buildHeadingDecorations(view: EditorView): DecorationSet {
 
   const ranges: Range<Decoration>[] = [];
   const seen = new Set<number>();
+  const frontMatterTo = frontMatterEnd(view.state);
   syntaxTree(view.state).iterate({
     enter(node) {
+      if (node.from < frontMatterTo) {
+        return;
+      }
       const className = headingClassForNode(node.name);
       if (!className) {
         return;
@@ -696,9 +809,13 @@ function buildBlockDecorations(view: EditorView): DecorationSet {
   const visible = view.visibleRanges;
   const isVisible = (from: number, to: number) =>
     visible.some((range) => from <= range.to && to >= range.from);
+  const frontMatterTo = frontMatterEnd(view.state);
 
   syntaxTree(view.state).iterate({
     enter(node) {
+      if (node.from < frontMatterTo) {
+        return;
+      }
       if (node.name === "Blockquote") {
         const ancestors: string[] = [];
         let parent = node.node.parent;
@@ -769,6 +886,38 @@ function buildBlockDecorations(view: EditorView): DecorationSet {
   return Decoration.set(ranges);
 }
 
+function buildFrontMatterDecorations(
+  state: EditorState,
+  options: LivePreviewOptions,
+): DecorationSet {
+  const end = frontMatterEnd(state);
+  if (end === 0 || rangeIsActive(state.selection.ranges, 0, end)) {
+    return Decoration.none;
+  }
+  return Decoration.set([
+    Decoration.replace({
+      block: true,
+      widget: new LiveFrontMatterWidget(
+        0,
+        end,
+        frontMatterSummary(state.doc.sliceString(0, end)),
+        options.frontMatterLabel,
+      ),
+    }).range(0, end),
+  ]);
+}
+
+function createFrontMatterField(options: LivePreviewOptions) {
+  return StateField.define<DecorationSet>({
+    create: (state) => buildFrontMatterDecorations(state, options),
+    update: (decorations, transaction) =>
+      transaction.docChanged || transaction.selection
+        ? buildFrontMatterDecorations(transaction.state, options)
+        : decorations,
+    provide: (field) => EditorView.decorations.from(field),
+  });
+}
+
 function buildTableDecorations(
   state: EditorState,
   tree: ReturnType<typeof syntaxTree>,
@@ -791,7 +940,7 @@ function buildTableDecorations(
       }
       const start = state.doc.lineAt(node.from);
       const end = state.doc.lineAt(Math.max(node.from, node.to - 1));
-      if (tableIsActive(state.selection.ranges, start.from, end.to)) {
+      if (rangeIsActive(state.selection.ranges, start.from, end.to)) {
         return false;
       }
       ranges.push(
@@ -932,15 +1081,17 @@ function createLivePreviewPlugin(options: LivePreviewOptions) {
  * syntax visible for precise editing. Headings gain their reading-view
  * hierarchy, block quotes gain a quote rule, horizontal rules become dividers,
  * fenced and indented code blocks gain a card surface and language badge,
- * inactive tables render as read-only tables with click-to-edit source,
- * local images render inline, and remote images stay inert until the user
- * enables remote loading in Preferences.
+ * leading YAML front matter becomes a metadata card, inactive tables render as
+ * read-only tables with click-to-edit source, local images render inline, and
+ * remote images stay inert until the user enables remote loading in
+ * Preferences.
  */
 export function livePreview(
   options: LivePreviewOptions = EMPTY_OPTIONS,
 ): Extension {
   return [
     EditorView.editorAttributes.of({ class: "cm-live-preview" }),
+    createFrontMatterField(options),
     createTablePreviewField(options),
     createBlockPreviewPlugin(),
     createHeadingPreviewPlugin(),

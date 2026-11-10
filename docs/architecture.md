@@ -159,6 +159,15 @@ sanitized Markdown pipeline as the reading view, strips image resize handles
 and inert image frames, and never edits the document. A document-length limit
 and a table-count cap keep decoration rebuilds bounded.
 
+Front matter uses another `StateField` because its card is also a block widget.
+`extractFrontMatter` supplies the leading block's line count and parsed
+metadata; the field replaces the full block only while the selection is outside
+it. All syntax-decoration passes skip that range unconditionally, so the Lezer
+parser's interpretation of the delimiters as a horizontal rule and a Setext
+heading never leaks into the preview. The card lists non-empty metadata in
+source order, capped at six rows, and clicking it moves the caret to the block
+start.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set

@@ -1,3 +1,5 @@
+import { rangeIsActive } from "./selection";
+
 /** Documents larger than this keep table source visible to protect typing. */
 export const TABLE_PREVIEW_MAX_CHARS = 300_000;
 
@@ -22,5 +24,5 @@ export function tableIsActive(
   from: number,
   to: number,
 ): boolean {
-  return ranges.some((range) => range.from <= to && range.to >= from);
+  return rangeIsActive(ranges, from, to);
 }

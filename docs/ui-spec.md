@@ -225,7 +225,10 @@ ease-out; honor `prefers-reduced-motion`.
   render as read-only tables with header styling, alignment, striping, and
   inline cell formatting; clicking a table or placing the caret on one of its
   lines reveals its Markdown source. Tables inside code fences, quotes, or list
-  items stay literal. GFM task markers on inactive
+  items stay literal. Leading YAML front matter on inactive lines renders as a
+  compact card with a YAML badge and metadata rows; clicking it reveals the
+  original YAML, and its delimiters never become headings or dividers. GFM task
+  markers on inactive
   lines render as checkboxes; clicking one or pressing Space/Enter rewrites
   `[ ]` or `[x]` in place. Remote images stay inert placeholders until remote
   loading is enabled, and images, task markers, quote markers, rules, code

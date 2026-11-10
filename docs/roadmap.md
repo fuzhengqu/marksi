@@ -25,14 +25,14 @@ The public security and version policies are enforced by
   confirmation, Flatpak packaging, inline local images in the editable live
   preview, interactive task list checkboxes, live-preview heading hierarchy
   with corrected scaling, live-preview block quotes and horizontal rules,
-  live-preview code block cards with language badges, and live-preview table
-  rendering.
+  live-preview code block cards with language badges, live-preview table
+  rendering, and the live-preview front matter card.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **120 done, 3 wip,
-3 todo, 2 deferred** across 128 items.
+is the source for exact status values. Current raw count: **121 done, 3 wip,
+3 todo, 2 deferred** across 129 items.
 
 ## Milestone definitions
 
@@ -151,8 +151,8 @@ accessibility pass, document-level RTL support, the large-document reading
 confirmation, Flatpak packaging, inline local images in the live preview,
 interactive task list checkboxes, live-preview heading hierarchy with
 corrected scaling, live-preview block quotes and horizontal rules,
-live-preview code block cards with language badges, and live-preview table
-rendering are complete.
+live-preview code block cards with language badges, live-preview table
+rendering, and the live-preview front matter card are complete.
 
 ## Delivery rules
 
