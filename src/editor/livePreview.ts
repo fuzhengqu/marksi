@@ -12,7 +12,11 @@ import {
   type DecorationSet,
   type ViewUpdate,
 } from "@codemirror/view";
-import { blockquoteDepth, quoteClassForDepth } from "../lib/blocks";
+import {
+  blockquoteDepth,
+  fenceLanguageLabel,
+  quoteClassForDepth,
+} from "../lib/blocks";
 import {
   classifyImageSource,
   directoryName,
@@ -348,6 +352,48 @@ class LiveRuleWidget extends WidgetType {
   }
 }
 
+class LiveCodeBadgeWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly label: string,
+  ) {
+    super();
+  }
+
+  eq(other: LiveCodeBadgeWidget): boolean {
+    return this.from === other.from && this.label === other.label;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const badge = document.createElement("span");
+    badge.className = "cm-live-code-badge";
+    badge.textContent = this.label;
+    badge.tabIndex = 0;
+    badge.contentEditable = "false";
+    badge.spellcheck = false;
+
+    const reveal = (event: Event) => {
+      event.preventDefault();
+      view.dispatch({
+        selection: { anchor: this.from },
+        scrollIntoView: true,
+      });
+      view.focus();
+    };
+    badge.addEventListener("mousedown", reveal);
+    badge.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        reveal(event);
+      }
+    });
+    return badge;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 function collectImages(view: EditorView): ImageOccurrence[] {
   const source = view.state.doc.toString();
   return source.includes("![") ? findImageOccurrences(source) : [];
@@ -467,6 +513,30 @@ function buildDecorations(
                 to: node.to,
                 decoration: hidden,
               });
+              break;
+            }
+            if (node.node.parent?.name === "FencedCode") {
+              const fence = node.node.parent;
+              if (node.from !== fence.from) {
+                ranges.push({
+                  from: node.from,
+                  to: node.to,
+                  decoration: hidden,
+                });
+                break;
+              }
+              const info = fence.getChild("CodeInfo");
+              const end = info ? info.to : node.to;
+              const label = fenceLanguageLabel(
+                info ? view.state.doc.sliceString(info.from, info.to) : "",
+              );
+              ranges.push({
+                from: node.from,
+                to: end,
+                decoration: Decoration.replace({
+                  widget: new LiveCodeBadgeWidget(node.from, label),
+                }),
+              });
             }
             break;
           case "TaskMarker": {
@@ -549,22 +619,38 @@ function buildHeadingDecorations(view: EditorView): DecorationSet {
 
 function buildBlockDecorations(view: EditorView): DecorationSet {
   const quoteDepths = new Map<number, number>();
+  const codeClasses = new Map<number, Set<string>>();
   const visible = view.visibleRanges;
   const isVisible = (from: number, to: number) =>
     visible.some((range) => from <= range.to && to >= range.from);
 
   syntaxTree(view.state).iterate({
     enter(node) {
-      if (node.name !== "Blockquote") {
+      if (node.name === "Blockquote") {
+        const ancestors: string[] = [];
+        let parent = node.node.parent;
+        while (parent) {
+          ancestors.push(parent.name);
+          parent = parent.parent;
+        }
+        const depth = blockquoteDepth(ancestors);
+        const start = view.state.doc.lineAt(node.from);
+        const end = view.state.doc.lineAt(Math.max(node.from, node.to - 1));
+        for (let number = start.number; number <= end.number; number += 1) {
+          const line = view.state.doc.line(number);
+          if (!isVisible(line.from, line.to)) {
+            continue;
+          }
+          if (depth > (quoteDepths.get(line.from) ?? 0)) {
+            quoteDepths.set(line.from, depth);
+          }
+        }
         return;
       }
-      const ancestors: string[] = [];
-      let parent = node.node.parent;
-      while (parent) {
-        ancestors.push(parent.name);
-        parent = parent.parent;
+
+      if (node.name !== "FencedCode" && node.name !== "CodeBlock") {
+        return;
       }
-      const depth = blockquoteDepth(ancestors);
       const start = view.state.doc.lineAt(node.from);
       const end = view.state.doc.lineAt(Math.max(node.from, node.to - 1));
       for (let number = start.number; number <= end.number; number += 1) {
@@ -572,17 +658,38 @@ function buildBlockDecorations(view: EditorView): DecorationSet {
         if (!isVisible(line.from, line.to)) {
           continue;
         }
-        if (depth > (quoteDepths.get(line.from) ?? 0)) {
-          quoteDepths.set(line.from, depth);
+        const classes = codeClasses.get(line.from) ?? new Set<string>();
+        classes.add("cm-live-code");
+        if (number === start.number) {
+          classes.add("cm-live-code-first");
         }
+        if (number === end.number) {
+          classes.add("cm-live-code-last");
+        }
+        codeClasses.set(line.from, classes);
       }
     },
   });
 
-  const ranges: Range<Decoration>[] = [];
+  const lineClasses = new Map<number, Set<string>>();
+  const addLineClass = (from: number, className: string) => {
+    const classes = lineClasses.get(from) ?? new Set<string>();
+    classes.add(className);
+    lineClasses.set(from, classes);
+  };
   for (const [from, depth] of quoteDepths) {
+    addLineClass(from, quoteClassForDepth(depth));
+  }
+  for (const [from, classes] of codeClasses) {
+    for (const className of classes) {
+      addLineClass(from, className);
+    }
+  }
+
+  const ranges: Range<Decoration>[] = [];
+  for (const [from, classes] of lineClasses) {
     ranges.push(
-      Decoration.line({ class: quoteClassForDepth(depth) }).range(from),
+      Decoration.line({ class: [...classes].join(" ") }).range(from),
     );
   }
   ranges.sort((left, right) => left.from - right.from);
@@ -675,6 +782,7 @@ function createLivePreviewPlugin(options: LivePreviewOptions) {
  * a live preview while remaining fully editable. The active line keeps its
  * syntax visible for precise editing. Headings gain their reading-view
  * hierarchy, block quotes gain a quote rule, horizontal rules become dividers,
+ * fenced and indented code blocks gain a card surface and language badge,
  * local images render inline, and remote images stay inert until the user
  * enables remote loading in Preferences.
  */

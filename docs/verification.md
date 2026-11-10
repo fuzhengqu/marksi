@@ -102,6 +102,11 @@ The E2E suite currently covers:
   indentation; inactive rules render as a divider and reveal their Markdown
   source when activated; quote and rule markers inside a code fence stay
   literal.
+- Live-preview code blocks: inactive fenced code shows a card background,
+  hides both fences, and replaces the opening fence with its language badge;
+  code content stays literal, inline code is unaffected, the active fence
+  reveals its source while keeping the card, and clicking the badge reveals
+  the opening fence.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.

@@ -25,3 +25,16 @@ export function blockquoteDepth(ancestorNames: readonly string[]): number {
   }
   return depth;
 }
+
+export const MAX_FENCE_LABEL_LENGTH = 24;
+
+/**
+ * Turns a fenced-code info string into a short language label. The first token
+ * is used so attributes and titles do not leak into the badge; attribute-only
+ * info strings such as `{.ts}` still yield `ts`.
+ */
+export function fenceLanguageLabel(info: string): string {
+  const token = info.trim().split(/\s+/)[0] ?? "";
+  const label = token.replace(/^\{\.?/, "").replace(/\}$/, "");
+  return (label || "code").slice(0, MAX_FENCE_LABEL_LENGTH);
+}

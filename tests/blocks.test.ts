@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  MAX_FENCE_LABEL_LENGTH,
   MAX_QUOTE_DEPTH,
   blockquoteDepth,
+  fenceLanguageLabel,
   quoteClassForDepth,
 } from "../src/lib/blocks";
 
@@ -29,5 +31,19 @@ describe("live preview block helpers", () => {
     expect(
       blockquoteDepth(["Document", "Blockquote", "ListItem", "Blockquote"]),
     ).toBe(3);
+  });
+
+  it("extracts a short language label from fence info", () => {
+    expect(fenceLanguageLabel("ts")).toBe("ts");
+    expect(fenceLanguageLabel("  python  ")).toBe("python");
+    expect(fenceLanguageLabel("ts title=\"example\"")).toBe("ts");
+    expect(fenceLanguageLabel("{.ts}")).toBe("ts");
+    expect(fenceLanguageLabel("")).toBe("code");
+    expect(fenceLanguageLabel("   ")).toBe("code");
+  });
+
+  it("caps long fence language labels", () => {
+    const label = fenceLanguageLabel("x".repeat(MAX_FENCE_LABEL_LENGTH + 8));
+    expect(label).toHaveLength(MAX_FENCE_LABEL_LENGTH);
   });
 });

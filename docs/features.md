@@ -226,6 +226,7 @@ translations are not shipped.
 | Editable source-based live preview | done | M5 |
 | Heading hierarchy in live preview | done | M7 |
 | Block quotes and horizontal rules in live preview | done | M7 |
+| Code block cards and language badges in live preview | done | M7 |
 | Task list checkboxes in live preview | done | M7 |
 | Reading view (rendered, read-only) | done | M5 |
 | Source mode toggle | done | M2 |
@@ -343,6 +344,12 @@ view's accent rule, subtle background, and muted text; nested quotes indent
 further. Horizontal rules render as a centered divider and reveal their
 `---`/`***`/`___` source when the line is activated. Quote-like text and rule
 markers inside code fences stay literal.
+
+Fenced and indented code blocks on inactive lines gain a card surface; fenced
+blocks also replace the opening fence with a language badge and hide the
+closing fence. Clicking the badge or activating the fence line reveals the
+canonical source. Code text keeps its editor syntax colors and is never
+rewritten.
 
 ## Export and import
 

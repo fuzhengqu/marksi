@@ -1492,6 +1492,53 @@
   outline-offset: 4px;
 }
 
+/* Fenced and indented code blocks in the editable live preview. The line
+   classes add a card surface; syntax colors stay owned by the editor theme. */
+.cm-live-preview .cm-line.cm-live-code {
+  border-right: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background: var(--sidebar-bg);
+  padding-right: 0.9em;
+  padding-left: 0.9em;
+}
+
+.cm-live-preview .cm-line.cm-live-code-first {
+  padding-top: 0.35em;
+  border-top: 1px solid var(--border);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.cm-live-preview .cm-line.cm-live-code-last {
+  padding-bottom: 0.45em;
+  border-bottom: 1px solid var(--border);
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.cm-live-code-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.16em 0.58em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68em;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  cursor: text;
+}
+
+.cm-live-code-badge:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Heading hierarchy in the editable live preview. Text size and weight come
    from the Markdown highlight style; these line classes add block chrome. */
 .cm-live-preview .cm-line.cm-live-heading {

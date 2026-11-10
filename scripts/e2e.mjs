@@ -1268,6 +1268,148 @@ async function main() {
     }
   });
 
+  await test("live preview styles fenced code blocks", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-code.md");
+    const source = [
+      "Before.",
+      "",
+      "```ts",
+      "const answer = 42;",
+      "console.log(answer);",
+      "```",
+      "",
+      "Inline `code` stays inline.",
+      "",
+      "After.",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(10)");
+      await waitFor(
+        'document.querySelectorAll(".cm-line.cm-live-code").length === 4',
+        10_000,
+      );
+
+      const state = await evaluate(`(() => {
+        const lines = Array.from(document.querySelectorAll(".cm-line"));
+        const lineWith = (text) => lines.find((node) => node.textContent?.includes(text));
+        const opening = lineWith("ts");
+        const firstCode = lineWith("const answer");
+        const inline = lineWith("Inline");
+        const badge = document.querySelector(".cm-live-code-badge");
+        const style = (node) => node ? getComputedStyle(node) : null;
+        return {
+          codeLines: document.querySelectorAll(".cm-line.cm-live-code").length,
+          badgeText: badge?.textContent ?? null,
+          openingText: opening?.textContent ?? null,
+          firstText: firstCode?.textContent ?? null,
+          fenceLines: lines.filter((node) => node.textContent?.trim().startsWith(String.fromCharCode(96, 96, 96))).length,
+          background: firstCode ? style(firstCode).backgroundColor : null,
+          border: firstCode ? parseFloat(style(firstCode).borderLeftWidth) : 0,
+          firstRadius: opening ? parseFloat(style(opening).borderTopLeftRadius) : 0,
+          inlineCodeClass: inline?.classList.contains("cm-live-code") ?? null,
+          inlineText: inline?.textContent ?? null
+        };
+      })()`);
+      assert(
+        state.codeLines === 4,
+        "inactive fenced code should style all block lines",
+        state,
+      );
+      assert(
+        state.badgeText === "ts",
+        "the opening fence should show its language badge",
+        state,
+      );
+      assert(
+        state.openingText === "ts",
+        "the opening fence should hide its backticks",
+        state,
+      );
+      assert(
+        state.firstText === "const answer = 42;",
+        "code content should stay literal",
+        state,
+      );
+      assert(
+        state.fenceLines === 0,
+        "both fences should hide while inactive",
+        state,
+      );
+      assert(
+        state.background !== "rgba(0, 0, 0, 0)",
+        "code blocks should use a card background",
+        state,
+      );
+      assert(
+        state.border > 0 && state.firstRadius > 0,
+        "code blocks should show a bordered card",
+        state,
+      );
+      assert(
+        state.inlineCodeClass === false,
+        "inline code must not receive block chrome",
+        state,
+      );
+      assert(
+        state.inlineText === "Inline code stays inline.",
+        "inline code markers should still hide",
+        state,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(3)");
+      await waitFor(
+        '!document.querySelector(".cm-live-code-badge") && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.trim() === "```ts")',
+        10_000,
+      );
+      const active = await evaluate(`(() => {
+        const line = Array.from(document.querySelectorAll(".cm-line")).find((node) => node.textContent?.includes(String.fromCharCode(96, 96, 96) + "ts"));
+        return {
+          text: line?.textContent ?? null,
+          code: line?.classList.contains("cm-live-code") ?? null
+        };
+      })()`);
+      assert(
+        active.text === "```ts" && active.code === true,
+        "the active fence should reveal its source and keep the card",
+        active,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(10)");
+      await waitFor('document.querySelector(".cm-live-code-badge")', 10_000);
+      await evaluate(
+        'document.querySelector(".cm-live-code-badge")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        'Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.trim() === "```ts")',
+        10_000,
+      );
+      const revealed = await evaluate(`({
+        badge: Boolean(document.querySelector(".cm-live-code-badge")),
+        fences: Array.from(document.querySelectorAll(".cm-line")).filter((node) => node.textContent?.trim().startsWith(String.fromCharCode(96, 96, 96))).length
+      })`);
+      assert(
+        !revealed.badge && revealed.fences === 1,
+        "clicking the badge should reveal the opening fence",
+        revealed,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

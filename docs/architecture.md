@@ -142,6 +142,14 @@ separator widget; activating the line reveals the canonical source. Neither
 path changes the document text, and neither applies inside fenced code because
 the syntax tree exposes those lines as code text.
 
+Code blocks use the same line-only pass. `FencedCode` and `CodeBlock` nodes add
+card classes to every visible line, with first and last classes supplying the
+rounded edges. The inline pass replaces the opening `CodeMark` and `CodeInfo`
+with a language badge and hides the closing `CodeMark` on inactive lines. The
+badge carries the opening offset, so activating it moves the caret to the
+canonical fence. Code text is never replaced and keeps the editor's syntax
+colors.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set
