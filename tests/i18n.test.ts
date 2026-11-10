@@ -79,6 +79,11 @@ describe("translate", () => {
     ).toBe("Text that has no translation");
   });
 
+  it("localizes live-preview labels", () => {
+    expect(translate("zh-Hans", "Table")).toBe("表格");
+    expect(translate("zh-Hant", "Table")).toBe("表格");
+  });
+
   it("returns the source label for English", () => {
     expect(translate("en", "New document")).toBe("New document");
   });

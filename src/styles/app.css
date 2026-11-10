@@ -1539,6 +1539,55 @@
   outline-offset: 2px;
 }
 
+/* Inactive tables in the editable live preview. The widget renders sanitized
+   reading-view HTML; clicking any part reveals the canonical source. */
+.cm-live-table {
+  margin: 0.4em 0;
+  cursor: text;
+}
+
+.cm-live-table:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.cm-live-table .table-scroll {
+  margin: 0;
+  overflow-x: auto;
+}
+
+.cm-live-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94em;
+}
+
+.cm-live-table th,
+.cm-live-table td {
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.cm-live-table th {
+  background: var(--sidebar-bg);
+  font-weight: 650;
+}
+
+.cm-live-table tr:nth-child(even) td {
+  background: var(--table-stripe);
+}
+
+.cm-live-table .cm-live-table-image {
+  display: inline-block;
+  padding: 0.1em 0.45em;
+  border: 1px dashed var(--border-strong);
+  border-radius: 5px;
+  color: var(--fg-muted);
+  font-size: 0.86em;
+}
+
 /* Heading hierarchy in the editable live preview. Text size and weight come
    from the Markdown highlight style; these line classes add block chrome. */
 .cm-live-preview .cm-line.cm-live-heading {

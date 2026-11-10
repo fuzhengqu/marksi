@@ -150,6 +150,15 @@ badge carries the opening offset, so activating it moves the caret to the
 canonical fence. Code text is never replaced and keeps the editor's syntax
 colors.
 
+Tables need block widgets, which CodeMirror only accepts from a `StateField`,
+not a `ViewPlugin`. A dedicated field walks top-level `Table` nodes and replaces
+each inactive table's full lines with a sanitized reading-view table. The field
+rebuilds on document or selection changes; placing the caret on any table line
+removes the widget and reveals source. The widget renders through the same
+sanitized Markdown pipeline as the reading view, strips image resize handles
+and inert image frames, and never edits the document. A document-length limit
+and a table-count cap keep decoration rebuilds bounded.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set

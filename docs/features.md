@@ -227,6 +227,7 @@ translations are not shipped.
 | Heading hierarchy in live preview | done | M7 |
 | Block quotes and horizontal rules in live preview | done | M7 |
 | Code block cards and language badges in live preview | done | M7 |
+| Tables in live preview | done | M7 |
 | Task list checkboxes in live preview | done | M7 |
 | Reading view (rendered, read-only) | done | M5 |
 | Source mode toggle | done | M2 |
@@ -350,6 +351,13 @@ blocks also replace the opening fence with a language badge and hide the
 closing fence. Clicking the badge or activating the fence line reveals the
 canonical source. Code text keeps its editor syntax colors and is never
 rewritten.
+
+Top-level GFM tables on inactive lines render as read-only tables with header
+styling, column alignment, striping, and inline cell formatting. Clicking the
+table or placing the caret on any of its lines reveals the Markdown source.
+Tables inside code fences, block quotes, and list items keep their source
+layout. Remote images inside rendered tables stay inert, and very large
+documents fall back to table source to protect typing performance.
 
 ## Export and import
 

@@ -107,6 +107,12 @@ The E2E suite currently covers:
   code content stays literal, inline code is unaffected, the active fence
   reveals its source while keeping the card, and clicking the badge reveals
   the opening fence.
+- Live-preview tables: an inactive top-level table renders one read-only table
+  widget with headers, both body rows, inline emphasis, center/right column
+  alignment, cell borders, and a striped fill; the Markdown pipes stay hidden,
+  a fenced table stays literal inside its code card, clicking the widget
+  reveals the source, moving away restores the widget, and the document text is
+  unchanged.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.

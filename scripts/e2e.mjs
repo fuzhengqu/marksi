@@ -1410,6 +1410,143 @@ async function main() {
     }
   });
 
+  await test("live preview renders tables and reveals source", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-table.md");
+    const source = [
+      "Before.",
+      "",
+      "| Name | Qty | Price |",
+      "| :--- | :---: | ---: |",
+      "| Apple | 2 | $1.50 |",
+      "| **Pear** | 3 | $2.00 |",
+      "",
+      "```md",
+      "| Raw | Table |",
+      "| --- | --- |",
+      "| 1 | 2 |",
+      "```",
+      "",
+      "After.",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(14)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-table table").length === 1',
+        10_000,
+      );
+
+      const state = await evaluate(`(() => {
+        const widget = document.querySelector(".cm-live-table");
+        const table = widget?.querySelector("table");
+        const headers = Array.from(table?.querySelectorAll("th") ?? []);
+        const rows = Array.from(table?.querySelectorAll("tbody tr") ?? []);
+        const cells = Array.from(rows[1]?.querySelectorAll("td") ?? []);
+        const lines = Array.from(document.querySelectorAll(".cm-line"));
+        const rawLine = lines.find((node) => node.textContent?.includes("| Raw | Table |"));
+        return {
+          widgets: document.querySelectorAll(".cm-live-table").length,
+          headers: headers.map((node) => node.textContent),
+          rows: rows.length,
+          strong: table?.querySelector("strong")?.textContent ?? null,
+          center: cells[1] ? getComputedStyle(cells[1]).textAlign : null,
+          right: cells[2] ? getComputedStyle(cells[2]).textAlign : null,
+          sourceVisible: lines.some((node) => node.textContent?.includes("| Name | Qty | Price |")),
+          rawVisible: rawLine?.textContent ?? null,
+          rawIsCode: rawLine?.classList.contains("cm-live-code") ?? null,
+          background: cells[0] ? getComputedStyle(cells[0]).backgroundColor : null,
+          border: cells[0] ? parseFloat(getComputedStyle(cells[0]).borderTopWidth) : 0
+        };
+      })()`);
+      assert(
+        state.widgets === 1,
+        "the inactive table should render one widget",
+        state,
+      );
+      assert(
+        state.headers.join("|") === "Name|Qty|Price",
+        "the header row should render",
+        state,
+      );
+      assert(state.rows === 2, "both body rows should render", state);
+      assert(
+        state.strong === "Pear",
+        "inline emphasis should render inside cells",
+        state,
+      );
+      assert(
+        state.center === "center" && state.right === "right",
+        "column alignment should survive",
+        state,
+      );
+      assert(
+        state.sourceVisible === false,
+        "rendered table source should be hidden",
+        state,
+      );
+      assert(
+        state.rawVisible?.includes("| Raw | Table |") === true,
+        "a fenced table should stay literal",
+        state,
+      );
+      assert(
+        state.rawIsCode === true,
+        "the fenced table should keep its code card",
+        state,
+      );
+      assert(
+        state.border > 0 && state.background !== "rgba(0, 0, 0, 0)",
+        "cells should have a visible border and fill",
+        state,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-table")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        '!document.querySelector(".cm-live-table") && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("| Name | Qty | Price |"))',
+        10_000,
+      );
+      const revealed = await evaluate(`({
+        widgets: document.querySelectorAll(".cm-live-table").length,
+        source: Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("| Name | Qty | Price |"))
+      })`);
+      assert(
+        revealed.widgets === 0 && revealed.source === true,
+        "clicking the table should reveal its source",
+        revealed,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(14)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-table table").length === 1',
+        10_000,
+      );
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "table preview must not rewrite the document",
+        content,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

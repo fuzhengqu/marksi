@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.48**
-- Technical version: **0.48.0**
+- Product version: **0.49**
+- Technical version: **0.49.0**
 - Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
@@ -24,14 +24,15 @@ The public security and version policies are enforced by
   accessibility pass, document-level RTL support, a large-document reading
   confirmation, Flatpak packaging, inline local images in the editable live
   preview, interactive task list checkboxes, live-preview heading hierarchy
-  with corrected scaling, live-preview block quotes and horizontal rules, and
-  live-preview code block cards with language badges.
+  with corrected scaling, live-preview block quotes and horizontal rules,
+  live-preview code block cards with language badges, and live-preview table
+  rendering.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **119 done, 3 wip,
-3 todo, 2 deferred** across 127 items.
+is the source for exact status values. Current raw count: **120 done, 3 wip,
+3 todo, 2 deferred** across 128 items.
 
 ## Milestone definitions
 
@@ -149,8 +150,9 @@ Status: in progress. IME/CJK composition coverage, the keyboard/focus
 accessibility pass, document-level RTL support, the large-document reading
 confirmation, Flatpak packaging, inline local images in the live preview,
 interactive task list checkboxes, live-preview heading hierarchy with
-corrected scaling, live-preview block quotes and horizontal rules, and
-live-preview code block cards with language badges are complete.
+corrected scaling, live-preview block quotes and horizontal rules,
+live-preview code block cards with language badges, and live-preview table
+rendering are complete.
 
 ## Delivery rules
 

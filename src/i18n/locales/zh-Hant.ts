@@ -13,6 +13,7 @@ export const zhHant: Record<string, string> = {
   "Maximize": "最大化",
   "Close": "關閉",
   "Toggle task": "切換任務",
+  "Table": "表格",
   "Files": "檔案",
   "Outline": "大綱",
   "Search": "搜尋",

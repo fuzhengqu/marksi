@@ -221,7 +221,11 @@ ease-out; honor `prefers-reduced-motion`.
   subtle background, and nested indentation. Horizontal rules render as a
   centered divider until the line is activated. Fenced code blocks on inactive
   lines show a card surface and language badge while hiding their fences;
-  clicking the badge reveals the source. GFM task markers on inactive
+  clicking the badge reveals the source. Top-level tables on inactive lines
+  render as read-only tables with header styling, alignment, striping, and
+  inline cell formatting; clicking a table or placing the caret on one of its
+  lines reveals its Markdown source. Tables inside code fences, quotes, or list
+  items stay literal. GFM task markers on inactive
   lines render as checkboxes; clicking one or pressing Space/Enter rewrites
   `[ ]` or `[x]` in place. Remote images stay inert placeholders until remote
   loading is enabled, and images, task markers, quote markers, rules, code

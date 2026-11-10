@@ -120,6 +120,7 @@ export function EditorPane({
     imageRootUrl,
     loadRemoteImages,
     taskToggleLabel: translate(language, "Toggle task"),
+    tableLabel: translate(language, "Table"),
   });
   const languageRef = useRef(language);
   const [editableCompartment] = useState(() => new Compartment());
@@ -171,6 +172,7 @@ export function EditorPane({
       imageRootUrl,
       loadRemoteImages,
       taskToggleLabel: translate(language, "Toggle task"),
+      tableLabel: translate(language, "Table"),
     };
     languageRef.current = language;
   }, [
@@ -335,6 +337,7 @@ export function EditorPane({
               imageRootUrl,
               loadRemoteImages,
               taskToggleLabel: translate(language, "Toggle task"),
+              tableLabel: translate(language, "Table"),
             })
           : [],
       ),

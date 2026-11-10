@@ -12,6 +12,7 @@ export const zhHans: Record<string, string> = {
   "Maximize": "最大化",
   "Close": "关闭",
   "Toggle task": "切换任务",
+  "Table": "表格",
   "Files": "文件",
   "Outline": "大纲",
   "Search": "搜索",

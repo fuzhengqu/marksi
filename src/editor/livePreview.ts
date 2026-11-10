@@ -1,6 +1,8 @@
 import { syntaxTree } from "@codemirror/language";
 import {
   RangeSetBuilder,
+  StateField,
+  type EditorState,
   type Extension,
   type Range,
 } from "@codemirror/state";
@@ -23,6 +25,8 @@ import {
   resolveImageRootPath,
 } from "../lib/images";
 import { loadImageSource } from "../lib/imageLoader";
+import { renderMarkdown } from "../lib/markdown";
+import { tableIsActive, tablePreviewLimit } from "../lib/tables";
 import {
   findImageOccurrences,
   imageFitFromAttributes,
@@ -44,6 +48,7 @@ export interface LivePreviewOptions {
   imageRootUrl: string;
   loadRemoteImages: boolean;
   taskToggleLabel: string;
+  tableLabel: string;
 }
 
 const EMPTY_OPTIONS: LivePreviewOptions = {
@@ -53,6 +58,7 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   imageRootUrl: "",
   loadRemoteImages: false,
   taskToggleLabel: "Toggle task",
+  tableLabel: "Table",
 };
 
 const hidden = Decoration.replace({});
@@ -394,6 +400,73 @@ class LiveCodeBadgeWidget extends WidgetType {
   }
 }
 
+class LiveTableWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly to: number,
+    readonly source: string,
+    readonly label: string,
+  ) {
+    super();
+  }
+
+  eq(other: LiveTableWidget): boolean {
+    return (
+      this.from === other.from &&
+      this.to === other.to &&
+      this.source === other.source &&
+      this.label === other.label
+    );
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const table = document.createElement("div");
+    table.className = "cm-live-table";
+    table.contentEditable = "false";
+    table.spellcheck = false;
+    table.tabIndex = 0;
+    table.setAttribute("role", "group");
+    table.setAttribute("aria-label", this.label);
+    table.innerHTML = renderMarkdown(this.source, {
+      imageMode: "preview",
+      imageResizable: false,
+    });
+
+    for (const frame of Array.from(
+      table.querySelectorAll(".markdown-image-frame"),
+    )) {
+      const alt = frame.querySelector("img")?.getAttribute("alt")?.trim();
+      const placeholder = document.createElement("span");
+      placeholder.className = "cm-live-table-image";
+      placeholder.textContent = alt || "Image";
+      frame.replaceWith(placeholder);
+    }
+
+    const reveal = (event: Event) => {
+      event.preventDefault();
+      view.dispatch({
+        selection: { anchor: this.from },
+        scrollIntoView: true,
+      });
+      view.focus();
+    };
+    table.addEventListener("mousedown", reveal);
+    table.addEventListener("click", (event) => {
+      event.preventDefault();
+    });
+    table.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        reveal(event);
+      }
+    });
+    return table;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 function collectImages(view: EditorView): ImageOccurrence[] {
   const source = view.state.doc.toString();
   return source.includes("![") ? findImageOccurrences(source) : [];
@@ -696,6 +769,82 @@ function buildBlockDecorations(view: EditorView): DecorationSet {
   return Decoration.set(ranges);
 }
 
+function buildTableDecorations(
+  state: EditorState,
+  tree: ReturnType<typeof syntaxTree>,
+  options: LivePreviewOptions,
+): DecorationSet {
+  const limit = tablePreviewLimit(state.doc.length);
+  if (limit === 0) {
+    return Decoration.none;
+  }
+
+  const ranges: Range<Decoration>[] = [];
+  let count = 0;
+  tree.iterate({
+    enter(node) {
+      if (node.name !== "Table" || node.node.parent?.name !== "Document") {
+        return;
+      }
+      if (count >= limit) {
+        return false;
+      }
+      const start = state.doc.lineAt(node.from);
+      const end = state.doc.lineAt(Math.max(node.from, node.to - 1));
+      if (tableIsActive(state.selection.ranges, start.from, end.to)) {
+        return false;
+      }
+      ranges.push(
+        Decoration.replace({
+          block: true,
+          widget: new LiveTableWidget(
+            start.from,
+            end.to,
+            state.doc.sliceString(start.from, end.to),
+            options.tableLabel,
+          ),
+        }).range(start.from, end.to),
+      );
+      count += 1;
+      return false;
+    },
+  });
+  return Decoration.set(ranges, true);
+}
+
+interface TablePreviewState {
+  decorations: DecorationSet;
+  tree: ReturnType<typeof syntaxTree>;
+}
+
+function createTablePreviewField(options: LivePreviewOptions) {
+  return StateField.define<TablePreviewState>({
+    create: (state) => {
+      const tree = syntaxTree(state);
+      return {
+        decorations: buildTableDecorations(state, tree, options),
+        tree,
+      };
+    },
+    update: (value, transaction) => {
+      const tree = syntaxTree(transaction.state);
+      if (
+        !transaction.docChanged &&
+        !transaction.selection &&
+        tree === value.tree
+      ) {
+        return value;
+      }
+      return {
+        decorations: buildTableDecorations(transaction.state, tree, options),
+        tree,
+      };
+    },
+    provide: (field) =>
+      EditorView.decorations.from(field, (value) => value.decorations),
+  });
+}
+
 function createBlockPreviewPlugin() {
   return ViewPlugin.fromClass(
     class {
@@ -783,6 +932,7 @@ function createLivePreviewPlugin(options: LivePreviewOptions) {
  * syntax visible for precise editing. Headings gain their reading-view
  * hierarchy, block quotes gain a quote rule, horizontal rules become dividers,
  * fenced and indented code blocks gain a card surface and language badge,
+ * inactive tables render as read-only tables with click-to-edit source,
  * local images render inline, and remote images stay inert until the user
  * enables remote loading in Preferences.
  */
@@ -791,6 +941,7 @@ export function livePreview(
 ): Extension {
   return [
     EditorView.editorAttributes.of({ class: "cm-live-preview" }),
+    createTablePreviewField(options),
     createBlockPreviewPlugin(),
     createHeadingPreviewPlugin(),
     createLivePreviewPlugin(options),
