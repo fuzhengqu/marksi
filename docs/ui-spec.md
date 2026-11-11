@@ -58,10 +58,17 @@ Typography:
   UI, Noto Sans CJK SC/TC, PingFang SC/TC, system-ui, sans-serif.
 - Editor: same family, 16px by default, line-height 1.7. The preference range
   is 14–22px.
-- Interface language: Simplified Chinese (`zh-Hans`) by default; Traditional
-  Chinese (`zh-Hant`) and English are available. The preference applies
-  immediately to menus, dialogs, sidebar, status bar, editor search, dates, and
-  numbers. Legacy `zh-CN` and `zh-TW` values map to the script codes.
+- Interface language: Simplified Chinese (`zh-Hans`), Traditional Chinese
+  (`zh-Hant`), and English are available. A fresh install follows the first
+  supported system locale and falls back to Simplified Chinese; after that the
+  saved preference wins. The preference applies immediately to menus, dialogs,
+  sidebar, status bar, editor search, dates, and numbers. Legacy `zh-CN` and
+  `zh-TW` values map to the script codes.
+- Windows packages: the NSIS `setup.exe` is the recommended single installer.
+  It contains English, Simplified Chinese, and Traditional Chinese installer
+  translations and selects the operating-system language automatically. The
+  MSI is the enterprise deployment package; its WiX installer UI is `en-US`,
+  which does not limit the application's three-language interface.
 - Writing column: 860px by default. The preference range is 680–1100px.
 - Interface zoom: 100% by default. The preference range is 80%–160% in 10%
   steps and scales the whole application surface.

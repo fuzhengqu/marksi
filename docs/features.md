@@ -467,6 +467,7 @@ save the imported document to choose its final location.
 | Chinese default / English language switch | done | M5 |
 | Version display and one-step bump | done | M5 |
 | i18n framework (en, zh-Hans, zh-Hant first) | done | M6 |
+| First-run language from system locale | done | M6 |
 | RTL and accessibility pass | done | M7 |
 | No telemetry / no account | done | M0 |
 | No activation / no paid gates | done | M0 |
@@ -476,6 +477,7 @@ save the imported document to choose its final location.
 | Feature | Status | Milestone |
 |---|---|---|
 | Windows 11 installer (NSIS/MSI) | done | M6 |
+| Single NSIS installer with system-language selection | done | M6 |
 | Linux deb/rpm/AppImage | done | M6 |
 | Flatpak packaging | done | M7 |
 | Signed releases / checksums | wip | M6 |

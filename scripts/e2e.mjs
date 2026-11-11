@@ -442,6 +442,7 @@ async function openFixture() {
 }
 
 async function main() {
+  await rm(fixtureDir, { recursive: true, force: true });
   await mkdir(fixtureDir, { recursive: true });
   await writeFile(markdownFixture, fixtureMarkdown, "utf8");
   await copyFile(
@@ -2230,6 +2231,69 @@ async function main() {
     await waitFor('!document.querySelector(".settings-dialog")');
   });
 
+  await test("first run follows the system language", async () => {
+    const saved = await evaluate(
+      'localStorage.getItem("marksi-preferences")',
+    );
+    const original = await evaluate(`({
+      userAgent: navigator.userAgent,
+      languages: navigator.languages,
+      platform: navigator.platform
+    })`);
+    try {
+      await send("Emulation.setUserAgentOverride", {
+        userAgent: original.userAgent,
+        acceptLanguage: "en-US,en",
+        platform: original.platform,
+      });
+      await evaluate('localStorage.removeItem("marksi-preferences")');
+      await send("Page.reload", { ignoreCache: false });
+      await waitFor("Boolean(window.__MARKSI_DEV__)", 15_000);
+      await waitFor('document.querySelector(".cm-content")', 10_000);
+      await waitFor(
+        'window.__MARKSI_DEV__.getState().settings.language === "en"',
+        10_000,
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setTheme("light")',
+      );
+      const first = await evaluate(`({
+        language: window.__MARKSI_DEV__.getState().settings.language,
+        htmlLang: document.documentElement.lang,
+        stored: JSON.parse(localStorage.getItem("marksi-preferences") || "{}").state?.settings?.language
+      })`);
+      assert(
+        first.language === "en" && first.htmlLang === "en",
+        "a fresh en-US system should start in English",
+        first,
+      );
+      assert(
+        first.stored === "en",
+        "the detected language should persist",
+        first,
+      );
+    } finally {
+      await send("Emulation.setUserAgentOverride", {
+        userAgent: original.userAgent,
+        acceptLanguage: original.languages.join(","),
+        platform: original.platform,
+      }).catch(() => {});
+      if (saved === null) {
+        await evaluate('localStorage.removeItem("marksi-preferences")');
+      } else {
+        await evaluate(
+          `localStorage.setItem("marksi-preferences", ${JSON.stringify(
+            saved,
+          )})`,
+        );
+      }
+      await send("Page.reload", { ignoreCache: false });
+      await waitFor("Boolean(window.__MARKSI_DEV__)", 15_000);
+      await waitFor('document.querySelector(".cm-content")', 10_000);
+      await resetBase();
+    }
+  });
+
   await test("follows the system color scheme", async () => {
     await resetBase();
     try {
@@ -3804,6 +3868,7 @@ async function main() {
     const deleteFile = resolve(root, "delete-me.md");
 
     try {
+      await rm(root, { recursive: true, force: true });
       await mkdir(resolve(root, "target"), { recursive: true });
       await writeFile(renameFile, "# Rename\n\nBody.\n", "utf8");
       await writeFile(moveFile, "# Move\n", "utf8");
@@ -3816,6 +3881,14 @@ async function main() {
       await waitFor('document.querySelector(".file-tree .file-row")');
 
       async function openRowAction(name, action) {
+        try {
+          await waitFor(
+            `Array.from(document.querySelectorAll(".file-row-wrap")).some((node) => node.querySelector(".file-name")?.textContent === ${JSON.stringify(
+              name,
+            )})`,
+            5_000,
+          );
+        } catch {}
         const opened = await evaluate(`(() => {
           const wrap = Array.from(document.querySelectorAll(".file-row-wrap"))
             .find((node) => node.querySelector(".file-name")?.textContent === ${JSON.stringify(name)});
@@ -3823,7 +3896,12 @@ async function main() {
           wrap.querySelector(".file-row-actions")?.click();
           return true;
         })()`);
-        assert(opened, `row action button missing for ${name}`);
+        if (!opened) {
+          const rows = await evaluate(
+            'Array.from(document.querySelectorAll(".file-row-wrap .file-name")).map((node) => node.textContent)',
+          );
+          assert(false, `row action button missing for ${name}: ${JSON.stringify(rows)}`);
+        }
         await waitFor('document.querySelector(".file-actions-menu")');
         const chosen = await evaluate(`(() => {
           const button = document.querySelector('.file-actions-menu [data-action="${action}"]');
@@ -3918,6 +3996,12 @@ async function main() {
       );
 
       const pinOpened = await evaluate(`(() => {
+        const state = window.__MARKSI_DEV__.getState();
+        for (const item of state.pinned) {
+          if (item.path.toLowerCase().endsWith("renamed.md")) {
+            state.removePinned(item.path);
+          }
+        }
         const wrap = Array.from(document.querySelectorAll(".file-row-wrap"))
           .find((node) => node.querySelector(".file-name")?.textContent === "renamed.md");
         wrap?.querySelector(".file-row-actions")?.click();

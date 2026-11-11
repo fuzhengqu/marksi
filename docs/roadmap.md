@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.53**
-- Technical version: **0.53.0**
+- Product version: **0.54**
+- Technical version: **0.54.0**
 - Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
@@ -20,7 +20,9 @@ The public security and version policies are enforced by
   associations, window flags, multiple document windows, window and session
   memory, the native title bar, advanced JSON settings, release checksums,
   Linux packages, the Windows/Linux build-test matrix, and the three-language
-  i18n framework. M7 has started with IME/CJK input coverage, a keyboard/focus
+  i18n framework. First-run interface language now follows the system locale,
+  and the NSIS setup is a single installer with English, Simplified Chinese,
+  and Traditional Chinese translations. M7 has started with IME/CJK input coverage, a keyboard/focus
   accessibility pass, document-level RTL support, a large-document reading
   confirmation, Flatpak packaging, inline local images in the editable live
   preview, interactive task list checkboxes, live-preview heading hierarchy
@@ -32,8 +34,8 @@ The public security and version policies are enforced by
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **124 done, 3 wip,
-3 todo, 2 deferred** across 132 items.
+is the source for exact status values. Current raw count: **126 done, 3 wip,
+3 todo, 2 deferred** across 134 items.
 
 ## Milestone definitions
 

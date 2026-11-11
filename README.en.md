@@ -46,8 +46,9 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   (Pandoc is not bundled); copy as Markdown, HTML, or plain text.
 - **Reliability**: optional autosave for named documents, unsaved-work recovery,
   and external-change notices.
-- **Interface**: Simplified Chinese, Traditional Chinese, and English;
-  system-following or fixed light/dark/
+- **Interface**: Simplified Chinese, Traditional Chinese, and English; the
+  first launch follows the system language and later launches remember the
+  choice; system-following or fixed light/dark/
   sepia/high-contrast appearance, local CSS themes, customizable application
   shortcuts, advanced JSON settings, multiple document windows, fullscreen and
   always-on-top, keyboard-accessible dialogs and sidebar, an optional native
@@ -79,7 +80,11 @@ npm run tauri:build
 ```
 
 On Windows this writes MSI and NSIS installers under
-`src-tauri/target/release/bundle/`. The artifacts are currently unsigned, so
+`src-tauri/target/release/bundle/`. The NSIS `setup.exe` is the recommended
+single download: one file contains English, Simplified Chinese, and Traditional
+Chinese installer translations and follows the operating-system language. The
+MSI targets enterprise deployment; its installer UI is `en-US`, but it installs
+the same three-language application. The artifacts are currently unsigned, so
 Windows may show a SmartScreen warning. After installation, open Markdown files
 through the registered file association or run
 `marksi path\to\note.md` from a terminal. Run `npm run release:checksums` to

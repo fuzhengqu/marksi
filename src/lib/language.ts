@@ -24,6 +24,39 @@ export function isLanguage(value: unknown): value is Language {
 }
 
 /**
+ * Picks the first supported interface language from a browser-style locale
+ * list. Unsupported locales fall back to Simplified Chinese, matching the
+ * product's Chinese-first default.
+ */
+export function detectLanguage(
+  locales: readonly string[] | string | null | undefined,
+): Language {
+  const candidates =
+    typeof locales === "string" ? [locales] : (locales ?? []);
+  for (const locale of candidates) {
+    const language = normalizeLanguage(locale);
+    if (language) {
+      return language;
+    }
+  }
+  return "zh-Hans";
+}
+
+/**
+ * Reads the system/browser locale list. The guard keeps the helper usable in
+ * unit tests and other non-browser contexts.
+ */
+export function systemLanguage(): Language {
+  if (typeof navigator === "undefined") {
+    return "zh-Hans";
+  }
+  const locales = navigator.languages?.length
+    ? navigator.languages
+    : navigator.language;
+  return detectLanguage(locales);
+}
+
+/**
  * Maps persisted and legacy language tags to a supported language. Older
  * MarkSI releases stored `zh-CN`; exported settings may contain either the
  * legacy tags or full BCP-47 tags such as `zh-Hant-TW`.

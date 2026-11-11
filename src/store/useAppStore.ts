@@ -19,7 +19,11 @@ import {
   normalizeTheme,
   systemPrefersDark,
 } from "../lib/theme";
-import { normalizeLanguage, untitledName } from "../lib/language";
+import {
+  normalizeLanguage,
+  systemLanguage,
+  untitledName,
+} from "../lib/language";
 import type {
   AppSettings,
   CursorPosition,
@@ -473,7 +477,7 @@ export const useAppStore = create<AppStore>()(
             ...(saved.settings ?? {}),
             language:
               normalizeLanguage(saved.settings?.language) ??
-              DEFAULT_SETTINGS.language,
+              systemLanguage(),
             exportOptions: normalizeExportOptions(
               saved.settings?.exportOptions,
             ),

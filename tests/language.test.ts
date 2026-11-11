@@ -3,6 +3,7 @@ import {
   INTL_LOCALES,
   LANGUAGE_LABELS,
   LANGUAGES,
+  detectLanguage,
   documentLanguage,
   intlLocale,
   isLanguage,
@@ -51,5 +52,23 @@ describe("normalizeLanguage", () => {
   it("keeps legacy settings working", () => {
     expect(normalizeLanguage("zh-CN")).toBe("zh-Hans");
     expect(normalizeLanguage("zh-TW")).toBe("zh-Hant");
+  });
+});
+
+describe("detectLanguage", () => {
+  it("maps the first supported system locale", () => {
+    expect(detectLanguage(["en-US"])).toBe("en");
+    expect(detectLanguage(["zh-CN"])).toBe("zh-Hans");
+    expect(detectLanguage(["zh-TW"])).toBe("zh-Hant");
+    expect(detectLanguage(["zh-HK"])).toBe("zh-Hant");
+    expect(detectLanguage(["fr-FR", "en-GB"])).toBe("en");
+    expect(detectLanguage("en-GB")).toBe("en");
+  });
+
+  it("falls back to Simplified Chinese for unsupported or empty input", () => {
+    expect(detectLanguage(["fr-FR"])).toBe("zh-Hans");
+    expect(detectLanguage([])).toBe("zh-Hans");
+    expect(detectLanguage(null)).toBe("zh-Hans");
+    expect(detectLanguage(undefined)).toBe("zh-Hans");
   });
 });

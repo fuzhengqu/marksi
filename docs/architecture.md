@@ -366,13 +366,23 @@ phrases. `src/i18n/dictionary.ts` performs pure lookups with a
 `zh-Hant → zh-Hans → English source` fallback chain, and `src/i18n/index.ts`
 adds the `useT()` hook and `tNow()` for event handlers.
 
-The persisted `AppSettings.language` defaults to `zh-Hans`. Saved settings that
-still contain `zh-CN` or `zh-TW` are normalized during store hydration and when
+The persisted `AppSettings.language` wins on every later launch. When no saved
+language exists, `systemLanguage()` picks the first supported locale from
+`navigator.languages`, so a fresh install follows the operating system language;
+unsupported locales fall back to Simplified Chinese. Saved settings that still
+contain `zh-CN` or `zh-TW` are normalized during store hydration and when
 applying settings JSON, so upgrades do not reset the interface language. The
 Settings dialog lists all three languages; switching applies immediately
 without a restart. Dates use `zh-CN`, `zh-TW`, or `en` from `Intl`, numbers use
 the same locale, and both the document `lang` attribute and exported HTML use
 the script code (`zh-Hans` or `zh-Hant`).
+
+Installer language is separate from application language. The Windows NSIS
+setup is one executable containing English, Simplified Chinese, and Traditional
+Chinese installer translations; it follows the operating system language with
+an English fallback. The WiX MSI remains a single `en-US` installer for
+enterprise deployment, but it installs the same three-language application and
+does not change the interface language selected by the app.
 
 New untitled documents are named `未命名.md` in either Chinese script and
 `Untitled.md` in English; the exported HTML title fallback is localized too.

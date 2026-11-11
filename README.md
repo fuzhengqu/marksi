@@ -35,7 +35,8 @@ MarkSI 是一个免费、开源的 Markdown 编辑器，使用 Rust 与 Tauri �
   可选 Pandoc 导出 DOCX、ODT、EPUB、LaTeX 或 RTF，以及导入 DOCX、ODT、EPUB、
   RTF 或 HTML（不打包 Pandoc）；复制为 Markdown、HTML 或纯文本。
 - **可靠性**：已命名文档可选自动保存、未保存内容恢复、外部修改提示。
-- **界面**：简体中文、繁體中文与英文界面、跟随系统或固定浅色/深色/柔和棕褐/高对比度外观、
+- **界面**：简体中文、繁體中文与英文界面；首次启动跟随系统语言，之后记住选择；
+  跟随系统或固定浅色/深色/柔和棕褐/高对比度外观、
   可加载本地 CSS 主题、可自定义应用快捷键、高级 JSON 设置、多窗口编辑、
   全屏与窗口置顶、键盘可访问的对话框与侧栏、可选原生标题栏、界面缩放。
 - **隐私**：无账户、无遥测；文档保留在本机；原始 HTML 不会作为活动内容执行；
@@ -64,10 +65,12 @@ npm run tauri:build
 ```
 
 Windows 构建会在 `src-tauri/target/release/bundle/` 下生成 MSI 和 NSIS
-安装程序。它们目前未做代码签名，Windows 可能显示 SmartScreen 提示。
-安装后可通过文件关联双击 Markdown 文件，或在命令行运行
-`marksi path\to\note.md` 打开文件。运行 `npm run release:checksums` 可在
-bundle 目录旁生成 `SHA256SUMS.txt`。
+安装程序。推荐分发 NSIS `setup.exe`：单个文件内置简体中文、繁体中文和英文
+安装界面，并按系统语言自动选择。MSI 面向企业部署，安装界面为 `en-US`，但
+安装的是同一套包含三种界面语言的应用。安装器目前未做代码签名，Windows 可能
+显示 SmartScreen 提示。安装后可通过文件关联双击 Markdown 文件，或在命令行
+运行 `marksi path\to\note.md` 打开文件。运行
+`npm run release:checksums` 可在 bundle 目录旁生成 `SHA256SUMS.txt`。
 
 Linux 构建同一目录下生成 deb、rpm 和 AppImage。Flatpak 元数据位于
 `flatpak/`：先运行 `npm run flatpak:stage`，再用 `flatpak-builder` 构建；

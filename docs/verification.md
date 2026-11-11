@@ -41,10 +41,11 @@ $env:MARKSI_E2E_ORIGIN = "localhost:1420"
 $env:MARKSI_CDP_PORT = "9222"
 ```
 
-The E2E suite creates temporary fixtures under `.tmp/e2e-fixtures`, resets the
-running app between checks, and removes the fixtures at the end. It does not
-modify user documents. The CDP endpoint is resolved through `localhost`, so the
-same harness works when WebView2 binds the debugging port to IPv4 or IPv6 only.
+The E2E suite creates temporary fixtures under `.tmp/e2e-fixtures`, removes and
+recreates that directory at the start, resets the running app between checks,
+and removes the fixtures at the end. It does not modify user documents. The CDP
+endpoint is resolved through `localhost`, so the same harness works when
+WebView2 binds the debugging port to IPv4 or IPv6 only.
 
 ## Definition of done
 
@@ -143,6 +144,13 @@ The E2E suite currently covers:
 - Chinese settings, the three-language switch (Simplified, Traditional, English),
   localized placeholder and untitled names, persisted choice, and return to
   Simplified Chinese.
+- First-run language: with saved preferences cleared and the system locale
+  emulated as `en-US`, the app boots in English, sets the document language,
+  and persists the detected choice; the original preferences and locale are
+  restored afterward.
+- Windows installer configuration: one NSIS installer includes English,
+  Simplified Chinese, and Traditional Chinese, while the WiX MSI remains a
+  single `en-US` installer.
 - System appearance: emulated dark and light system preferences update the
   resolved theme live, an explicit Dark choice ignores the system preference,
   the five theme options are present, and system mode can be restored.
@@ -285,7 +293,8 @@ and root URL resolution, image-source scanning
 and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
-calculation, quick-open ranking, and analysis helpers.
+calculation, quick-open ranking, installer language configuration, and
+analysis helpers.
 
 Golden Markdown fixtures under `tests/fixtures/markdown/` pair 18 hand-written
 sources with their exact rendered HTML. They cover ATX/setext headings and
