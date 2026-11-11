@@ -1800,6 +1800,114 @@ async function main() {
     }
   });
 
+  await test("live preview renders Mermaid and reveals source", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-mermaid.md");
+    const fence = String.fromCharCode(96, 96, 96);
+    const source = [
+      "# Diagram",
+      "",
+      `${fence}mermaid`,
+      "graph TD",
+      "  A[Start] --> B[Ship]",
+      fence,
+      "",
+      `${fence}text`,
+      "graph TD",
+      "  X --> Y",
+      fence,
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(12)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-mermaid .mermaid-diagram[data-mermaid-state=ready] svg").length === 1',
+        20_000,
+      );
+
+      const rendered = await evaluate(`(() => {
+        const lines = Array.from(document.querySelectorAll(".cm-line")).map(
+          (node) => node.textContent ?? ""
+        );
+        const widgets = Array.from(
+          document.querySelectorAll(".cm-live-mermaid")
+        );
+        return {
+          widgets: widgets.length,
+          svgs: document.querySelectorAll(
+            ".cm-live-mermaid .mermaid-diagram svg"
+          ).length,
+          scripts: document.querySelectorAll(".cm-live-mermaid script").length,
+          foreignObjects: document.querySelectorAll(
+            ".cm-live-mermaid foreignObject"
+          ).length,
+          mermaidSourceVisible: lines.some((line) =>
+            line.includes("A[Start] --> B[Ship]")
+          ),
+          textFenceVisible: lines.some((line) => line.includes("X --> Y")),
+          textWidgets: widgets.filter((node) =>
+            node.textContent?.includes("X --> Y")
+          ).length
+        };
+      })()`);
+      assert(
+        rendered.widgets === 1 && rendered.svgs === 1,
+        "one sanitized Mermaid widget should render",
+        rendered,
+      );
+      assert(
+        rendered.scripts === 0 && rendered.foreignObjects === 0,
+        "Mermaid widget must not contain script or foreignObject",
+        rendered,
+      );
+      assert(
+        rendered.mermaidSourceVisible === false,
+        "inactive Mermaid source should be hidden",
+        rendered,
+      );
+      assert(
+        rendered.textFenceVisible === true && rendered.textWidgets === 0,
+        "non-Mermaid fences should keep their code card",
+        rendered,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-mermaid")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        'document.querySelectorAll(".cm-live-mermaid").length === 0 && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("A[Start] --> B[Ship]"))',
+        10_000,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(12)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-mermaid .mermaid-diagram[data-mermaid-state=ready] svg").length === 1',
+        20_000,
+      );
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "Mermaid preview must not rewrite the document",
+        content,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

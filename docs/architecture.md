@@ -179,6 +179,17 @@ front matter, fenced and inline code, escaped dollars, link destinations, link
 titles, HTML tags and blocks, and currency-like amounts. A document-length
 limit and a span cap keep decoration rebuilds bounded.
 
+Top-level Mermaid fences use another `StateField` because each diagram is a
+block widget. `lib/mermaidBlocks.ts` reuses the shared fence scanner in
+`lib/textRanges.ts`, keeps the info string and content offsets, skips front
+matter, and accepts only the `mermaid` language token. Inactive fences are
+replaced by a card whose diagram reuses `lib/mermaid.ts`, so strict security,
+SVG sanitization, and lazy loading match the reading view. Clicking the card
+moves the caret to the opening fence and reveals the source. The Mermaid field
+also records blocked ranges so the code-card, syntax, table, and math passes do
+not decorate the same lines. A document-length limit and a diagram cap keep
+decoration rebuilds bounded.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set
@@ -637,9 +648,11 @@ window starts with an empty document rather than duplicating main state.
   unit tests.
 - `src/lib/imageSize.ts` owns source-image scanning, dimension clamping, and
   source-preserving width/height updates; it is covered by unit tests.
-- `src/lib/textRanges.ts` owns shared fenced-code, inline-code, escape, and
-  merged-range scanning for source-preserving preview features; it is covered
-  through the image and math unit tests.
+- `src/lib/textRanges.ts` owns shared fenced-code block/range, inline-code,
+  escape, and merged-range scanning for source-preserving preview features; it
+  is covered by unit tests.
+- `src/lib/mermaidBlocks.ts` owns top-level Mermaid fence detection, content
+  extraction, and live-preview caps; it is covered by unit tests.
 - `src/lib/mathSpans.ts` owns inline/display math scanning, ignore ranges, and
   preview caps; it is covered by unit tests.
 - `src/lib/textChange.ts` owns minimal text-diff calculation for programmatic

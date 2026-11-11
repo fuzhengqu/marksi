@@ -1947,6 +1947,7 @@ export default function App() {
             livePreviewMode={viewMode === "preview" && !largeFile}
             language={settings.language}
             textDirection={textDirection}
+            theme={resolvedTheme}
           />
           {viewMode === "reading" ? (
             <Suspense

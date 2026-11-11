@@ -37,9 +37,20 @@ import {
   mathPreviewLimit,
   type MathSpan,
 } from "../lib/mathSpans";
+import {
+  findMermaidBlocks,
+  mermaidPreviewLimit,
+  type MermaidBlock,
+} from "../lib/mermaidBlocks";
+import { renderMermaidDiagrams } from "../lib/mermaid";
 import { rangeIsActive } from "../lib/selection";
 import { tablePreviewLimit } from "../lib/tables";
-import { mergeRanges, type TextRange } from "../lib/textRanges";
+import {
+  isIgnored,
+  mergeRanges,
+  type TextRange,
+} from "../lib/textRanges";
+import type { ResolvedTheme } from "../lib/theme";
 import {
   findImageOccurrences,
   imageFitFromAttributes,
@@ -64,6 +75,8 @@ export interface LivePreviewOptions {
   tableLabel: string;
   frontMatterLabel: string;
   mathLabel: string;
+  mermaidLabel: string;
+  theme: ResolvedTheme;
 }
 
 const EMPTY_OPTIONS: LivePreviewOptions = {
@@ -76,6 +89,8 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   tableLabel: "Table",
   frontMatterLabel: "Front matter",
   mathLabel: "Math",
+  mermaidLabel: "Mermaid diagram",
+  theme: "light",
 };
 
 const hidden = Decoration.replace({});
@@ -585,7 +600,7 @@ function renderMathInto(
   }
 }
 
-function addMathReveal(
+function addPreviewReveal(
   element: HTMLElement,
   view: EditorView,
   from: number,
@@ -640,7 +655,7 @@ class LiveMathWidget extends WidgetType {
     math.setAttribute("aria-label", `${this.label}: ${this.content}`);
     math.title = this.content;
     renderMathInto(math, this.content, this.display);
-    addMathReveal(math, view, this.from);
+    addPreviewReveal(math, view, this.from);
     return math;
   }
 
@@ -678,8 +693,55 @@ class LiveMathBlockWidget extends WidgetType {
     math.setAttribute("aria-label", `${this.label}: ${this.content}`);
     math.title = this.content;
     renderMathInto(math, this.content, true);
-    addMathReveal(math, view, this.from);
+    addPreviewReveal(math, view, this.from);
     return math;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
+class LiveMermaidWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly to: number,
+    readonly source: string,
+    readonly label: string,
+    readonly theme: ResolvedTheme,
+  ) {
+    super();
+  }
+
+  eq(other: LiveMermaidWidget): boolean {
+    return (
+      this.from === other.from &&
+      this.to === other.to &&
+      this.source === other.source &&
+      this.label === other.label &&
+      this.theme === other.theme
+    );
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const card = document.createElement("div");
+    card.className = "cm-live-mermaid";
+    card.contentEditable = "false";
+    card.spellcheck = false;
+    card.tabIndex = 0;
+    card.setAttribute("role", "group");
+    card.setAttribute("aria-label", this.label);
+    card.title = this.label;
+
+    const diagram = document.createElement("div");
+    diagram.className = "mermaid-diagram";
+    diagram.dataset.mermaidSource = encodeURIComponent(this.source);
+    diagram.setAttribute("aria-busy", "true");
+    card.append(diagram);
+
+    addPreviewReveal(card, view, this.from);
+    void renderMermaidDiagrams(card, this.theme);
+    return card;
   }
 
   ignoreEvent(): boolean {
@@ -832,10 +894,84 @@ function createMathPreviewField(options: LivePreviewOptions) {
   });
 }
 
+interface MermaidPreviewState {
+  blocks: MermaidBlock[];
+  /** Inactive diagrams replaced by widgets; other passes must skip them. */
+  blockedRanges: TextRange[];
+  decorations: DecorationSet;
+}
+
+function collectMermaidSpans(state: EditorState): MermaidBlock[] {
+  const limit = mermaidPreviewLimit(state.doc.length);
+  if (limit === 0) {
+    return [];
+  }
+  return findMermaidBlocks(state.doc.toString()).slice(0, limit);
+}
+
+function buildMermaidPreviewState(
+  state: EditorState,
+  blocks: MermaidBlock[],
+  options: LivePreviewOptions,
+): MermaidPreviewState {
+  const ranges: Range<Decoration>[] = [];
+  const blocked: TextRange[] = [];
+  for (const block of blocks) {
+    if (rangeIsActive(state.selection.ranges, block.from, block.to)) {
+      continue;
+    }
+    blocked.push({ start: block.from, end: block.to });
+    ranges.push(
+      Decoration.replace({
+        block: true,
+        widget: new LiveMermaidWidget(
+          block.from,
+          block.to,
+          block.content,
+          options.mermaidLabel,
+          options.theme,
+        ),
+      }).range(block.from, block.to),
+    );
+  }
+  return {
+    blocks,
+    blockedRanges: mergeRanges(blocked),
+    decorations: Decoration.set(ranges, true),
+  };
+}
+
+function createMermaidPreviewField(options: LivePreviewOptions) {
+  return StateField.define<MermaidPreviewState>({
+    create: (state) =>
+      buildMermaidPreviewState(state, collectMermaidSpans(state), options),
+    update: (value, transaction) => {
+      if (transaction.docChanged) {
+        return buildMermaidPreviewState(
+          transaction.state,
+          collectMermaidSpans(transaction.state),
+          options,
+        );
+      }
+      if (transaction.selection) {
+        return buildMermaidPreviewState(
+          transaction.state,
+          value.blocks,
+          options,
+        );
+      }
+      return value;
+    },
+    provide: (field) =>
+      EditorView.decorations.from(field, (value) => value.decorations),
+  });
+}
+
 function buildDecorations(
   view: EditorView,
   images: ImageOccurrence[],
   math: MathPreviewState,
+  mermaid: MermaidPreviewState,
   options: LivePreviewOptions,
 ): DecorationSet {
   const activeLines = new Set<number>();
@@ -937,6 +1073,9 @@ function buildDecorations(
       to: visible.to,
       enter(node) {
         if (node.from < frontMatterTo) {
+          return;
+        }
+        if (isIgnored(mermaid.blockedRanges, node.from)) {
           return;
         }
         const lineNumber = view.state.doc.lineAt(node.from).number;
@@ -1102,7 +1241,10 @@ function buildHeadingDecorations(view: EditorView): DecorationSet {
   return Decoration.set(ranges);
 }
 
-function buildBlockDecorations(view: EditorView): DecorationSet {
+function buildBlockDecorations(
+  view: EditorView,
+  mermaid: MermaidPreviewState,
+): DecorationSet {
   const quoteDepths = new Map<number, number>();
   const codeClasses = new Map<number, Set<string>>();
   const visible = view.visibleRanges;
@@ -1113,6 +1255,9 @@ function buildBlockDecorations(view: EditorView): DecorationSet {
   syntaxTree(view.state).iterate({
     enter(node) {
       if (node.from < frontMatterTo) {
+        return;
+      }
+      if (isIgnored(mermaid.blockedRanges, node.from)) {
         return;
       }
       if (node.name === "Blockquote") {
@@ -1293,18 +1438,30 @@ function createTablePreviewField(options: LivePreviewOptions) {
   });
 }
 
-function createBlockPreviewPlugin() {
+function createBlockPreviewPlugin(
+  mermaidField: StateField<MermaidPreviewState>,
+) {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
 
       constructor(view: EditorView) {
-        this.decorations = buildBlockDecorations(view);
+        this.decorations = buildBlockDecorations(
+          view,
+          view.state.field(mermaidField),
+        );
       }
 
       update(update: ViewUpdate): void {
-        if (update.docChanged || update.viewportChanged) {
-          this.decorations = buildBlockDecorations(update.view);
+        if (
+          update.docChanged ||
+          update.selectionSet ||
+          update.viewportChanged
+        ) {
+          this.decorations = buildBlockDecorations(
+            update.view,
+            update.state.field(mermaidField),
+          );
         }
       }
     },
@@ -1342,6 +1499,7 @@ function createHeadingPreviewPlugin() {
 function createLivePreviewPlugin(
   options: LivePreviewOptions,
   mathField: StateField<MathPreviewState>,
+  mermaidField: StateField<MermaidPreviewState>,
 ) {
   return ViewPlugin.fromClass(
     class {
@@ -1354,6 +1512,7 @@ function createLivePreviewPlugin(
           view,
           this.images,
           view.state.field(mathField),
+          view.state.field(mermaidField),
           options,
         );
       }
@@ -1372,6 +1531,7 @@ function createLivePreviewPlugin(
             update.view,
             this.images,
             update.state.field(mathField),
+            update.state.field(mermaidField),
             options,
           );
         }
@@ -1398,13 +1558,15 @@ export function livePreview(
   options: LivePreviewOptions = EMPTY_OPTIONS,
 ): Extension {
   const mathField = createMathPreviewField(options);
+  const mermaidField = createMermaidPreviewField(options);
   return [
     EditorView.editorAttributes.of({ class: "cm-live-preview" }),
     createFrontMatterField(options),
     mathField,
+    mermaidField,
     createTablePreviewField(options),
-    createBlockPreviewPlugin(),
+    createBlockPreviewPlugin(mermaidField),
     createHeadingPreviewPlugin(),
-    createLivePreviewPlugin(options, mathField),
+    createLivePreviewPlugin(options, mathField, mermaidField),
   ];
 }

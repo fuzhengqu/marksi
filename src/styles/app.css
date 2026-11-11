@@ -1646,6 +1646,38 @@
   white-space: pre-wrap;
 }
 
+/* Inactive Mermaid fences in the editable live preview. The widget reuses the
+   sanitized reading-view renderer; clicking any part reveals the fence. */
+.cm-live-mermaid {
+  margin: 0.45em 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  overflow-x: auto;
+  text-align: center;
+  cursor: text;
+}
+
+.cm-live-mermaid:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.cm-live-mermaid .mermaid-diagram {
+  margin: 0;
+}
+
+.cm-live-mermaid .mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.cm-live-mermaid .mermaid-error {
+  color: var(--danger);
+  text-align: left;
+}
+
 /* Inactive tables in the editable live preview. The widget renders sanitized
    reading-view HTML; clicking any part reveals the canonical source. */
 .cm-live-table {

@@ -48,11 +48,29 @@ export function isIgnored(ranges: TextRange[], index: number): boolean {
   return false;
 }
 
-export function collectFencedCodeRanges(source: string): TextRange[] {
-  const ranges: TextRange[] = [];
+export interface FencedCodeBlock {
+  /** Start of the opening fence line. */
+  start: number;
+  /** End of the closing fence line, or the end of the source when unclosed. */
+  end: number;
+  /** Start of the code content, after the opening fence line. */
+  contentStart: number;
+  /** Start of the closing fence line, or the end of the source. */
+  contentEnd: number;
+  /** Trimmed info string after the opening fence. */
+  info: string;
+}
+
+export function collectFencedCodeBlocks(source: string): FencedCodeBlock[] {
+  const blocks: FencedCodeBlock[] = [];
   let lineStart = 0;
-  let openFence: { character: string; length: number; start: number } | null =
-    null;
+  let openFence: {
+    character: string;
+    length: number;
+    start: number;
+    contentStart: number;
+    info: string;
+  } | null = null;
 
   while (lineStart <= source.length) {
     let lineEnd = source.indexOf("\n", lineStart);
@@ -66,16 +84,24 @@ export function collectFencedCodeRanges(source: string): TextRange[] {
         `^ {0,3}\\${openFence.character}{${openFence.length},}[ \\t]*$`,
       );
       if (closingPattern.test(line)) {
-        ranges.push({ start: openFence.start, end: lineEnd });
+        blocks.push({
+          start: openFence.start,
+          end: lineEnd,
+          contentStart: openFence.contentStart,
+          contentEnd: lineStart,
+          info: openFence.info,
+        });
         openFence = null;
       }
     } else {
-      const opening = /^ {0,3}(`{3,}|~{3,})/.exec(line);
+      const opening = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
       if (opening) {
         openFence = {
           character: opening[1][0],
           length: opening[1].length,
           start: lineStart,
+          contentStart: lineEnd < source.length ? lineEnd + 1 : lineEnd,
+          info: opening[2].trim(),
         };
       }
     }
@@ -87,9 +113,22 @@ export function collectFencedCodeRanges(source: string): TextRange[] {
   }
 
   if (openFence) {
-    ranges.push({ start: openFence.start, end: source.length });
+    blocks.push({
+      start: openFence.start,
+      end: source.length,
+      contentStart: openFence.contentStart,
+      contentEnd: source.length,
+      info: openFence.info,
+    });
   }
-  return ranges;
+  return blocks;
+}
+
+export function collectFencedCodeRanges(source: string): TextRange[] {
+  return collectFencedCodeBlocks(source).map(({ start, end }) => ({
+    start,
+    end,
+  }));
 }
 
 export function collectInlineCodeRanges(

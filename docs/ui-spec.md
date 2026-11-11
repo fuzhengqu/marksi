@@ -230,7 +230,11 @@ ease-out; honor `prefers-reduced-motion`.
   original YAML, and its delimiters never become headings or dividers. Inline
   `$...$` and whole-line display `$$...$$` math on inactive lines render with
   KaTeX; clicking the formula or placing the caret on its line reveals the
-  delimiters. Math inside code, front matter, URLs, and HTML stays literal. GFM
+  delimiters. Math inside code, front matter, URLs, and HTML stays literal.
+  Top-level `mermaid` fences on inactive lines render as sanitized diagrams in a
+  bordered card; clicking the diagram or placing the caret inside the fence
+  reveals the original source. Other languages and nested fences keep their
+  code cards. GFM
   task
   markers on inactive
   lines render as checkboxes; clicking one or pressing Space/Enter rewrites
@@ -443,8 +447,10 @@ ease-out; honor `prefers-reduced-motion`.
 ## Mermaid diagrams
 
 - A fenced block with the `mermaid` language renders as a diagram in preview.
-  The source disclosure below the diagram stays collapsed by default and opens
-  automatically when rendering fails.
+  Top-level fences also render on inactive lines in the editable live preview;
+  clicking the diagram reveals its Markdown source. The source disclosure below
+  the reading-view diagram stays collapsed by default and opens automatically
+  when rendering fails.
 - The Mermaid runtime is loaded lazily on the first diagram, not at application
   startup. Theme changes re-render diagrams with the light or dark palette.
 - Diagrams are centered in a bordered surface and may scroll horizontally when
@@ -473,6 +479,10 @@ ease-out; honor `prefers-reduced-motion`.
   the editable live preview. Display formulas are centered and can scroll
   horizontally when wide; clicking one in live preview reveals its source.
   Math inside code, front matter, URLs, and HTML stays literal.
+- Mermaid diagrams follow the same strict security boundary in the editable
+  live preview as in reading view: lazy loading, sanitized SVG, no scripts, no
+  `foreignObject`, and no click directives. Large documents and documents with
+  more than twenty diagrams keep the fenced source instead.
 - `==highlight==`, `~subscript~`, and `^superscript^` use the normal text color
   with subtle themed treatment.
 - Link reference definitions work throughout the document.

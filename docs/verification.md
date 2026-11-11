@@ -123,6 +123,11 @@ The E2E suite currently covers:
   widget reveals its source, moving away restores the widgets, math inside
   inline code and fenced code stays literal, and the document text is
   unchanged.
+- Live-preview Mermaid: an inactive top-level `mermaid` fence renders one
+  sanitized SVG card while the source stays hidden, a `text` fence keeps its
+  code card, the diagram contains no script or `foreignObject`, clicking the
+  card reveals the fence, moving away restores the diagram, and the document
+  text is unchanged.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.

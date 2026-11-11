@@ -28,6 +28,7 @@ import {
 } from "../editor/viewModes";
 import { useAppStore } from "../store/useAppStore";
 import type { Language } from "../types";
+import type { ResolvedTheme } from "../lib/theme";
 
 interface EditorPaneProps {
   content: string;
@@ -49,6 +50,7 @@ interface EditorPaneProps {
   livePreviewMode: boolean;
   language: Language;
   textDirection: "ltr" | "rtl";
+  theme: ResolvedTheme;
 }
 
 function focusSearchField(view: EditorView, replace: boolean): void {
@@ -100,6 +102,7 @@ export function EditorPane({
   livePreviewMode,
   language,
   textDirection,
+  theme,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -123,6 +126,8 @@ export function EditorPane({
     tableLabel: translate(language, "Table"),
     frontMatterLabel: translate(language, "Front matter"),
     mathLabel: translate(language, "Math"),
+    mermaidLabel: translate(language, "Mermaid diagram"),
+    theme,
   });
   const languageRef = useRef(language);
   const [editableCompartment] = useState(() => new Compartment());
@@ -177,6 +182,8 @@ export function EditorPane({
       tableLabel: translate(language, "Table"),
       frontMatterLabel: translate(language, "Front matter"),
       mathLabel: translate(language, "Math"),
+      mermaidLabel: translate(language, "Mermaid diagram"),
+      theme,
     };
     languageRef.current = language;
   }, [
@@ -189,6 +196,7 @@ export function EditorPane({
     livePreviewMode,
     loadRemoteImages,
     smartPunctuation,
+    theme,
     workspacePath,
   ]);
 
@@ -344,6 +352,8 @@ export function EditorPane({
               tableLabel: translate(language, "Table"),
               frontMatterLabel: translate(language, "Front matter"),
               mathLabel: translate(language, "Math"),
+              mermaidLabel: translate(language, "Mermaid diagram"),
+              theme,
             })
           : [],
       ),
@@ -356,6 +366,7 @@ export function EditorPane({
     livePreviewCompartment,
     livePreviewMode,
     loadRemoteImages,
+    theme,
     workspacePath,
   ]);
 
