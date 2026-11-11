@@ -293,8 +293,8 @@ and root URL resolution, image-source scanning
 and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
-calculation, quick-open ranking, installer language configuration, and
-analysis helpers.
+calculation, quick-open ranking, installer language configuration, MSI
+artifact-name normalization, and analysis helpers.
 
 Golden Markdown fixtures under `tests/fixtures/markdown/` pair 18 hand-written
 sources with their exact rendered HTML. They cover ATX/setext headings and
@@ -343,6 +343,12 @@ extension filtering, uppercase SHA-256 output, relative paths, and the
 no-artifacts error. Running `npm run release:checksums` against the local bundle
 tree produced six entries for historical MSI and NSIS artifacts, including
 `MarkSI_0.25.0_x64_en-US.msi` and its setup executable.
+
+`scripts/artifact-names.mjs` has Vitest coverage for stripping the WiX language
+suffix from Tauri MSI names, preserving unrelated names, replacing stale files,
+and idempotent reruns. The release workflow runs `npm run release:normalize` on
+Windows before checksums, so current artifacts use the language-neutral
+`MarkSI_<version>_x64.msi` name. The installer UI itself remains `en-US`.
 
 `.github/workflows/release-package.yml` builds unsigned bundles on
 `windows-latest` and `ubuntu-latest` when dispatched manually or when a `v*` tag

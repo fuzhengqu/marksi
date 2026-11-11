@@ -382,7 +382,10 @@ setup is one executable containing English, Simplified Chinese, and Traditional
 Chinese installer translations; it follows the operating system language with
 an English fallback. The WiX MSI remains a single `en-US` installer for
 enterprise deployment, but it installs the same three-language application and
-does not change the interface language selected by the app.
+does not change the interface language selected by the app. The release
+pipeline strips WiX's generated language suffix from the MSI filename, so the
+artifact is named `MarkSI_<version>_x64.msi` while the installer UI itself stays
+`en-US`.
 
 New untitled documents are named `未命名.md` in either Chinese script and
 `Untitled.md` in English; the exported HTML title fallback is localized too.

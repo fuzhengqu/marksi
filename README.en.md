@@ -83,8 +83,9 @@ On Windows this writes MSI and NSIS installers under
 `src-tauri/target/release/bundle/`. The NSIS `setup.exe` is the recommended
 single download: one file contains English, Simplified Chinese, and Traditional
 Chinese installer translations and follows the operating-system language. The
-MSI targets enterprise deployment; its installer UI is `en-US`, but it installs
-the same three-language application. The artifacts are currently unsigned, so
+MSI targets enterprise deployment; its filename is language-neutral
+(`MarkSI_<version>_x64.msi`), its installer UI is `en-US`, and it installs the
+same three-language application. The artifacts are currently unsigned, so
 Windows may show a SmartScreen warning. After installation, open Markdown files
 through the registered file association or run
 `marksi path\to\note.md` from a terminal. Run `npm run release:checksums` to

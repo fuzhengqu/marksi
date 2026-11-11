@@ -68,7 +68,9 @@ Typography:
   It contains English, Simplified Chinese, and Traditional Chinese installer
   translations and selects the operating-system language automatically. The
   MSI is the enterprise deployment package; its WiX installer UI is `en-US`,
-  which does not limit the application's three-language interface.
+  which does not limit the application's three-language interface. The MSI
+  filename is language-neutral (`MarkSI_<version>_x64.msi`), so it does not
+  imply an English-only application.
 - Writing column: 860px by default. The preference range is 680–1100px.
 - Interface zoom: 100% by default. The preference range is 80%–160% in 10%
   steps and scales the whole application surface.

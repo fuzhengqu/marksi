@@ -478,6 +478,7 @@ save the imported document to choose its final location.
 |---|---|---|
 | Windows 11 installer (NSIS/MSI) | done | M6 |
 | Single NSIS installer with system-language selection | done | M6 |
+| Language-neutral MSI artifact name | done | M6 |
 | Linux deb/rpm/AppImage | done | M6 |
 | Flatpak packaging | done | M7 |
 | Signed releases / checksums | wip | M6 |

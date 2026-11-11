@@ -1,7 +1,7 @@
 {
   "name": "marksi",
   "private": true,
-  "version": "0.54.0",
+  "version": "0.55.0",
   "description": "MarkSI - a focused Markdown studio for Windows and Linux",
   "type": "module",
   "license": "MIT",
@@ -20,6 +20,7 @@
     "flatpak:check": "node scripts/flatpak.mjs check",
     "flatpak:stage": "node scripts/flatpak.mjs stage",
     "release:checksums": "node scripts/checksums.mjs",
+    "release:normalize": "node scripts/artifact-names.mjs",
     "version:bump": "node scripts/bump-version.mjs",
     "typecheck": "tsc --noEmit"
   },

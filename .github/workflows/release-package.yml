@@ -84,6 +84,10 @@ jobs:
       - name: Build bundles
         run: npm run tauri:build
 
+      - name: Normalize Windows artifact names
+        if: runner.os == 'Windows'
+        run: npm run release:normalize
+
       - name: Install Flatpak runtime
         if: runner.os == 'Linux'
         run: |

@@ -66,10 +66,11 @@ npm run tauri:build
 
 Windows 构建会在 `src-tauri/target/release/bundle/` 下生成 MSI 和 NSIS
 安装程序。推荐分发 NSIS `setup.exe`：单个文件内置简体中文、繁体中文和英文
-安装界面，并按系统语言自动选择。MSI 面向企业部署，安装界面为 `en-US`，但
-安装的是同一套包含三种界面语言的应用。安装器目前未做代码签名，Windows 可能
-显示 SmartScreen 提示。安装后可通过文件关联双击 Markdown 文件，或在命令行
-运行 `marksi path\to\note.md` 打开文件。运行
+安装界面，并按系统语言自动选择。MSI 面向企业部署，文件名不带语言后缀
+（`MarkSI_<版本>_x64.msi`），安装界面为 `en-US`，但安装的是同一套包含三种
+界面语言的应用。安装器目前未做代码签名，Windows 可能显示 SmartScreen 提示。
+安装后可通过文件关联双击 Markdown 文件，或在命令行运行
+`marksi path\to\note.md` 打开文件。运行
 `npm run release:checksums` 可在 bundle 目录旁生成 `SHA256SUMS.txt`。
 
 Linux 构建同一目录下生成 deb、rpm 和 AppImage。Flatpak 元数据位于
