@@ -17,10 +17,10 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
 - **Writing views**: source, editable live preview, and reading view; focus,
   typewriter, and read-only modes; auto-pairing, smart punctuation, emoji
   completion, IME composition support, and find/replace; inline images, heading
-  hierarchy, block quotes and rules, code block cards with language badges,
-  table rendering, front matter cards, math formulas, Mermaid diagrams, and
-  clickable task checkboxes in the live preview. Automatic or explicit LTR/RTL
-  document
+  hierarchy, block quotes and rules, GitHub alert cards, code block cards with
+  language badges, table rendering, front matter cards, math formulas, Mermaid
+  diagrams, and clickable task checkboxes in the live preview. Automatic or
+  explicit LTR/RTL document
   direction keeps code and math LTR.
 - **Markdown**: CommonMark/GFM, tables, task lists, footnotes, table of contents,
   YAML front matter, callouts, syntax highlighting, KaTeX math, Mermaid

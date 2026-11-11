@@ -1469,6 +1469,51 @@
   padding-left: 2.7em;
 }
 
+/* GitHub alert block quotes reuse the quote surface with a per-kind accent
+   and an inline title label in place of the hidden [!KIND] marker. */
+.cm-live-preview .cm-line.cm-live-alert {
+  --alert-color: #3f7fbf;
+  border-left-color: var(--alert-color);
+  background: color-mix(in srgb, var(--alert-color) 8%, var(--bg-elevated));
+  color: var(--fg);
+}
+
+.cm-live-preview .cm-line.cm-live-alert-tip {
+  --alert-color: #3f8a64;
+}
+
+.cm-live-preview .cm-line.cm-live-alert-important {
+  --alert-color: #7b64b6;
+}
+
+.cm-live-preview .cm-line.cm-live-alert-warning {
+  --alert-color: #a87a2d;
+}
+
+.cm-live-preview .cm-line.cm-live-alert-caution {
+  --alert-color: #b25050;
+}
+
+.cm-live-alert-label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.45em;
+  color: var(--alert-color, var(--accent));
+  font-size: 0.78em;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  cursor: text;
+}
+
+.cm-live-alert-label:focus-visible {
+  outline: 2px solid var(--alert-color, var(--accent));
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
 .cm-live-rule {
   position: relative;
   display: inline-block;

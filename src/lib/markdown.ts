@@ -9,6 +9,7 @@ import { sup } from "@mdit/plugin-sup";
 import { tex } from "@mdit/plugin-tex";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { ALERT_TITLES } from "./alerts";
 import { extractFrontMatter } from "./frontMatter";
 import { escapeHtml } from "./htmlEscape";
 import { classifyImageSource } from "./images";
@@ -66,14 +67,6 @@ interface MarkdownEnvironment {
   imageResizable?: boolean;
 }
 
-const ALERT_TITLES: Record<string, string> = {
-  caution: "Caution",
-  important: "Important",
-  note: "Note",
-  tip: "Tip",
-  warning: "Warning",
-};
-
 const md = new MarkdownIt({
   html: false,
   linkify: true,
@@ -91,9 +84,9 @@ md.use(footnote)
   .use(alert, {
     titleRenderer: (tokens, index) => {
       const name = String(tokens[index].markup ?? "").toLowerCase();
-      return `<p class="markdown-alert-title">${escapeHtml(
-        ALERT_TITLES[name] ?? name,
-      )}</p>\n`;
+      const title =
+        ALERT_TITLES[name as keyof typeof ALERT_TITLES] ?? name;
+      return `<p class="markdown-alert-title">${escapeHtml(title)}</p>\n`;
     },
   })
   .use(tex, {

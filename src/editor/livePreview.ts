@@ -16,6 +16,12 @@ import {
 } from "@codemirror/view";
 import katex from "katex";
 import {
+  alertClass,
+  alertMarker,
+  ALERT_TITLES,
+  type AlertKind,
+} from "../lib/alerts";
+import {
   blockquoteDepth,
   fenceLanguageLabel,
   quoteClassForDepth,
@@ -702,6 +708,36 @@ class LiveMathBlockWidget extends WidgetType {
   }
 }
 
+class LiveAlertLabelWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly kind: AlertKind,
+  ) {
+    super();
+  }
+
+  eq(other: LiveAlertLabelWidget): boolean {
+    return this.from === other.from && this.kind === other.kind;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const label = document.createElement("span");
+    label.className = `cm-live-alert-label cm-live-alert-label-${this.kind}`;
+    label.contentEditable = "false";
+    label.spellcheck = false;
+    label.tabIndex = 0;
+    label.setAttribute("role", "note");
+    label.setAttribute("aria-label", ALERT_TITLES[this.kind]);
+    label.textContent = ALERT_TITLES[this.kind];
+    addPreviewReveal(label, view, this.from);
+    return label;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 class LiveMermaidWidget extends WidgetType {
   constructor(
     readonly from: number,
@@ -1246,6 +1282,8 @@ function buildBlockDecorations(
   mermaid: MermaidPreviewState,
 ): DecorationSet {
   const quoteDepths = new Map<number, number>();
+  const alertClasses = new Map<number, string>();
+  const alertWidgets: Range<Decoration>[] = [];
   const codeClasses = new Map<number, Set<string>>();
   const visible = view.visibleRanges;
   const isVisible = (from: number, to: number) =>
@@ -1270,6 +1308,7 @@ function buildBlockDecorations(
         const depth = blockquoteDepth(ancestors);
         const start = view.state.doc.lineAt(node.from);
         const end = view.state.doc.lineAt(Math.max(node.from, node.to - 1));
+        const marker = depth === 1 ? alertMarker(start.text) : null;
         for (let number = start.number; number <= end.number; number += 1) {
           const line = view.state.doc.line(number);
           if (!isVisible(line.from, line.to)) {
@@ -1278,6 +1317,19 @@ function buildBlockDecorations(
           if (depth > (quoteDepths.get(line.from) ?? 0)) {
             quoteDepths.set(line.from, depth);
           }
+          if (marker) {
+            alertClasses.set(line.from, alertClass(marker.kind));
+          }
+        }
+        if (
+          marker &&
+          !rangeIsActive(view.state.selection.ranges, start.from, start.to)
+        ) {
+          alertWidgets.push(
+            Decoration.replace({
+              widget: new LiveAlertLabelWidget(start.from, marker.kind),
+            }).range(start.from + marker.start, start.from + marker.end),
+          );
         }
         return;
       }
@@ -1314,6 +1366,9 @@ function buildBlockDecorations(
   for (const [from, depth] of quoteDepths) {
     addLineClass(from, quoteClassForDepth(depth));
   }
+  for (const [from, className] of alertClasses) {
+    addLineClass(from, className);
+  }
   for (const [from, classes] of codeClasses) {
     for (const className of classes) {
       addLineClass(from, className);
@@ -1326,6 +1381,7 @@ function buildBlockDecorations(
       Decoration.line({ class: [...classes].join(" ") }).range(from),
     );
   }
+  ranges.push(...alertWidgets);
   ranges.sort((left, right) => left.from - right.from);
   return Decoration.set(ranges);
 }

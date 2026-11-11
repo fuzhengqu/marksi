@@ -226,6 +226,7 @@ translations are not shipped.
 | Editable source-based live preview | done | M5 |
 | Heading hierarchy in live preview | done | M7 |
 | Block quotes and horizontal rules in live preview | done | M7 |
+| GitHub alerts in live preview | done | M7 |
 | Code block cards and language badges in live preview | done | M7 |
 | Tables in live preview | done | M7 |
 | Front matter card in live preview | done | M7 |

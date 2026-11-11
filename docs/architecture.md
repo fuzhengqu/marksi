@@ -190,6 +190,15 @@ also records blocked ranges so the code-card, syntax, table, and math passes do
 not decorate the same lines. A document-length limit and a diagram cap keep
 decoration rebuilds bounded.
 
+GitHub alert block quotes reuse the quote line pass. `lib/alerts.ts` recognizes
+the `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, and `[!CAUTION]` markers
+on the first line of a top-level quote. Every line in the block receives the
+quote classes plus an alert class that carries the per-kind accent, while the
+marker is replaced on inactive lines by an inline title label built from the
+same titles as the reading view. Activating the marker line reveals the source
+marker. Nested quotes, inline text, and near matches keep ordinary quote
+styling, and the document text is never rewritten.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set
@@ -653,6 +662,8 @@ window starts with an empty document rather than duplicating main state.
   is covered by unit tests.
 - `src/lib/mermaidBlocks.ts` owns top-level Mermaid fence detection, content
   extraction, and live-preview caps; it is covered by unit tests.
+- `src/lib/alerts.ts` owns GitHub alert marker parsing and shared titles for the
+  reading view and live preview; it is covered by unit tests.
 - `src/lib/mathSpans.ts` owns inline/display math scanning, ignore ranges, and
   preview caps; it is covered by unit tests.
 - `src/lib/textChange.ts` owns minimal text-diff calculation for programmatic

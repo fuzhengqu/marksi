@@ -43,7 +43,8 @@ $env:MARKSI_CDP_PORT = "9222"
 
 The E2E suite creates temporary fixtures under `.tmp/e2e-fixtures`, resets the
 running app between checks, and removes the fixtures at the end. It does not
-modify user documents.
+modify user documents. The CDP endpoint is resolved through `localhost`, so the
+same harness works when WebView2 binds the debugging port to IPv4 or IPv6 only.
 
 ## Definition of done
 
@@ -128,6 +129,11 @@ The E2E suite currently covers:
   code card, the diagram contains no script or `foreignObject`, clicking the
   card reveals the fence, moving away restores the diagram, and the document
   text is unchanged.
+- Live-preview GitHub alerts: note and warning blocks style every line with the
+  matching accent and one title label each, inactive `[!NOTE]` markers stay
+  hidden, an ordinary quote keeps quote styling without an alert class,
+  clicking a label reveals its marker, moving away restores the labels, and the
+  document text is unchanged.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.

@@ -50,7 +50,7 @@ function assert(condition, message, detail) {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function connect() {
-  const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+  const targets = await (await fetch(`http://localhost:${port}/json`)).json();
   const pages = targets.filter(
     (target) => target.type === "page" && target.url.includes(origin),
   );
@@ -132,7 +132,7 @@ async function findEditorWindowTarget(timeout = 15_000) {
   const started = Date.now();
   while (Date.now() - started < timeout) {
     const targets = await (
-      await fetch(`http://127.0.0.1:${port}/json`)
+      await fetch(`http://localhost:${port}/json`)
     ).json();
     for (const target of targets) {
       if (target.type !== "page" || !target.url.includes(origin)) {
@@ -213,7 +213,7 @@ async function waitForNoWindowTarget(label, timeout = 8_000) {
   const started = Date.now();
   while (Date.now() - started < timeout) {
     const targets = await (
-      await fetch(`http://127.0.0.1:${port}/json`)
+      await fetch(`http://localhost:${port}/json`)
     ).json();
     const present = targets.some((target) => {
       try {
@@ -1908,6 +1908,112 @@ async function main() {
     }
   });
 
+  await test("live preview renders GitHub alerts and reveals source", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-alerts.md");
+    const source = [
+      "# Alerts",
+      "",
+      "> [!NOTE]",
+      "> This is a note.",
+      "",
+      "> [!WARNING]",
+      "> Danger zone.",
+      "",
+      "> Plain quote",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(10)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-alert-label").length === 2',
+        10_000,
+      );
+
+      const rendered = await evaluate(`(() => {
+        const lines = Array.from(document.querySelectorAll(".cm-line"));
+        const plain = lines.find((node) =>
+          (node.textContent ?? "").includes("Plain quote")
+        );
+        return {
+          noteLines: document.querySelectorAll(".cm-live-alert-note").length,
+          warningLines: document.querySelectorAll(".cm-live-alert-warning").length,
+          labels: Array.from(
+            document.querySelectorAll(".cm-live-alert-label")
+          ).map((node) => node.textContent),
+          noteMarkerVisible: lines.some((line) =>
+            (line.textContent ?? "").includes("[!NOTE]")
+          ),
+          noteTextVisible: lines.some((line) =>
+            (line.textContent ?? "").includes("This is a note.")
+          ),
+          plainIsAlert: plain?.classList.contains("cm-live-alert") ?? true,
+          plainIsQuote: plain?.classList.contains("cm-live-quote") ?? false
+        };
+      })()`);
+      assert(
+        rendered.noteLines === 2 && rendered.warningLines === 2,
+        "each alert block should style all of its lines",
+        rendered,
+      );
+      assert(
+        JSON.stringify(rendered.labels) === JSON.stringify(["Note", "Warning"]),
+        "alert labels should use the reading-view titles",
+        rendered,
+      );
+      assert(
+        rendered.noteMarkerVisible === false,
+        "inactive alert markers should be hidden",
+        rendered,
+      );
+      assert(
+        rendered.noteTextVisible === true,
+        "alert content should stay visible",
+        rendered,
+      );
+      assert(
+        rendered.plainIsAlert === false && rendered.plainIsQuote === true,
+        "ordinary quotes should keep quote styling without an alert class",
+        rendered,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-alert-label")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        'document.querySelectorAll(".cm-live-alert-label").length === 1 && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("[!NOTE]"))',
+        10_000,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(10)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-alert-label").length === 2',
+        10_000,
+      );
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "alert preview must not rewrite the document",
+        content,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);
@@ -2594,7 +2700,7 @@ async function main() {
 
     async function closeExtraWindows() {
       const targets = await (
-        await fetch(`http://127.0.0.1:${port}/json`)
+        await fetch(`http://localhost:${port}/json`)
       ).json().catch(() => []);
       for (const target of targets) {
         try {

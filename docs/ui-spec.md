@@ -234,7 +234,9 @@ ease-out; honor `prefers-reduced-motion`.
   Top-level `mermaid` fences on inactive lines render as sanitized diagrams in a
   bordered card; clicking the diagram or placing the caret inside the fence
   reveals the original source. Other languages and nested fences keep their
-  code cards. GFM
+  code cards. Top-level GitHub alert quotes render with a per-kind accent,
+  background, and title label; clicking the label or activating its line reveals
+  the `[!NOTE]`-style marker. GFM
   task
   markers on inactive
   lines render as checkboxes; clicking one or pressing Space/Enter rewrites
@@ -474,7 +476,9 @@ ease-out; honor `prefers-reduced-motion`.
   links and backlinks scroll within preview.
 - GitHub alerts use `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`,
   `> [!WARNING]`, or `> [!CAUTION]`. They render as labeled, theme-aware
-  callouts.
+  callouts in the reading view. In the editable live preview, top-level alerts
+  reuse the quote surface with the matching accent and an inline title label;
+  clicking the label reveals the source marker.
 - Inline `$...$` and display `$$...$$` math render with KaTeX in preview and in
   the editable live preview. Display formulas are centered and can scroll
   horizontally when wide; clicking one in live preview reveals its source.
