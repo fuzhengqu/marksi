@@ -1,4 +1,5 @@
 import { syntaxTree } from "@codemirror/language";
+import type { SyntaxNode } from "@lezer/common";
 import {
   RangeSetBuilder,
   StateField,
@@ -44,6 +45,10 @@ import {
   type MathSpan,
 } from "../lib/mathSpans";
 import {
+  classifyLinkTarget,
+  normalizeReferenceLabel,
+} from "../lib/links";
+import {
   findMermaidBlocks,
   mermaidPreviewLimit,
   type MermaidBlock,
@@ -83,6 +88,7 @@ export interface LivePreviewOptions {
   mathLabel: string;
   mermaidLabel: string;
   theme: ResolvedTheme;
+  openLink: (url: string) => void;
 }
 
 const EMPTY_OPTIONS: LivePreviewOptions = {
@@ -97,6 +103,7 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   mathLabel: "Math",
   mermaidLabel: "Mermaid diagram",
   theme: "light",
+  openLink: () => {},
 };
 
 const hidden = Decoration.replace({});
@@ -604,6 +611,83 @@ function renderMathInto(
     element.textContent = content;
     element.classList.add("is-error");
   }
+}
+
+function linkHrefAt(state: EditorState, pos: number): string | null {
+  const tree = syntaxTree(state);
+  let node: SyntaxNode | null = tree.resolveInner(pos, 1);
+  while (node && node.name !== "Link" && node.name !== "Autolink") {
+    node = node.parent;
+  }
+  if (!node) {
+    return null;
+  }
+  const url = node.getChild("URL");
+  if (url) {
+    return state.doc.sliceString(url.from, url.to);
+  }
+  const label = node.getChild("LinkLabel");
+  if (!label) {
+    return null;
+  }
+  const wanted = normalizeReferenceLabel(
+    state.doc.sliceString(label.from, label.to),
+  );
+  let href: string | null = null;
+  tree.iterate({
+    enter(reference) {
+      if (reference.name !== "LinkReference") {
+        return;
+      }
+      const referenceLabel = reference.node.getChild("LinkLabel");
+      const referenceUrl = reference.node.getChild("URL");
+      if (!referenceLabel || !referenceUrl) {
+        return;
+      }
+      const candidate = normalizeReferenceLabel(
+        state.doc.sliceString(referenceLabel.from, referenceLabel.to),
+      );
+      if (candidate === wanted) {
+        href = state.doc.sliceString(referenceUrl.from, referenceUrl.to);
+        return false;
+      }
+    },
+  });
+  return href;
+}
+
+function createLinkInteraction(options: LivePreviewOptions) {
+  return EditorView.domEventHandlers({
+    mousedown(event, view) {
+      if (
+        event.button !== 0 ||
+        event.altKey ||
+        event.shiftKey ||
+        !(event.ctrlKey || event.metaKey)
+      ) {
+        return false;
+      }
+      const pos = view.posAtCoords({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      if (pos == null) {
+        return false;
+      }
+      const href = linkHrefAt(view.state, pos);
+      if (!href) {
+        return false;
+      }
+      const target = classifyLinkTarget(href);
+      if (target.kind !== "external") {
+        return false;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      options.openLink(target.url);
+      return true;
+    },
+  });
 }
 
 function addPreviewReveal(
@@ -1621,6 +1705,7 @@ export function livePreview(
     mathField,
     mermaidField,
     createTablePreviewField(options),
+    createLinkInteraction(options),
     createBlockPreviewPlugin(mermaidField),
     createHeadingPreviewPlugin(),
     createLivePreviewPlugin(options, mathField, mermaidField),

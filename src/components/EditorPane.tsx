@@ -15,9 +15,13 @@ import {
   createEditorExtensions,
   editorContentAttributes,
 } from "../editor/setup";
-import { livePreview } from "../editor/livePreview";
+import {
+  livePreview,
+  type LivePreviewOptions,
+} from "../editor/livePreview";
 import { searchPhrases, translate } from "../i18n";
 import { clearImageCache } from "../lib/imageLoader";
+import { openExternalLink } from "../lib/linkActions";
 import { clearImageSize, setImageFit, setImageSize } from "../lib/imageSize";
 import { minimalTextChange } from "../lib/textChange";
 import { smartTyping } from "../editor/smartTyping";
@@ -60,6 +64,20 @@ function focusSearchField(view: EditorView, replace: boolean): void {
     const input = view.dom.querySelector<HTMLInputElement>(`.cm-search ${selector}`);
     input?.focus();
     input?.select();
+  });
+}
+
+function openPreviewLink(language: Language, url: string): void {
+  void openExternalLink(url).catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    useAppStore
+      .getState()
+      .showToast(
+        translate(language, "Could not open link: {error}", {
+          error: message,
+        }),
+        "error",
+      );
   });
 }
 
@@ -116,7 +134,7 @@ export function EditorPane({
   const smartPunctuationRef = useRef(smartPunctuation);
   const emojiAutocompleteRef = useRef(emojiAutocomplete);
   const livePreviewRef = useRef(livePreviewMode);
-  const livePreviewOptionsRef = useRef({
+  const livePreviewOptionsRef = useRef<LivePreviewOptions>({
     documentPath,
     workspacePath,
     imageRootPath,
@@ -128,6 +146,7 @@ export function EditorPane({
     mathLabel: translate(language, "Math"),
     mermaidLabel: translate(language, "Mermaid diagram"),
     theme,
+    openLink: (url) => openPreviewLink(language, url),
   });
   const languageRef = useRef(language);
   const [editableCompartment] = useState(() => new Compartment());
@@ -184,6 +203,7 @@ export function EditorPane({
       mathLabel: translate(language, "Math"),
       mermaidLabel: translate(language, "Mermaid diagram"),
       theme,
+      openLink: (url) => openPreviewLink(language, url),
     };
     languageRef.current = language;
   }, [
@@ -354,6 +374,7 @@ export function EditorPane({
               mathLabel: translate(language, "Math"),
               mermaidLabel: translate(language, "Mermaid diagram"),
               theme,
+              openLink: (url) => openPreviewLink(language, url),
             })
           : [],
       ),

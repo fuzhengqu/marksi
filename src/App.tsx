@@ -107,6 +107,7 @@ import {
   editorWindowCount,
   closeEditorWindow,
 } from "./lib/platform";
+import { setExternalLinkHandler } from "./lib/linkActions";
 import {
   clearWindowFrame,
   fitWindowFrame,
@@ -1789,6 +1790,7 @@ export default function App() {
       setContent: (content: string) => useAppStore.getState().setContent(content),
       getState: () => useAppStore.getState(),
       gotoLine: (line: number) => useAppStore.getState().requestGotoLine(line),
+      setExternalLinkHandler,
       toggleView: handleToggleView,
       setViewMode: (mode: "source" | "preview" | "reading") =>
         useAppStore.getState().setViewMode(mode),

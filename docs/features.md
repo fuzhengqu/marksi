@@ -232,6 +232,7 @@ translations are not shipped.
 | Front matter card in live preview | done | M7 |
 | Math in live preview | done | M7 |
 | Mermaid in live preview | done | M7 |
+| Ctrl+Click external links in live preview | done | M7 |
 | Task list checkboxes in live preview | done | M7 |
 | Reading view (rendered, read-only) | done | M5 |
 | Source mode toggle | done | M2 |

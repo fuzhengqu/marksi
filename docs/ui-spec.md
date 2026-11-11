@@ -245,7 +245,10 @@ ease-out; honor `prefers-reduced-motion`.
   reveals the original source. Other languages and nested fences keep their
   code cards. Top-level GitHub alert quotes render with a per-kind accent,
   background, and title label; clicking the label or activating its line reveals
-  the `[!NOTE]`-style marker. GFM
+  the `[!NOTE]`-style marker. Link text keeps its accent underline; Ctrl+Click
+  opens `http:`, `https:`, and `mailto:` targets externally, while a plain click
+  still edits. Fragment and local links stay in the editor, and unsafe schemes
+  such as `javascript:` or `data:` never reach the operating system. GFM
   task
   markers on inactive
   lines render as checkboxes; clicking one or pressing Space/Enter rewrites

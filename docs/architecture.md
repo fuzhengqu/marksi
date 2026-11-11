@@ -199,6 +199,16 @@ same titles as the reading view. Activating the marker line reveals the source
 marker. Nested quotes, inline text, and near matches keep ordinary quote
 styling, and the document text is never rewritten.
 
+Link text keeps the editor's accent and underline styling. A dedicated
+`mousedown` handler resolves the nearest `Link` or `Autolink` node, reads inline
+destinations or matches a reference label against `LinkReference` definitions,
+and opens only `http:`, `https:`, and `mailto:` targets when Ctrl (or Cmd) is
+held. Plain clicks still place the caret for editing, fragment and local links
+are not handed to the operating system, and other schemes such as `javascript:`
+or `data:` are rejected by `lib/links.ts` before any opener call. The opener is
+isolated in `lib/linkActions.ts`, so the development hook can replace it for
+controlled E2E checks while production uses the system opener.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set
@@ -677,6 +687,10 @@ window starts with an empty document rather than duplicating main state.
   extraction, and live-preview caps; it is covered by unit tests.
 - `src/lib/alerts.ts` owns GitHub alert marker parsing and shared titles for the
   reading view and live preview; it is covered by unit tests.
+- `src/lib/links.ts` owns link-target classification and reference-label
+  normalization; it is covered by unit tests.
+- `src/lib/linkActions.ts` owns the replaceable external-link opener used by the
+  live preview and the development test hook.
 - `src/lib/mathSpans.ts` owns inline/display math scanning, ignore ranges, and
   preview caps; it is covered by unit tests.
 - `src/lib/textChange.ts` owns minimal text-diff calculation for programmatic

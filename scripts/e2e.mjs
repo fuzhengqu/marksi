@@ -2015,6 +2015,135 @@ async function main() {
     }
   });
 
+  await test("live preview opens safe links with Ctrl+click", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-links.md");
+    const source = [
+      "# Links",
+      "",
+      "[External](https://example.com/path) and [Reference][docs].",
+      "",
+      "[Unsafe](javascript:alert(1))",
+      "",
+      "[docs]: https://example.org/docs",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(7)");
+      await waitFor(
+        'Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("External"))',
+        10_000,
+      );
+
+      await evaluate(`(() => {
+        window.__openRequests = [];
+        window.__MARKSI_DEV__.setExternalLinkHandler((url) => {
+          window.__openRequests.push(url);
+          return Promise.resolve();
+        });
+      })()`);
+
+      async function linkPoint(label) {
+        return evaluate(`(() => {
+          const root = document.querySelector(".cm-content");
+          if (!root) return null;
+          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+          let node;
+          while ((node = walker.nextNode())) {
+            const index = node.nodeValue?.indexOf(${JSON.stringify(label)}) ?? -1;
+            if (index < 0) continue;
+            const range = document.createRange();
+            range.setStart(node, index);
+            range.setEnd(node, index + ${label.length});
+            const box = range.getBoundingClientRect();
+            if (box.width > 0 && box.height > 0) {
+              return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+            }
+          }
+          return null;
+        })()`);
+      }
+
+      async function ctrlClick(point) {
+        await send("Input.dispatchMouseEvent", {
+          type: "mousePressed",
+          x: point.x,
+          y: point.y,
+          button: "left",
+          clickCount: 1,
+          modifiers: 2,
+        });
+        await send("Input.dispatchMouseEvent", {
+          type: "mouseReleased",
+          x: point.x,
+          y: point.y,
+          button: "left",
+          clickCount: 1,
+          modifiers: 2,
+        });
+      }
+
+      const external = await linkPoint("External");
+      assert(external, "external link text is missing", external);
+      await ctrlClick(external);
+      await waitFor("window.__openRequests.length === 1", 10_000);
+      const first = await evaluate("window.__openRequests[0]");
+      assert(
+        first === "https://example.com/path",
+        "Ctrl+click should open the inline link",
+        first,
+      );
+
+      const reference = await linkPoint("Reference");
+      assert(reference, "reference link text is missing", reference);
+      await ctrlClick(reference);
+      await waitFor("window.__openRequests.length === 2", 10_000);
+      const second = await evaluate("window.__openRequests[1]");
+      assert(
+        second === "https://example.org/docs",
+        "Ctrl+click should resolve reference links",
+        second,
+      );
+
+      const unsafe = await linkPoint("Unsafe");
+      assert(unsafe, "unsafe link text is missing", unsafe);
+      await ctrlClick(unsafe);
+      await sleep(350);
+      const afterUnsafe = await evaluate("window.__openRequests.length");
+      assert(
+        afterUnsafe === 2,
+        "javascript links must not reach the opener",
+        afterUnsafe,
+      );
+
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "link interaction must not rewrite the document",
+        content,
+      );
+    } finally {
+      await evaluate(`(() => {
+        window.__MARKSI_DEV__.setExternalLinkHandler(null);
+        delete window.__openRequests;
+      })()`).catch(() => {});
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

@@ -135,6 +135,10 @@ The E2E suite currently covers:
   hidden, an ordinary quote keeps quote styling without an alert class,
   clicking a label reveals its marker, moving away restores the labels, and the
   document text is unchanged.
+- Live-preview links: Ctrl+Click on an inline link and a reference-style link
+  passes the resolved URL to the injected opener, a `javascript:` link never
+  reaches the opener, ordinary clicks still edit, and the document text stays
+  unchanged.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.
@@ -294,7 +298,7 @@ and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, installer language configuration, MSI
-artifact-name normalization, and analysis helpers.
+artifact-name normalization, link-target classification, and analysis helpers.
 
 Golden Markdown fixtures under `tests/fixtures/markdown/` pair 18 hand-written
 sources with their exact rendered HTML. They cover ATX/setext headings and
