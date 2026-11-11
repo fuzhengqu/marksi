@@ -14,6 +14,7 @@ export const zhHans: Record<string, string> = {
   "Toggle task": "切换任务",
   "Table": "表格",
   "Front matter": "文档信息",
+  "Math": "数学公式",
   "Files": "文件",
   "Outline": "大纲",
   "Search": "搜索",

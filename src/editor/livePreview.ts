@@ -14,6 +14,7 @@ import {
   type DecorationSet,
   type ViewUpdate,
 } from "@codemirror/view";
+import katex from "katex";
 import {
   blockquoteDepth,
   fenceLanguageLabel,
@@ -31,8 +32,14 @@ import {
   type FrontMatterEntry,
 } from "../lib/frontMatter";
 import { renderMarkdown } from "../lib/markdown";
+import {
+  findMathSpans,
+  mathPreviewLimit,
+  type MathSpan,
+} from "../lib/mathSpans";
 import { rangeIsActive } from "../lib/selection";
 import { tablePreviewLimit } from "../lib/tables";
+import { mergeRanges, type TextRange } from "../lib/textRanges";
 import {
   findImageOccurrences,
   imageFitFromAttributes,
@@ -56,6 +63,7 @@ export interface LivePreviewOptions {
   taskToggleLabel: string;
   tableLabel: string;
   frontMatterLabel: string;
+  mathLabel: string;
 }
 
 const EMPTY_OPTIONS: LivePreviewOptions = {
@@ -67,6 +75,7 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   taskToggleLabel: "Toggle task",
   tableLabel: "Table",
   frontMatterLabel: "Front matter",
+  mathLabel: "Math",
 };
 
 const hidden = Decoration.replace({});
@@ -557,6 +566,127 @@ class LiveFrontMatterWidget extends WidgetType {
   }
 }
 
+function renderMathInto(
+  element: HTMLElement,
+  content: string,
+  display: boolean,
+): void {
+  try {
+    element.innerHTML = katex.renderToString(content, {
+      displayMode: display,
+      output: "html",
+      strict: "ignore",
+      throwOnError: false,
+      trust: false,
+    });
+  } catch {
+    element.textContent = content;
+    element.classList.add("is-error");
+  }
+}
+
+function addMathReveal(
+  element: HTMLElement,
+  view: EditorView,
+  from: number,
+): void {
+  const reveal = (event: Event) => {
+    event.preventDefault();
+    view.dispatch({
+      selection: { anchor: from },
+      scrollIntoView: true,
+    });
+    view.focus();
+  };
+  element.addEventListener("mousedown", reveal);
+  element.addEventListener("click", (event) => {
+    event.preventDefault();
+  });
+  element.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      reveal(event);
+    }
+  });
+}
+
+class LiveMathWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly to: number,
+    readonly content: string,
+    readonly display: boolean,
+    readonly label: string,
+  ) {
+    super();
+  }
+
+  eq(other: LiveMathWidget): boolean {
+    return (
+      this.from === other.from &&
+      this.to === other.to &&
+      this.content === other.content &&
+      this.display === other.display &&
+      this.label === other.label
+    );
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const math = document.createElement("span");
+    math.className = `cm-live-math${this.display ? " is-display" : ""}`;
+    math.contentEditable = "false";
+    math.spellcheck = false;
+    math.tabIndex = 0;
+    math.setAttribute("role", "math");
+    math.setAttribute("aria-label", `${this.label}: ${this.content}`);
+    math.title = this.content;
+    renderMathInto(math, this.content, this.display);
+    addMathReveal(math, view, this.from);
+    return math;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
+class LiveMathBlockWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly to: number,
+    readonly content: string,
+    readonly label: string,
+  ) {
+    super();
+  }
+
+  eq(other: LiveMathBlockWidget): boolean {
+    return (
+      this.from === other.from &&
+      this.to === other.to &&
+      this.content === other.content &&
+      this.label === other.label
+    );
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const math = document.createElement("div");
+    math.className = "cm-live-math-block";
+    math.contentEditable = "false";
+    math.spellcheck = false;
+    math.tabIndex = 0;
+    math.setAttribute("role", "math");
+    math.setAttribute("aria-label", `${this.label}: ${this.content}`);
+    math.title = this.content;
+    renderMathInto(math, this.content, true);
+    addMathReveal(math, view, this.from);
+    return math;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 function collectImages(view: EditorView): ImageOccurrence[] {
   const source = view.state.doc.toString();
   return source.includes("![") ? findImageOccurrences(source) : [];
@@ -574,9 +704,138 @@ function frontMatterEnd(state: EditorState): number {
   return lineCount === 0 ? 0 : state.doc.line(lineCount).to;
 }
 
+function collectMathIgnoredRanges(
+  state: EditorState,
+  source: string,
+): TextRange[] {
+  const ranges: TextRange[] = [];
+  if (source.includes("![")) {
+    for (const image of findImageOccurrences(source)) {
+      ranges.push({
+        start: image.from,
+        end: image.attrsTo ?? image.to,
+      });
+    }
+  }
+  syntaxTree(state).iterate({
+    enter(node) {
+      if (
+        node.name === "URL" ||
+        node.name === "LinkTitle" ||
+        node.name === "HTMLTag" ||
+        node.name === "HTMLBlock" ||
+        node.name === "Image" ||
+        (node.name === "Table" && node.node.parent?.name === "Document")
+      ) {
+        ranges.push({ start: node.from, end: node.to });
+        return false;
+      }
+    },
+  });
+  return mergeRanges(ranges);
+}
+
+function collectMathSpans(state: EditorState): MathSpan[] {
+  const limit = mathPreviewLimit(state.doc.length);
+  if (limit === 0) {
+    return [];
+  }
+  const source = state.doc.toString();
+  return findMathSpans(
+    source,
+    collectMathIgnoredRanges(state, source),
+  ).slice(0, limit);
+}
+
+function fullLineMathRange(
+  state: EditorState,
+  span: MathSpan,
+): TextRange | null {
+  const start = state.doc.lineAt(span.from);
+  const end = state.doc.lineAt(Math.max(span.from, span.to - 1));
+  if (state.doc.sliceString(start.from, span.from).trim() !== "") {
+    return null;
+  }
+  if (state.doc.sliceString(span.to, end.to).trim() !== "") {
+    return null;
+  }
+  return { start: start.from, end: end.to };
+}
+
+interface MathPreviewState {
+  spans: MathSpan[];
+  blocked: Set<number>;
+  decorations: DecorationSet;
+}
+
+function buildMathPreviewState(
+  state: EditorState,
+  spans: MathSpan[],
+  options: LivePreviewOptions,
+): MathPreviewState {
+  const ranges: Range<Decoration>[] = [];
+  const blocked = new Set<number>();
+  for (const span of spans) {
+    if (!span.display) {
+      continue;
+    }
+    const block = fullLineMathRange(state, span);
+    if (!block) {
+      continue;
+    }
+    blocked.add(span.from);
+    if (rangeIsActive(state.selection.ranges, block.start, block.end)) {
+      continue;
+    }
+    ranges.push(
+      Decoration.replace({
+        block: true,
+        widget: new LiveMathBlockWidget(
+          span.from,
+          span.to,
+          span.content,
+          options.mathLabel,
+        ),
+      }).range(block.start, block.end),
+    );
+  }
+  return {
+    spans,
+    blocked,
+    decorations: Decoration.set(ranges, true),
+  };
+}
+
+function createMathPreviewField(options: LivePreviewOptions) {
+  return StateField.define<MathPreviewState>({
+    create: (state) =>
+      buildMathPreviewState(state, collectMathSpans(state), options),
+    update: (value, transaction) => {
+      if (transaction.docChanged) {
+        return buildMathPreviewState(
+          transaction.state,
+          collectMathSpans(transaction.state),
+          options,
+        );
+      }
+      if (transaction.selection) {
+        return buildMathPreviewState(
+          transaction.state,
+          value.spans,
+          options,
+        );
+      }
+      return value;
+    },
+    provide: (field) =>
+      EditorView.decorations.from(field, (value) => value.decorations),
+  });
+}
+
 function buildDecorations(
   view: EditorView,
   images: ImageOccurrence[],
+  math: MathPreviewState,
   options: LivePreviewOptions,
 ): DecorationSet {
   const activeLines = new Set<number>();
@@ -590,6 +849,46 @@ function buildDecorations(
   const frontMatterTo = frontMatterEnd(view.state);
 
   const ranges: DecorationRange[] = [];
+  for (const span of math.spans) {
+    if (math.blocked.has(span.from) || span.from < frontMatterTo) {
+      continue;
+    }
+    const firstLine = view.state.doc.lineAt(span.from).number;
+    const lastLine = view.state.doc.lineAt(
+      Math.max(span.from, span.to - 1),
+    ).number;
+    let active = false;
+    for (let line = firstLine; line <= lastLine; line += 1) {
+      if (activeLines.has(line)) {
+        active = true;
+        break;
+      }
+    }
+    if (active) {
+      continue;
+    }
+    if (
+      !view.visibleRanges.some(
+        (range) => span.from <= range.to && span.to >= range.from,
+      )
+    ) {
+      continue;
+    }
+    ranges.push({
+      from: span.from,
+      to: span.to,
+      decoration: Decoration.replace({
+        widget: new LiveMathWidget(
+          span.from,
+          span.to,
+          span.content,
+          span.display,
+          options.mathLabel,
+        ),
+      }),
+    });
+  }
+
   for (const image of images) {
     if (image.from < frontMatterTo) {
       continue;
@@ -1040,7 +1339,10 @@ function createHeadingPreviewPlugin() {
   );
 }
 
-function createLivePreviewPlugin(options: LivePreviewOptions) {
+function createLivePreviewPlugin(
+  options: LivePreviewOptions,
+  mathField: StateField<MathPreviewState>,
+) {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet;
@@ -1048,7 +1350,12 @@ function createLivePreviewPlugin(options: LivePreviewOptions) {
 
       constructor(view: EditorView) {
         this.images = collectImages(view);
-        this.decorations = buildDecorations(view, this.images, options);
+        this.decorations = buildDecorations(
+          view,
+          this.images,
+          view.state.field(mathField),
+          options,
+        );
       }
 
       update(update: ViewUpdate): void {
@@ -1064,6 +1371,7 @@ function createLivePreviewPlugin(options: LivePreviewOptions) {
           this.decorations = buildDecorations(
             update.view,
             this.images,
+            update.state.field(mathField),
             options,
           );
         }
@@ -1089,12 +1397,14 @@ function createLivePreviewPlugin(options: LivePreviewOptions) {
 export function livePreview(
   options: LivePreviewOptions = EMPTY_OPTIONS,
 ): Extension {
+  const mathField = createMathPreviewField(options);
   return [
     EditorView.editorAttributes.of({ class: "cm-live-preview" }),
     createFrontMatterField(options),
+    mathField,
     createTablePreviewField(options),
     createBlockPreviewPlugin(),
     createHeadingPreviewPlugin(),
-    createLivePreviewPlugin(options),
+    createLivePreviewPlugin(options, mathField),
   ];
 }

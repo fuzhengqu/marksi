@@ -229,6 +229,7 @@ translations are not shipped.
 | Code block cards and language badges in live preview | done | M7 |
 | Tables in live preview | done | M7 |
 | Front matter card in live preview | done | M7 |
+| Math in live preview | done | M7 |
 | Task list checkboxes in live preview | done | M7 |
 | Reading view (rendered, read-only) | done | M5 |
 | Source mode toggle | done | M2 |
@@ -365,6 +366,14 @@ with a YAML badge and up to six key/value rows. Clicking the card or placing the
 caret inside the block reveals the original YAML. Front matter delimiters are
 never styled as horizontal rules or headings, while `---` rules in the document
 body keep their normal divider treatment.
+
+Inline `$...$` and display `$$...$$` math on inactive lines render with KaTeX
+in the editable live preview. Display spans that occupy whole lines become
+centered blocks; clicking either form, or placing the caret on its line,
+reveals the original delimiters. Math inside fenced code, inline code, YAML
+front matter, URLs, HTML tags, and escaped dollars stays literal, and
+currency-like text such as `$5 and $10` is not treated as math. Documents above
+the large-file threshold keep math source visible.
 
 ## Export and import
 

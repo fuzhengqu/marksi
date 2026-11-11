@@ -84,6 +84,8 @@ describe("translate", () => {
     expect(translate("zh-Hant", "Table")).toBe("表格");
     expect(translate("zh-Hans", "Front matter")).toBe("文档信息");
     expect(translate("zh-Hant", "Front matter")).toBe("文件資訊");
+    expect(translate("zh-Hans", "Math")).toBe("数学公式");
+    expect(translate("zh-Hant", "Math")).toBe("數學公式");
   });
 
   it("returns the source label for English", () => {

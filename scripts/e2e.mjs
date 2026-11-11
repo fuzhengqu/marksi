@@ -1673,6 +1673,133 @@ async function main() {
     }
   });
 
+  await test("live preview renders math and reveals source", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-math.md");
+    const fence = String.fromCharCode(96, 96, 96);
+    const source = [
+      "# Math",
+      "",
+      "Inline $E = mc^2$ stays readable.",
+      "",
+      "$$",
+      "a^2 + b^2 = c^2",
+      "$$",
+      "",
+      "Code `$not math$` stays literal.",
+      "",
+      `${fence}text`,
+      "$also not math$",
+      fence,
+      "",
+      "| Formula | Value |",
+      "| --- | --- |",
+      "| $x$ | 1 |",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(18)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-math").length === 1 && document.querySelectorAll(".cm-live-math-block").length === 1 && document.querySelectorAll(".cm-live-table table").length === 1',
+        10_000,
+      );
+
+      const rendered = await evaluate(`(() => {
+        const inline = document.querySelector(".cm-live-math");
+        const block = document.querySelector(".cm-live-math-block");
+        const table = document.querySelector(".cm-live-table");
+        const lines = Array.from(document.querySelectorAll(".cm-line")).map(
+          (node) => node.textContent ?? ""
+        );
+        return {
+          inlineCount: document.querySelectorAll(".cm-live-math").length,
+          blockCount: document.querySelectorAll(".cm-live-math-block").length,
+          tableCount: document.querySelectorAll(".cm-live-table").length,
+          inlineKatex: Boolean(inline?.querySelector(".katex")),
+          blockKatex: Boolean(block?.querySelector(".katex")),
+          tableKatex: Boolean(table?.querySelector(".katex")),
+          inlineSourceVisible: lines.some((line) => line.includes("$E = mc^2$")),
+          blockSourceVisible: lines.some((line) => line.includes("a^2 + b^2")),
+          tableSourceVisible: lines.some((line) => line.includes("$x$")),
+          inlineCodeVisible: lines.some((line) => line.includes("$not math$")),
+          fencedCodeVisible: lines.some((line) => line.includes("$also not math$"))
+        };
+      })()`);
+      assert(
+        rendered.inlineCount === 1 && rendered.blockCount === 1,
+        "one inline and one display math widget should render",
+        rendered,
+      );
+      assert(
+        rendered.inlineKatex === true && rendered.blockKatex === true,
+        "both widgets should contain KaTeX output",
+        rendered,
+      );
+      assert(
+        rendered.inlineSourceVisible === false &&
+          rendered.blockSourceVisible === false,
+        "rendered math source should be hidden",
+        rendered,
+      );
+      assert(
+        rendered.inlineCodeVisible === true &&
+          rendered.fencedCodeVisible === true,
+        "math inside code should stay literal",
+        rendered,
+      );
+      assert(
+        rendered.tableCount === 1 &&
+          rendered.tableKatex === true &&
+          rendered.tableSourceVisible === false,
+        "math inside a rendered table should stay inside the table widget",
+        rendered,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-math")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        'document.querySelectorAll(".cm-live-math").length === 0 && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("$E = mc^2$"))',
+        10_000,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-math-block")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        'document.querySelectorAll(".cm-live-math-block").length === 0 && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("a^2 + b^2"))',
+        10_000,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(18)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-math").length === 1 && document.querySelectorAll(".cm-live-math-block").length === 1 && document.querySelectorAll(".cm-live-table table").length === 1',
+        10_000,
+      );
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "math preview must not rewrite the document",
+        content,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

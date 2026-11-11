@@ -15,6 +15,7 @@ export const zhHant: Record<string, string> = {
   "Toggle task": "切換任務",
   "Table": "表格",
   "Front matter": "文件資訊",
+  "Math": "數學公式",
   "Files": "檔案",
   "Outline": "大綱",
   "Search": "搜尋",

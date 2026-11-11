@@ -1602,6 +1602,50 @@
   overflow-wrap: anywhere;
 }
 
+/* Inline and display math in the editable live preview. KaTeX renders the
+   widget; clicking it reveals the canonical delimiters. */
+.cm-live-math {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 0.08em;
+  border-radius: 4px;
+  cursor: text;
+  vertical-align: middle;
+}
+
+.cm-live-math.is-display {
+  margin: 0.2em 0;
+}
+
+.cm-live-math.is-display .katex-display {
+  margin: 0;
+}
+
+.cm-live-math:focus-visible,
+.cm-live-math-block:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cm-live-math-block {
+  margin: 0.45em 0;
+  padding: 0.15em 0;
+  overflow-x: auto;
+  text-align: center;
+  cursor: text;
+}
+
+.cm-live-math-block .katex-display {
+  margin: 0;
+}
+
+.cm-live-math.is-error,
+.cm-live-math-block.is-error {
+  color: var(--danger);
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+}
+
 /* Inactive tables in the editable live preview. The widget renders sanitized
    reading-view HTML; clicking any part reveals the canonical source. */
 .cm-live-table {

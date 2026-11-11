@@ -168,6 +168,17 @@ heading never leaks into the preview. The card lists non-empty metadata in
 source order, capped at six rows, and clicking it moves the caret to the block
 start.
 
+Inline and display math share the same source scanner in `lib/mathSpans.ts`.
+Inline `$...$` spans are replaced by inline widgets from the live-preview view
+plugin. Display `$$...$$` spans that occupy whole lines need block widgets, so a
+separate `StateField` replaces the full lines and records their opening offsets;
+the inline pass skips those offsets to avoid overlapping decorations. Both
+widgets render through KaTeX with `trust` and HTML extensions disabled, and
+clicking either form moves the caret to the opening delimiter. The scanner skips
+front matter, fenced and inline code, escaped dollars, link destinations, link
+titles, HTML tags and blocks, and currency-like amounts. A document-length
+limit and a span cap keep decoration rebuilds bounded.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set
@@ -626,6 +637,11 @@ window starts with an empty document rather than duplicating main state.
   unit tests.
 - `src/lib/imageSize.ts` owns source-image scanning, dimension clamping, and
   source-preserving width/height updates; it is covered by unit tests.
+- `src/lib/textRanges.ts` owns shared fenced-code, inline-code, escape, and
+  merged-range scanning for source-preserving preview features; it is covered
+  through the image and math unit tests.
+- `src/lib/mathSpans.ts` owns inline/display math scanning, ignore ranges, and
+  preview caps; it is covered by unit tests.
 - `src/lib/textChange.ts` owns minimal text-diff calculation for programmatic
   editor transactions; it is covered by unit tests.
 - `src/lib/frontMatter.ts` owns front-matter extraction and metadata parsing; it

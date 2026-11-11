@@ -227,7 +227,11 @@ ease-out; honor `prefers-reduced-motion`.
   lines reveals its Markdown source. Tables inside code fences, quotes, or list
   items stay literal. Leading YAML front matter on inactive lines renders as a
   compact card with a YAML badge and metadata rows; clicking it reveals the
-  original YAML, and its delimiters never become headings or dividers. GFM task
+  original YAML, and its delimiters never become headings or dividers. Inline
+  `$...$` and whole-line display `$$...$$` math on inactive lines render with
+  KaTeX; clicking the formula or placing the caret on its line reveals the
+  delimiters. Math inside code, front matter, URLs, and HTML stays literal. GFM
+  task
   markers on inactive
   lines render as checkboxes; clicking one or pressing Space/Enter rewrites
   `[ ]` or `[x]` in place. Remote images stay inert placeholders until remote
@@ -465,8 +469,10 @@ ease-out; honor `prefers-reduced-motion`.
 - GitHub alerts use `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`,
   `> [!WARNING]`, or `> [!CAUTION]`. They render as labeled, theme-aware
   callouts.
-- Inline `$...$` and display `$$...$$` math render with KaTeX in preview.
-  Display formulas are centered and can scroll horizontally when wide.
+- Inline `$...$` and display `$$...$$` math render with KaTeX in preview and in
+  the editable live preview. Display formulas are centered and can scroll
+  horizontally when wide; clicking one in live preview reveals its source.
+  Math inside code, front matter, URLs, and HTML stays literal.
 - `==highlight==`, `~subscript~`, and `^superscript^` use the normal text color
   with subtle themed treatment.
 - Link reference definitions work throughout the document.

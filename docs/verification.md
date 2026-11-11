@@ -118,6 +118,11 @@ The E2E suite currently covers:
   only a body `---` rule renders as a divider, clicking the card reveals the
   original YAML without heading styling, moving away restores the card, and the
   document text is unchanged.
+- Live-preview math: inactive inline `$...$` and whole-line display `$$...$$`
+  render one KaTeX widget each, the delimiters stay hidden, clicking either
+  widget reveals its source, moving away restores the widgets, math inside
+  inline code and fenced code stays literal, and the document text is
+  unchanged.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.
