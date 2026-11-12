@@ -489,6 +489,40 @@ function wrapTables(root: Document): void {
   });
 }
 
+export interface HeadingAnchor {
+  id: string;
+  /** One-based source line of the heading text. */
+  line: number;
+}
+
+/**
+ * Returns the heading anchors produced by the same Markdown pipeline as the
+ * reading view, including Setext headings, duplicate suffixes, front-matter
+ * exclusion, and fenced-code exclusion.
+ */
+export function headingAnchors(
+  source: string,
+  strictMode = true,
+): HeadingAnchor[] {
+  const renderingSource = strictMode ? source : normalizeLaxMarkdown(source);
+  const tokens = md.parse(renderingSource, {});
+  const anchors: HeadingAnchor[] = [];
+  for (const token of tokens) {
+    if (token.type !== "heading_open" || !token.map) {
+      continue;
+    }
+    const id = token.attrGet("id");
+    if (!id) {
+      continue;
+    }
+    anchors.push({
+      id: String(id),
+      line: (token.map[0] ?? 0) + 1,
+    });
+  }
+  return anchors;
+}
+
 export function renderMarkdownHtml(
   source: string,
   options: {

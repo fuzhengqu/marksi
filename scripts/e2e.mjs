@@ -2144,6 +2144,100 @@ async function main() {
     }
   });
 
+  await test("live preview anchor links jump to headings", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-anchors.md");
+    const source = [
+      "# Anchors",
+      "",
+      "[Jump](#second-section)",
+      "",
+      "## First Section",
+      "",
+      "Text.",
+      "",
+      "## Second Section",
+      "",
+      "Target.",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(3)");
+      await waitFor(
+        'Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("Jump"))',
+        10_000,
+      );
+
+      const point = await evaluate(`(() => {
+        const root = document.querySelector(".cm-content");
+        if (!root) return null;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+          const index = node.nodeValue?.indexOf("Jump") ?? -1;
+          if (index < 0) continue;
+          const range = document.createRange();
+          range.setStart(node, index);
+          range.setEnd(node, index + 4);
+          const box = range.getBoundingClientRect();
+          if (box.width > 0 && box.height > 0) {
+            return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+          }
+        }
+        return null;
+      })()`);
+      assert(point, "anchor link text is missing", point);
+
+      await send("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        x: point.x,
+        y: point.y,
+        button: "left",
+        clickCount: 1,
+        modifiers: 2,
+      });
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        x: point.x,
+        y: point.y,
+        button: "left",
+        clickCount: 1,
+        modifiers: 2,
+      });
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().cursor.line === 9",
+        10_000,
+      );
+      const jumped = await evaluate(`({
+        cursor: window.__MARKSI_DEV__.getState().cursor,
+        content: window.__MARKSI_DEV__.getState().doc.content
+      })`);
+      assert(
+        jumped.cursor.line === 9,
+        "Ctrl+click should move to the target heading",
+        jumped,
+      );
+      assert(
+        jumped.content === source,
+        "anchor navigation must not rewrite the document",
+        jumped,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

@@ -205,9 +205,12 @@ destinations or matches a reference label against `LinkReference` definitions,
 and opens only `http:`, `https:`, and `mailto:` targets when Ctrl (or Cmd) is
 held. Plain clicks still place the caret for editing, fragment and local links
 are not handed to the operating system, and other schemes such as `javascript:`
-or `data:` are rejected by `lib/links.ts` before any opener call. The opener is
-isolated in `lib/linkActions.ts`, so the development hook can replace it for
-controlled E2E checks while production uses the system opener.
+or `data:` are rejected by `lib/links.ts` before any opener call. Fragment links
+resolve against `headingAnchors` from the same Markdown pipeline as the reading
+view, including Setext headings and duplicate suffixes, then move the caret to
+the matching heading line. The opener is isolated in `lib/linkActions.ts`, so
+the development hook can replace it for controlled E2E checks while production
+uses the system opener.
 
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,

@@ -38,7 +38,7 @@ import {
   frontMatterSummary,
   type FrontMatterEntry,
 } from "../lib/frontMatter";
-import { renderMarkdown } from "../lib/markdown";
+import { headingAnchors, renderMarkdown } from "../lib/markdown";
 import {
   findMathSpans,
   mathPreviewLimit,
@@ -679,6 +679,30 @@ function createLinkInteraction(options: LivePreviewOptions) {
         return false;
       }
       const target = classifyLinkTarget(href);
+      if (target.kind === "anchor") {
+        if (!target.id) {
+          return false;
+        }
+        const anchor = headingAnchors(view.state.doc.toString()).find(
+          (candidate) =>
+            candidate.id === target.id ||
+            candidate.id.toLowerCase() === target.id.toLowerCase(),
+        );
+        if (!anchor) {
+          return false;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        const line = view.state.doc.line(
+          Math.min(Math.max(1, anchor.line), view.state.doc.lines),
+        );
+        view.dispatch({
+          selection: { anchor: line.from },
+          scrollIntoView: true,
+        });
+        view.focus();
+        return true;
+      }
       if (target.kind !== "external") {
         return false;
       }
