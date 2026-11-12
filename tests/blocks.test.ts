@@ -5,6 +5,7 @@ import {
   blockquoteDepth,
   fenceLanguageLabel,
   isUnorderedListMarker,
+  orderedListNumberLabel,
   quoteClassForDepth,
 } from "../src/lib/blocks";
 
@@ -55,5 +56,12 @@ describe("live preview block helpers", () => {
     expect(isUnorderedListMarker("1.")).toBe(false);
     expect(isUnorderedListMarker("1)")).toBe(false);
     expect(isUnorderedListMarker("")).toBe(false);
+  });
+
+  it("advances ordered list labels from the first source number", () => {
+    expect(orderedListNumberLabel(3, 0, "3.")).toBe("3.");
+    expect(orderedListNumberLabel(3, 1, "7.")).toBe("4.");
+    expect(orderedListNumberLabel(1, 0, "1)")).toBe("1)");
+    expect(orderedListNumberLabel(0, 2, "x.")).toBe("3.");
   });
 });

@@ -226,6 +226,12 @@ so numbering is never lost. Task-list checkboxes remain interactive beside the
 bullet, nested indentation is preserved, and clicking a bullet or activating its
 line reveals the canonical marker.
 
+Ordered lists use the first marker's number and advance sequentially within
+each list, mirroring the reading view; later source numbers are ignored, and
+both `.` and `)` delimiters are preserved. Nested lists number independently,
+task items continue their parent sequence, and activating a line or clicking
+the number reveals the source marker.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set

@@ -34,6 +34,22 @@ export function isUnorderedListMarker(value: string): boolean {
 }
 
 /**
+ * Returns the visible ordered-list label for an item. Markdown only uses the
+ * first number in a list; following items advance sequentially and keep the
+ * source delimiter (`.` or `)`).
+ */
+export function orderedListNumberLabel(
+  start: number,
+  index: number,
+  marker: string,
+): string {
+  const first =
+    Number.isFinite(start) && start > 0 ? Math.trunc(start) : 1;
+  const step = Number.isFinite(index) && index > 0 ? Math.trunc(index) : 0;
+  return `${first + step}${marker.endsWith(")") ? ")" : "."}`;
+}
+
+/**
  * Turns a fenced-code info string into a short language label. The first token
  * is used so attributes and titles do not leak into the badge; attribute-only
  * info strings such as `{.ts}` still yield `ts`.

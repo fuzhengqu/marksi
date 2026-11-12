@@ -1724,6 +1724,16 @@
   cursor: text;
 }
 
+.cm-live-list-number {
+  display: inline-block;
+  min-width: 1.6em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  text-align: right;
+  cursor: text;
+}
+
 /* Inactive Mermaid fences in the editable live preview. The widget reuses the
    sanitized reading-view renderer; clicking any part reveals the fence. */
 .cm-live-mermaid {

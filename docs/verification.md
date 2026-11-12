@@ -146,9 +146,14 @@ The E2E suite currently covers:
   superscript badges with hidden delimiters, Ctrl+Click moves the caret to each
   definition line, and the document text stays unchanged.
 - Live-preview unordered lists: inactive `-`, `*`, and `+` markers become five
-  accent bullets across plain, nested, task, and quoted lists; ordered numbers
-  stay visible, task checkboxes remain interactive, clicking a bullet reveals
-  the source marker, and the document text stays unchanged.
+  accent bullets across plain, nested, task, and quoted lists; task checkboxes
+  remain interactive, clicking a bullet reveals the source marker, and the
+  document text stays unchanged.
+- Live-preview ordered lists: a list starting at `3.` renders six sequential
+  labels (`3.` through `7.`, including its task items), a separate `1)` list
+  keeps its parenthesis delimiter, inactive source numbers stay hidden, task
+  checkboxes remain interactive, clicking a number reveals its marker, and the
+  document text stays unchanged.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.
@@ -309,7 +314,8 @@ custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, installer language configuration, MSI
 artifact-name normalization, link-target classification, heading-anchor
-extraction, footnote scanning, list-marker detection, and analysis helpers.
+extraction, footnote scanning, list-marker detection and numbering, and analysis
+helpers.
 
 Golden Markdown fixtures under `tests/fixtures/markdown/` pair 18 hand-written
 sources with their exact rendered HTML. They cover ATX/setext headings and

@@ -453,7 +453,7 @@ function FilesPanel({
           {recent.length === 0 ? (
             <div className="recent-empty">{t("No recent documents yet.")}</div>
           ) : (
-            <div className="recent-list">
+            <div className="recent-list recent-files-list">
               {recent.slice(0, 8).map((item) => (
                 <div key={item.path} className="recent-item">
                   <button

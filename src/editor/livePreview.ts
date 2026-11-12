@@ -26,6 +26,7 @@ import {
   blockquoteDepth,
   fenceLanguageLabel,
   isUnorderedListMarker,
+  orderedListNumberLabel,
   quoteClassForDepth,
 } from "../lib/blocks";
 import {
@@ -823,6 +824,34 @@ class LiveMathBlockWidget extends WidgetType {
   }
 }
 
+class LiveListNumberWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly text: string,
+  ) {
+    super();
+  }
+
+  eq(other: LiveListNumberWidget): boolean {
+    return this.from === other.from && this.text === other.text;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const number = document.createElement("span");
+    number.className = "cm-live-list-number";
+    number.contentEditable = "false";
+    number.spellcheck = false;
+    number.setAttribute("aria-hidden", "true");
+    number.textContent = this.text;
+    addPreviewReveal(number, view, this.from);
+    return number;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 class LiveListBulletWidget extends WidgetType {
   constructor(readonly from: number) {
     super();
@@ -1223,6 +1252,45 @@ function createFootnoteField() {
   });
 }
 
+function collectOrderedListNumbers(
+  state: EditorState,
+  tree: ReturnType<typeof syntaxTree>,
+): Map<number, string> {
+  const numbers = new Map<number, string>();
+  tree.iterate({
+    enter(node) {
+      if (node.name !== "OrderedList") {
+        return;
+      }
+      let index = 0;
+      let start = 1;
+      for (
+        let child = node.node.firstChild;
+        child;
+        child = child.nextSibling
+      ) {
+        if (child.name !== "ListItem") {
+          continue;
+        }
+        const mark = child.getChild("ListMark");
+        if (!mark) {
+          continue;
+        }
+        const marker = state.doc.sliceString(mark.from, mark.to);
+        if (index === 0) {
+          start = Number.parseInt(marker, 10) || 1;
+        }
+        numbers.set(
+          mark.from,
+          orderedListNumberLabel(start, index, marker),
+        );
+        index += 1;
+      }
+    },
+  });
+  return numbers;
+}
+
 function buildDecorations(
   view: EditorView,
   images: ImageOccurrence[],
@@ -1324,6 +1392,7 @@ function buildDecorations(
   }
 
   const tree = syntaxTree(view.state);
+  const orderedNumbers = collectOrderedListNumbers(view.state, tree);
   const footnoteDefinitions = new Map(
     footnotes.definitions.map((definition) => [
       definition.label,
@@ -1479,6 +1548,17 @@ function buildDecorations(
                   widget: new LiveListBulletWidget(node.from),
                 }),
               });
+            } else if (/^\d+[.)]$/.test(marker)) {
+              const number = orderedNumbers.get(node.from);
+              if (number) {
+                ranges.push({
+                  from: node.from,
+                  to: node.to,
+                  decoration: Decoration.replace({
+                    widget: new LiveListNumberWidget(node.from, number),
+                  }),
+                });
+              }
             }
             break;
           }

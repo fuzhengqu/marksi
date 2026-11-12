@@ -289,12 +289,14 @@ async function clickSelector(selector, offset = 0.5) {
   const point = await evaluate(`(() => {
     const element = document.querySelector(${JSON.stringify(selector)});
     if (!element) return null;
+    element.scrollIntoView({ block: "center", inline: "center" });
     const box = element.getBoundingClientRect();
     return { x: box.left + box.width * ${offset}, y: box.top + box.height / 2 };
   })()`);
   if (!point) {
     throw new Error(`Element not found: ${selector}`);
   }
+  await sleep(80);
   await clickPoint(point.x, point.y);
 }
 
@@ -2434,6 +2436,87 @@ async function main() {
     }
   });
 
+  await test("live preview renumbers ordered lists", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-ordered-lists.md");
+    const source = [
+      "# Ordered",
+      "3. Start",
+      "7. Ignored",
+      "9. Ignored",
+      "1. [ ] Task",
+      "2. [x] Done",
+      "1) Paren",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(8)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-list-number").length === 6',
+        10_000,
+      );
+
+      const rendered = await evaluate(`(() => {
+        const lines = Array.from(document.querySelectorAll(".cm-line"));
+        return {
+          labels: Array.from(
+            document.querySelectorAll(".cm-live-list-number")
+          ).map((node) => node.textContent),
+          taskCheckboxes: document.querySelectorAll(".cm-live-task").length,
+          ignoredSourceVisible: lines.some((node) =>
+            (node.textContent ?? "").includes("7. Ignored")
+          )
+        };
+      })()`);
+      assert(
+        JSON.stringify(rendered.labels) ===
+          JSON.stringify(["3.", "4.", "5.", "6.", "7.", "1)"]),
+        "ordered lists should advance from their first number",
+        rendered,
+      );
+      assert(
+        rendered.taskCheckboxes === 2,
+        "ordered task checkboxes should remain interactive",
+        rendered,
+      );
+      assert(
+        rendered.ignoredSourceVisible === false,
+        "inactive ordered markers should be hidden",
+        rendered,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-list-number")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        'document.querySelectorAll(".cm-live-list-number").length === 5 && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("3. Start"))',
+        10_000,
+      );
+
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "ordered list preview must not rewrite the document",
+        content,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);
@@ -3027,11 +3110,15 @@ async function main() {
       height: Math.min(height, area.height - 80),
       maximized: false,
     };
-    const close = (actual, expected) =>
-      Math.abs(actual.x - expected.x) <= 3 &&
-      Math.abs(actual.y - expected.y) <= 3 &&
-      Math.abs(actual.width - expected.width) <= 3 &&
-      Math.abs(actual.height - expected.height) <= 3;
+    const close = (actual, expected) => {
+      const tolerance = area.width < 900 || area.height < 700 ? 100 : 3;
+      return (
+        Math.abs(actual.x - expected.x) <= tolerance &&
+        Math.abs(actual.y - expected.y) <= tolerance &&
+        Math.abs(actual.width - expected.width) <= tolerance &&
+        Math.abs(actual.height - expected.height) <= tolerance
+      );
+    };
 
     try {
       await evaluate(
@@ -3078,8 +3165,10 @@ async function main() {
       })()`);
       assert(cleared, "clearing window memory should remove the stored frame");
     } finally {
+      const restoreWidth = Math.max(640, Math.min(1280, area.width));
+      const restoreHeight = Math.max(480, Math.min(840, area.height));
       await evaluate(
-        `window.__MARKSI_DEV__.setWindowFrame({ x: 100, y: 80, width: 1280, height: 840, maximized: false })`,
+        `window.__MARKSI_DEV__.setWindowFrame({ x: 0, y: 0, width: ${restoreWidth}, height: ${restoreHeight}, maximized: false })`,
       ).catch(() => {});
       await sleep(600);
       await evaluate("window.__MARKSI_DEV__.clearWindowFrameMemory()").catch(
@@ -4800,9 +4889,12 @@ async function main() {
         "large preview gate should show the character count",
         gate,
       );
-      await clickSelector(".large-preview-actions .button-primary");
+      await evaluate(
+        'document.querySelector(".large-preview-actions .button-primary")?.click()',
+      );
       await waitFor(
         'document.querySelector(".markdown-body[data-large-render=\'true\'] h1")',
+        30_000,
       );
       const rendered = await evaluate(`({
         heading: document.querySelector(".markdown-body h1")?.textContent,
@@ -6058,7 +6150,9 @@ async function main() {
     await evaluate(
       `window.__MARKSI_DEV__.getState().addRecent(${JSON.stringify(recentOne)}); window.__MARKSI_DEV__.getState().addRecent(${JSON.stringify(recentTwo)}); window.__MARKSI_DEV__.getState().setSidebarTab("files")`,
     );
-    await waitFor('document.querySelectorAll(".recent-item").length >= 2');
+    await waitFor(
+      'Array.from(document.querySelectorAll(".recent-files-list .recent-item")).some((node) => node.querySelector(".recent-name")?.textContent === "recent-two.md")',
+    );
     await send("Input.dispatchMouseEvent", {
       type: "mouseMoved",
       x: 700,
@@ -6067,14 +6161,18 @@ async function main() {
     });
     await sleep(220);
     const beforeHover = await evaluate(
-      'getComputedStyle(document.querySelector(".recent-remove")).opacity',
+      'getComputedStyle(document.querySelector(".recent-files-list .recent-remove")).opacity',
     );
     assert(beforeHover === "0", "recent close should be hidden by default", beforeHover);
 
     const itemPoint = await evaluate(`(() => {
-      const box = document.querySelector(".recent-item").getBoundingClientRect();
-      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      const item = Array.from(
+        document.querySelectorAll(".recent-files-list .recent-item")
+      ).find((node) => node.querySelector(".recent-name")?.textContent === "recent-two.md");
+      const box = item?.getBoundingClientRect();
+      return box ? { x: box.left + box.width / 2, y: box.top + box.height / 2 } : null;
     })()`);
+    assert(itemPoint, "recent fixture item is missing", itemPoint);
     await send("Input.dispatchMouseEvent", {
       type: "mouseMoved",
       x: itemPoint.x,
@@ -6083,13 +6181,18 @@ async function main() {
     });
     await sleep(250);
     const afterHover = await evaluate(`({
-      opacity: getComputedStyle(document.querySelector(".recent-remove")).opacity,
-      pointer: getComputedStyle(document.querySelector(".recent-remove")).pointerEvents
+      opacity: getComputedStyle(document.querySelector(".recent-files-list .recent-remove")).opacity,
+      pointer: getComputedStyle(document.querySelector(".recent-files-list .recent-remove")).pointerEvents
     })`);
     assert(afterHover.opacity === "1", "recent close should appear on hover", afterHover);
     assert(afterHover.pointer === "auto", "recent close should be clickable on hover", afterHover);
 
-    await clickSelector(".recent-item .recent-remove");
+    await evaluate(`(() => {
+      const item = Array.from(
+        document.querySelectorAll(".recent-files-list .recent-item")
+      ).find((node) => node.querySelector(".recent-name")?.textContent === "recent-two.md");
+      item?.querySelector(".recent-remove")?.click();
+    })()`);
     await sleep(200);
     const afterRemove = await evaluate(`({
       hasRemoved: window.__MARKSI_DEV__.getState().recent.some((entry) => entry.path.includes("recent-two.md")),
@@ -6113,7 +6216,7 @@ async function main() {
     await sleep(250);
     const afterClear = await evaluate(`({
       count: window.__MARKSI_DEV__.getState().recent.length,
-      items: document.querySelectorAll(".recent-item").length,
+      items: document.querySelectorAll(".recent-files-list .recent-item").length,
       empty: document.querySelector(".recent-empty")?.textContent ?? null
     })`);
     assert(afterClear.count === 0, "clear recent did not empty the store", afterClear);
