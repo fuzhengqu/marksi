@@ -1691,6 +1691,27 @@
   white-space: pre-wrap;
 }
 
+/* Footnote references in the editable live preview. Ctrl+Click jumps to the
+   definition; a plain click reveals the source marker for editing. */
+.cm-live-footnote {
+  display: inline-block;
+  margin: 0 0.08em;
+  padding: 0 0.2em;
+  border-radius: 3px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.72em;
+  font-weight: 650;
+  line-height: 1.35;
+  vertical-align: super;
+  cursor: pointer;
+}
+
+.cm-live-footnote:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Inactive Mermaid fences in the editable live preview. The widget reuses the
    sanitized reading-view renderer; clicking any part reveals the fence. */
 .cm-live-mermaid {

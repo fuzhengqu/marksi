@@ -145,6 +145,7 @@ export function EditorPane({
     frontMatterLabel: translate(language, "Front matter"),
     mathLabel: translate(language, "Math"),
     mermaidLabel: translate(language, "Mermaid diagram"),
+    footnoteLabel: translate(language, "Footnote"),
     theme,
     openLink: (url) => openPreviewLink(language, url),
   });
@@ -202,6 +203,7 @@ export function EditorPane({
       frontMatterLabel: translate(language, "Front matter"),
       mathLabel: translate(language, "Math"),
       mermaidLabel: translate(language, "Mermaid diagram"),
+      footnoteLabel: translate(language, "Footnote"),
       theme,
       openLink: (url) => openPreviewLink(language, url),
     };
@@ -373,6 +375,7 @@ export function EditorPane({
               frontMatterLabel: translate(language, "Front matter"),
               mathLabel: translate(language, "Math"),
               mermaidLabel: translate(language, "Mermaid diagram"),
+              footnoteLabel: translate(language, "Footnote"),
               theme,
               openLink: (url) => openPreviewLink(language, url),
             })

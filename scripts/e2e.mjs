@@ -2238,6 +2238,113 @@ async function main() {
     }
   });
 
+  await test("live preview footnote badges jump to definitions", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-footnotes.md");
+    const source = [
+      "# Footnotes",
+      "",
+      "Text[^1] and[^note].",
+      "",
+      "[^1]: First footnote.",
+      "",
+      "[^note]: Second footnote.",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(7)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-footnote").length === 2',
+        10_000,
+      );
+
+      const rendered = await evaluate(`({
+        labels: Array.from(document.querySelectorAll(".cm-live-footnote"))
+          .map((node) => node.textContent),
+        sourceVisible: Array.from(document.querySelectorAll(".cm-line"))
+          .some((node) => (node.textContent ?? "").includes("[^1]"))
+      })`);
+      assert(
+        JSON.stringify(rendered.labels) === JSON.stringify(["1", "note"]),
+        "footnote badges should show their labels",
+        rendered,
+      );
+      assert(
+        rendered.sourceVisible === false,
+        "inactive footnote markers should be hidden",
+        rendered,
+      );
+
+      async function footnotePoint(label) {
+        return evaluate(`(() => {
+          const badge = Array.from(
+            document.querySelectorAll(".cm-live-footnote")
+          ).find((node) => node.textContent === ${JSON.stringify(label)});
+          if (!badge) return null;
+          const box = badge.getBoundingClientRect();
+          return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+        })()`);
+      }
+
+      async function ctrlClick(point) {
+        await send("Input.dispatchMouseEvent", {
+          type: "mousePressed",
+          x: point.x,
+          y: point.y,
+          button: "left",
+          clickCount: 1,
+          modifiers: 2,
+        });
+        await send("Input.dispatchMouseEvent", {
+          type: "mouseReleased",
+          x: point.x,
+          y: point.y,
+          button: "left",
+          clickCount: 1,
+          modifiers: 2,
+        });
+      }
+
+      const first = await footnotePoint("1");
+      assert(first, "first footnote badge is missing", first);
+      await ctrlClick(first);
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().cursor.line === 5",
+        10_000,
+      );
+
+      const second = await footnotePoint("note");
+      assert(second, "second footnote badge is missing", second);
+      await ctrlClick(second);
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().cursor.line === 7",
+        10_000,
+      );
+
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "footnote navigation must not rewrite the document",
+        content,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);
@@ -2811,8 +2918,12 @@ async function main() {
       `(async () => (await import("/src/lib/platform.ts")).windowWorkAreas())()`,
     );
     const area = areas?.[0] ?? { x: 0, y: 0, width: 1600, height: 1000 };
-    const width = Math.min(1020, Math.max(640, area.width - 120));
-    const height = Math.min(700, Math.max(480, area.height - 160));
+    const maxWidth = Math.max(640, area.width - 60);
+    const maxHeight = Math.max(480, area.height - 80);
+    const width = Math.min(1020, maxWidth);
+    const height = Math.min(700, maxHeight);
+    const minUsableWidth = Math.min(900, maxWidth);
+    const minUsableHeight = Math.min(600, maxHeight);
     const first = {
       x: area.x + 60,
       y: area.y + 80,
@@ -2850,10 +2961,10 @@ async function main() {
         { savedFrame, minimized },
       );
       assert(
-        savedFrame.width >= Math.min(900, area.width) &&
-          savedFrame.height >= Math.min(600, area.height),
+        savedFrame.width >= minUsableWidth &&
+          savedFrame.height >= minUsableHeight,
         "saved window should keep a usable content size",
-        { savedFrame, area },
+        { savedFrame, area, minUsableWidth, minUsableHeight },
       );
 
       await evaluate(

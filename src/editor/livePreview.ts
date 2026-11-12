@@ -40,6 +40,10 @@ import {
 } from "../lib/frontMatter";
 import { headingAnchors, renderMarkdown } from "../lib/markdown";
 import {
+  scanFootnotes,
+  type FootnoteScan,
+} from "../lib/footnotes";
+import {
   findMathSpans,
   mathPreviewLimit,
   type MathSpan,
@@ -87,6 +91,7 @@ export interface LivePreviewOptions {
   frontMatterLabel: string;
   mathLabel: string;
   mermaidLabel: string;
+  footnoteLabel: string;
   theme: ResolvedTheme;
   openLink: (url: string) => void;
 }
@@ -102,6 +107,7 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   frontMatterLabel: "Front matter",
   mathLabel: "Math",
   mermaidLabel: "Mermaid diagram",
+  footnoteLabel: "Footnote",
   theme: "light",
   openLink: () => {},
 };
@@ -816,6 +822,76 @@ class LiveMathBlockWidget extends WidgetType {
   }
 }
 
+class LiveFootnoteWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly label: string,
+    readonly definitionLine: number | null,
+    readonly name: string,
+  ) {
+    super();
+  }
+
+  eq(other: LiveFootnoteWidget): boolean {
+    return (
+      this.from === other.from &&
+      this.label === other.label &&
+      this.definitionLine === other.definitionLine &&
+      this.name === other.name
+    );
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const badge = document.createElement("sup");
+    badge.className = "cm-live-footnote";
+    badge.contentEditable = "false";
+    badge.spellcheck = false;
+    badge.tabIndex = 0;
+    badge.setAttribute("role", "link");
+    badge.setAttribute("aria-label", `${this.name} ${this.label}`);
+    badge.title = `${this.name} ${this.label}`;
+    badge.textContent = this.label;
+
+    const activate = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const mouse = event as MouseEvent;
+      if (
+        (mouse.ctrlKey || mouse.metaKey) &&
+        this.definitionLine !== null
+      ) {
+        const line = view.state.doc.line(
+          Math.min(
+            Math.max(1, this.definitionLine),
+            view.state.doc.lines,
+          ),
+        );
+        view.dispatch({
+          selection: { anchor: line.from },
+          scrollIntoView: true,
+        });
+      } else {
+        view.dispatch({
+          selection: { anchor: this.from },
+          scrollIntoView: true,
+        });
+      }
+      view.focus();
+    };
+    badge.addEventListener("mousedown", activate);
+    badge.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        activate(event);
+      }
+    });
+    return badge;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 class LiveAlertLabelWidget extends WidgetType {
   constructor(
     readonly from: number,
@@ -1111,11 +1187,22 @@ function createMermaidPreviewField(options: LivePreviewOptions) {
   });
 }
 
+function createFootnoteField() {
+  return StateField.define<FootnoteScan>({
+    create: (state) => scanFootnotes(state.doc.toString()),
+    update: (value, transaction) =>
+      transaction.docChanged
+        ? scanFootnotes(transaction.state.doc.toString())
+        : value,
+  });
+}
+
 function buildDecorations(
   view: EditorView,
   images: ImageOccurrence[],
   math: MathPreviewState,
   mermaid: MermaidPreviewState,
+  footnotes: FootnoteScan,
   options: LivePreviewOptions,
 ): DecorationSet {
   const activeLines = new Set<number>();
@@ -1211,6 +1298,42 @@ function buildDecorations(
   }
 
   const tree = syntaxTree(view.state);
+  const footnoteDefinitions = new Map(
+    footnotes.definitions.map((definition) => [
+      definition.label,
+      definition,
+    ]),
+  );
+  for (const reference of footnotes.references) {
+    if (reference.from < frontMatterTo) {
+      continue;
+    }
+    if (activeLines.has(view.state.doc.lineAt(reference.from).number)) {
+      continue;
+    }
+    if (
+      !view.visibleRanges.some(
+        (range) =>
+          reference.from <= range.to && reference.to >= range.from,
+      )
+    ) {
+      continue;
+    }
+    const definition = footnoteDefinitions.get(reference.label);
+    ranges.push({
+      from: reference.from,
+      to: reference.to,
+      decoration: Decoration.replace({
+        widget: new LiveFootnoteWidget(
+          reference.from,
+          reference.label,
+          definition?.line ?? null,
+          options.footnoteLabel,
+        ),
+      }),
+    });
+  }
+
   for (const visible of view.visibleRanges) {
     tree.iterate({
       from: visible.from,
@@ -1664,6 +1787,7 @@ function createLivePreviewPlugin(
   options: LivePreviewOptions,
   mathField: StateField<MathPreviewState>,
   mermaidField: StateField<MermaidPreviewState>,
+  footnoteField: StateField<FootnoteScan>,
 ) {
   return ViewPlugin.fromClass(
     class {
@@ -1677,6 +1801,7 @@ function createLivePreviewPlugin(
           this.images,
           view.state.field(mathField),
           view.state.field(mermaidField),
+          view.state.field(footnoteField),
           options,
         );
       }
@@ -1696,6 +1821,7 @@ function createLivePreviewPlugin(
             this.images,
             update.state.field(mathField),
             update.state.field(mermaidField),
+            update.state.field(footnoteField),
             options,
           );
         }
@@ -1723,15 +1849,17 @@ export function livePreview(
 ): Extension {
   const mathField = createMathPreviewField(options);
   const mermaidField = createMermaidPreviewField(options);
+  const footnoteField = createFootnoteField();
   return [
     EditorView.editorAttributes.of({ class: "cm-live-preview" }),
     createFrontMatterField(options),
     mathField,
     mermaidField,
+    footnoteField,
     createTablePreviewField(options),
     createLinkInteraction(options),
     createBlockPreviewPlugin(mermaidField),
     createHeadingPreviewPlugin(),
-    createLivePreviewPlugin(options, mathField, mermaidField),
+    createLivePreviewPlugin(options, mathField, mermaidField, footnoteField),
   ];
 }

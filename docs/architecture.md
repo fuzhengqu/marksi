@@ -212,6 +212,14 @@ the matching heading line. The opener is isolated in `lib/linkActions.ts`, so
 the development hook can replace it for controlled E2E checks while production
 uses the system opener.
 
+Footnotes use a dedicated `StateField` so the document is scanned only when it
+changes. `lib/footnotes.ts` finds references and definitions outside YAML front
+matter, fenced code, and inline code; definitions must start a line with at most
+three leading spaces, and duplicate labels keep the first definition. Inactive
+references become superscript badges; Ctrl+Click moves the caret to the matching
+definition line, while a plain click moves to the reference source. Active lines
+keep their literal `[^label]` source.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set
@@ -691,6 +699,8 @@ window starts with an empty document rather than duplicating main state.
 - `src/lib/alerts.ts` owns GitHub alert marker parsing and shared titles for the
   reading view and live preview; it is covered by unit tests.
 - `src/lib/links.ts` owns link-target classification and reference-label
+  normalization; it is covered by unit tests.
+- `src/lib/footnotes.ts` owns footnote reference/definition scanning and label
   normalization; it is covered by unit tests.
 - `src/lib/linkActions.ts` owns the replaceable external-link opener used by the
   live preview and the development test hook.

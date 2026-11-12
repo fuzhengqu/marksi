@@ -19,8 +19,9 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   completion, IME composition support, and find/replace; inline images, heading
   hierarchy, block quotes and rules, GitHub alert cards, code block cards with
   language badges, table rendering, front matter cards, math formulas, Mermaid
-  diagrams, clickable task checkboxes, and Ctrl+Click link opening or heading
-  jumps in the live preview. Automatic or explicit LTR/RTL document
+  diagrams, clickable task checkboxes, Ctrl+Click link opening or heading
+  jumps, and footnote reference jumps in the live preview. Automatic or
+  explicit LTR/RTL document
   direction keeps code and math LTR.
 - **Markdown**: CommonMark/GFM, tables, task lists, footnotes, table of contents,
   YAML front matter, callouts, syntax highlighting, KaTeX math, Mermaid

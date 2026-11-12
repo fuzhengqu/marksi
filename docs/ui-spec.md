@@ -247,7 +247,9 @@ ease-out; honor `prefers-reduced-motion`.
   background, and title label; clicking the label or activating its line reveals
   the `[!NOTE]`-style marker. Link text keeps its accent underline; Ctrl+Click
   opens `http:`, `https:`, and `mailto:` targets externally and jumps fragment
-  links to their matching headings, while a plain click still edits. Local
+  links to their matching headings, while a plain click still edits. Inactive
+  footnote references render as superscript badges; Ctrl+Click jumps to the
+  matching definition, and a plain click reveals the source marker. Local
   links stay in the editor, and unsafe schemes such as `javascript:` or `data:`
   never reach the operating system. GFM
   task

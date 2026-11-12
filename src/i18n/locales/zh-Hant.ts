@@ -17,6 +17,7 @@ export const zhHant: Record<string, string> = {
   "Front matter": "文件資訊",
   "Math": "數學公式",
   "Mermaid diagram": "Mermaid 圖表",
+  "Footnote": "腳註",
   "Files": "檔案",
   "Outline": "大綱",
   "Search": "搜尋",

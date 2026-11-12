@@ -88,6 +88,8 @@ describe("translate", () => {
     expect(translate("zh-Hant", "Math")).toBe("數學公式");
     expect(translate("zh-Hans", "Mermaid diagram")).toBe("Mermaid 图表");
     expect(translate("zh-Hant", "Mermaid diagram")).toBe("Mermaid 圖表");
+    expect(translate("zh-Hans", "Footnote")).toBe("脚注");
+    expect(translate("zh-Hant", "Footnote")).toBe("腳註");
   });
 
   it("returns the source label for English", () => {
