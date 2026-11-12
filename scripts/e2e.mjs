@@ -2345,6 +2345,95 @@ async function main() {
     }
   });
 
+  await test("live preview renders unordered list bullets", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-lists.md");
+    const source = [
+      "# Lists",
+      "- Alpha",
+      "- Beta",
+      "  - Nested",
+      "1. First",
+      "2. Second",
+      "- [ ] Task",
+      "> - Quoted",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(9)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-list-bullet").length === 5',
+        10_000,
+      );
+
+      const rendered = await evaluate(`(() => {
+        const lines = Array.from(document.querySelectorAll(".cm-line"));
+        return {
+          bullets: Array.from(document.querySelectorAll(".cm-live-list-bullet"))
+            .map((node) => node.textContent),
+          orderedVisible: lines.some((node) =>
+            (node.textContent ?? "").includes("1. First")
+          ),
+          taskCheckboxes: document.querySelectorAll(".cm-live-task").length,
+          alphaSourceVisible: lines.some((node) =>
+            (node.textContent ?? "").includes("- Alpha")
+          )
+        };
+      })()`);
+      assert(
+        rendered.bullets.length === 5 &&
+          rendered.bullets.every((value) => value === "•"),
+        "unordered list markers should render as bullets",
+        rendered,
+      );
+      assert(
+        rendered.orderedVisible === true,
+        "ordered list numbers should stay visible",
+        rendered,
+      );
+      assert(
+        rendered.taskCheckboxes === 1,
+        "task list checkboxes should remain interactive",
+        rendered,
+      );
+      assert(
+        rendered.alphaSourceVisible === false,
+        "inactive unordered markers should be hidden",
+        rendered,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-list-bullet")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        'document.querySelectorAll(".cm-live-list-bullet").length === 4 && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("- Alpha"))',
+        10_000,
+      );
+
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "list preview must not rewrite the document",
+        content,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);

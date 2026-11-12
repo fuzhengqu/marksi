@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.58**
-- Technical version: **0.58.0**
+- Product version: **0.59**
+- Technical version: **0.59.0**
 - Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
@@ -31,14 +31,14 @@ The public security and version policies are enforced by
   live-preview code block cards with language badges, live-preview table
   rendering, the live-preview front matter card, live-preview math,
   live-preview Mermaid diagrams, live-preview GitHub alert cards, Ctrl+Click
-  external links, anchor-link heading jumps, and footnote badges in the live
-  preview.
+  external links, anchor-link heading jumps, footnote badges, and unordered
+  list bullets in the live preview.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **130 done, 3 wip,
-3 todo, 2 deferred** across 138 items.
+is the source for exact status values. Current raw count: **131 done, 3 wip,
+3 todo, 2 deferred** across 139 items.
 
 ## Milestone definitions
 
@@ -160,8 +160,8 @@ corrected scaling, live-preview block quotes and horizontal rules,
 live-preview code block cards with language badges, live-preview table
 rendering, the live-preview front matter card, live-preview math, live-preview
 Mermaid diagrams, live-preview GitHub alert cards, Ctrl+Click external links,
-anchor-link heading jumps, and footnote badges in the live preview are
-complete.
+anchor-link heading jumps, footnote badges, and unordered list bullets in the
+live preview are complete.
 
 ## Delivery rules
 

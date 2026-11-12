@@ -4,6 +4,7 @@ import {
   MAX_QUOTE_DEPTH,
   blockquoteDepth,
   fenceLanguageLabel,
+  isUnorderedListMarker,
   quoteClassForDepth,
 } from "../src/lib/blocks";
 
@@ -45,5 +46,14 @@ describe("live preview block helpers", () => {
   it("caps long fence language labels", () => {
     const label = fenceLanguageLabel("x".repeat(MAX_FENCE_LABEL_LENGTH + 8));
     expect(label).toHaveLength(MAX_FENCE_LABEL_LENGTH);
+  });
+
+  it("recognizes only unordered list markers", () => {
+    expect(isUnorderedListMarker("-")).toBe(true);
+    expect(isUnorderedListMarker("*")).toBe(true);
+    expect(isUnorderedListMarker("+")).toBe(true);
+    expect(isUnorderedListMarker("1.")).toBe(false);
+    expect(isUnorderedListMarker("1)")).toBe(false);
+    expect(isUnorderedListMarker("")).toBe(false);
   });
 });

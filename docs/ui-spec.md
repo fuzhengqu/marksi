@@ -249,9 +249,10 @@ ease-out; honor `prefers-reduced-motion`.
   opens `http:`, `https:`, and `mailto:` targets externally and jumps fragment
   links to their matching headings, while a plain click still edits. Inactive
   footnote references render as superscript badges; Ctrl+Click jumps to the
-  matching definition, and a plain click reveals the source marker. Local
-  links stay in the editor, and unsafe schemes such as `javascript:` or `data:`
-  never reach the operating system. GFM
+  matching definition, and a plain click reveals the source marker. Inactive
+  unordered list markers render as accent bullets, while ordered numbers and
+  task checkboxes stay visible. Local links stay in the editor, and unsafe
+  schemes such as `javascript:` or `data:` never reach the operating system. GFM
   task
   markers on inactive
   lines render as checkboxes; clicking one or pressing Space/Enter rewrites

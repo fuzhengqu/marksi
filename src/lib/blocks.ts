@@ -28,6 +28,11 @@ export function blockquoteDepth(ancestorNames: readonly string[]): number {
 
 export const MAX_FENCE_LABEL_LENGTH = 24;
 
+/** True for the single-character markers of unordered Markdown lists. */
+export function isUnorderedListMarker(value: string): boolean {
+  return value === "-" || value === "*" || value === "+";
+}
+
 /**
  * Turns a fenced-code info string into a short language label. The first token
  * is used so attributes and titles do not leak into the badge; attribute-only

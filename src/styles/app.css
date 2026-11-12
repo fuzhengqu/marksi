@@ -1712,6 +1712,18 @@
   outline-offset: 2px;
 }
 
+/* Inactive unordered list markers become compact bullets. The source marker
+   returns on the active line and when the bullet is clicked. */
+.cm-live-list-bullet {
+  display: inline-block;
+  width: 1ch;
+  color: var(--accent);
+  font-weight: 700;
+  text-align: center;
+  vertical-align: baseline;
+  cursor: text;
+}
+
 /* Inactive Mermaid fences in the editable live preview. The widget reuses the
    sanitized reading-view renderer; clicking any part reveals the fence. */
 .cm-live-mermaid {

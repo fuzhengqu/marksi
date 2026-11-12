@@ -220,6 +220,12 @@ references become superscript badges; Ctrl+Click moves the caret to the matching
 definition line, while a plain click moves to the reference source. Active lines
 keep their literal `[^label]` source.
 
+Unordered list markers use the same line pass. On inactive lines, `-`, `*`, and
+`+` are replaced by a one-character accent bullet; ordered numbers stay literal
+so numbering is never lost. Task-list checkboxes remain interactive beside the
+bullet, nested indentation is preserved, and clicking a bullet or activating its
+line reveals the canonical marker.
+
 Loaded local images also carry their resolved path. The preview context menu
 uses that path to copy it, open the image with the system default application,
 or reveal it in the file manager through the opener plugin. The capability set

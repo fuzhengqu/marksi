@@ -145,6 +145,10 @@ The E2E suite currently covers:
 - Live-preview footnotes: inactive `[^1]` and `[^note]` references render two
   superscript badges with hidden delimiters, Ctrl+Click moves the caret to each
   definition line, and the document text stays unchanged.
+- Live-preview unordered lists: inactive `-`, `*`, and `+` markers become five
+  accent bullets across plain, nested, task, and quoted lists; ordered numbers
+  stay visible, task checkboxes remain interactive, clicking a bullet reveals
+  the source marker, and the document text stays unchanged.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.
@@ -305,7 +309,7 @@ custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, installer language configuration, MSI
 artifact-name normalization, link-target classification, heading-anchor
-extraction, footnote scanning, and analysis helpers.
+extraction, footnote scanning, list-marker detection, and analysis helpers.
 
 Golden Markdown fixtures under `tests/fixtures/markdown/` pair 18 hand-written
 sources with their exact rendered HTML. They cover ATX/setext headings and

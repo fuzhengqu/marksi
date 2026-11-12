@@ -25,6 +25,7 @@ import {
 import {
   blockquoteDepth,
   fenceLanguageLabel,
+  isUnorderedListMarker,
   quoteClassForDepth,
 } from "../lib/blocks";
 import {
@@ -822,6 +823,31 @@ class LiveMathBlockWidget extends WidgetType {
   }
 }
 
+class LiveListBulletWidget extends WidgetType {
+  constructor(readonly from: number) {
+    super();
+  }
+
+  eq(other: LiveListBulletWidget): boolean {
+    return this.from === other.from;
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const bullet = document.createElement("span");
+    bullet.className = "cm-live-list-bullet";
+    bullet.contentEditable = "false";
+    bullet.spellcheck = false;
+    bullet.setAttribute("aria-hidden", "true");
+    bullet.textContent = "•";
+    addPreviewReveal(bullet, view, this.from);
+    return bullet;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 class LiveFootnoteWidget extends WidgetType {
   constructor(
     readonly from: number,
@@ -1438,6 +1464,19 @@ function buildDecorations(
                     taskMarkerChecked(marker),
                     options.taskToggleLabel,
                   ),
+                }),
+              });
+            }
+            break;
+          }
+          case "ListMark": {
+            const marker = view.state.doc.sliceString(node.from, node.to);
+            if (isUnorderedListMarker(marker)) {
+              ranges.push({
+                from: node.from,
+                to: node.to,
+                decoration: Decoration.replace({
+                  widget: new LiveListBulletWidget(node.from),
                 }),
               });
             }
