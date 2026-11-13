@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   classifyLinkTarget,
+  headingAnchorLine,
   normalizeReferenceLabel,
+  resolveLocalLink,
   resolveLocalLinkPath,
 } from "../src/lib/links";
 
@@ -95,5 +97,35 @@ describe("resolveLocalLinkPath", () => {
     expect(resolveLocalLinkPath("image.png", documentPath)).toBeNull();
     expect(resolveLocalLinkPath("README", documentPath)).toBeNull();
     expect(resolveLocalLinkPath("javascript:alert(1)", documentPath)).toBeNull();
+  });
+
+  it("keeps decoded fragments for heading navigation", () => {
+    expect(resolveLocalLink("notes.md#Target%20Heading", documentPath)).toEqual({
+      path: "C:/Docs/notes.md",
+      fragment: "Target Heading",
+    });
+    expect(resolveLocalLink("other.txt?raw=1#section", documentPath)).toEqual({
+      path: "C:/Docs/other.txt",
+      fragment: "section",
+    });
+    expect(resolveLocalLink("other.md#", documentPath)?.fragment).toBeNull();
+  });
+});
+
+describe("headingAnchorLine", () => {
+  const anchors = [
+    { id: "first", line: 3 },
+    { id: "target-heading", line: 7 },
+    { id: "first-1", line: 11 },
+  ];
+
+  it("matches exact IDs and falls back to case-insensitive matching", () => {
+    expect(headingAnchorLine(anchors, "target-heading")).toBe(7);
+    expect(headingAnchorLine(anchors, "Target-Heading")).toBe(7);
+  });
+
+  it("returns null for empty or unknown fragments", () => {
+    expect(headingAnchorLine(anchors, "")).toBeNull();
+    expect(headingAnchorLine(anchors, "missing")).toBeNull();
   });
 });

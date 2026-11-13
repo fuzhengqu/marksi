@@ -236,6 +236,7 @@ translations are not shipped.
 | Anchor links in live preview | done | M7 |
 | Footnotes in live preview | done | M7 |
 | Local Markdown/text links | done | M7 |
+| Local link heading fragments | done | M7 |
 | Unordered list bullets in live preview | done | M7 |
 | Ordered list numbering in live preview | done | M7 |
 | Task list checkboxes in live preview | done | M7 |

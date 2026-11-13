@@ -115,6 +115,8 @@ import {
   saveWindowFrame,
   type WindowFrame,
 } from "./lib/windowFrame";
+import { headingAnchorLine } from "./lib/links";
+import { headingAnchors } from "./lib/markdown";
 import { useAppStore } from "./store/useAppStore";
 import type {
   AppSettings,
@@ -318,11 +320,20 @@ export default function App() {
   }, [confirmDiscard]);
 
   const handleOpenPath = useCallback(
-    async (path: string, line?: number) => {
+    async (path: string, line?: number, anchor?: string) => {
       const current = useAppStore.getState();
       if (samePath(current.doc.path, path)) {
         if (line != null) {
           current.requestGotoLine(line);
+        } else if (anchor) {
+          const targetLine = headingAnchorLine(
+            headingAnchors(current.doc.content),
+            anchor,
+          );
+          if (targetLine != null) {
+            current.requestGotoLine(targetLine);
+            current.setViewMode("preview");
+          }
         }
         return;
       }
@@ -335,8 +346,14 @@ export default function App() {
           const payload = await openDocument();
           if (payload) {
             useAppStore.getState().setLoadedDocument(payload);
-            if (line != null) {
-              useAppStore.getState().requestGotoLine(line);
+            const targetLine =
+              line ??
+              (anchor
+                ? headingAnchorLine(headingAnchors(payload.content), anchor)
+                : null);
+            if (targetLine != null) {
+              useAppStore.getState().requestGotoLine(targetLine);
+              useAppStore.getState().setViewMode("preview");
             }
           }
         } catch (error) {
@@ -348,8 +365,13 @@ export default function App() {
       try {
         const payload = await readDocument(path);
         useAppStore.getState().setLoadedDocument(payload);
-        if (line != null) {
-          useAppStore.getState().requestGotoLine(line);
+        const targetLine =
+          line ??
+          (anchor
+            ? headingAnchorLine(headingAnchors(payload.content), anchor)
+            : null);
+        if (targetLine != null) {
+          useAppStore.getState().requestGotoLine(targetLine);
           useAppStore.getState().setViewMode("preview");
         }
       } catch (error) {
@@ -362,8 +384,8 @@ export default function App() {
   );
 
   const handleOpenLocalFile = useCallback(
-    (path: string) => {
-      void handleOpenPath(path);
+    (path: string, fragment: string | null) => {
+      void handleOpenPath(path, undefined, fragment ?? undefined);
     },
     [handleOpenPath],
   );

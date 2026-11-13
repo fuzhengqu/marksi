@@ -211,7 +211,9 @@ view, including Setext headings and duplicate suffixes, then move the caret to
 the matching heading line. Relative Markdown/text links resolve against the
 current document folder only when they use a supported text extension; absolute
 paths, URL schemes, missing extensions, and unsupported files are rejected
-before any read. The opener is isolated in `lib/linkActions.ts`, so the
+before any read. A `#fragment` on a local link is decoded and matched against
+the target document's heading anchors after opening, so the editor jumps to the
+matching heading line. The opener is isolated in `lib/linkActions.ts`, so the
 development hook can replace it for controlled E2E checks while production
 uses the system opener.
 

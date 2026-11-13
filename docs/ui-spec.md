@@ -251,7 +251,8 @@ ease-out; honor `prefers-reduced-motion`.
   footnote references render as superscript badges; Ctrl+Click jumps to the
   matching definition, and a plain click reveals the source marker. Relative
   links to saved Markdown or text documents open in MarkSI from both previews;
-  absolute paths, unsupported extensions, and unsafe schemes show an explanatory
+  a `#heading` fragment jumps to the matching heading in the opened document.
+  Absolute paths, unsupported extensions, and unsafe schemes show an explanatory
   message instead. Inactive unordered list markers render as accent bullets,
   ordered lists renumber from their first source number with `.`/`)` delimiters
   preserved, and task checkboxes stay visible. GFM

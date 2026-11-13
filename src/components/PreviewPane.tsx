@@ -31,7 +31,7 @@ import {
 } from "../lib/images";
 import { renderMarkdown } from "../lib/markdown";
 import { renderMermaidDiagrams } from "../lib/mermaid";
-import { resolveLocalLinkPath } from "../lib/links";
+import { resolveLocalLink } from "../lib/links";
 import {
   openExternal,
   openLocalPath,
@@ -50,7 +50,7 @@ interface PreviewPaneProps {
   gotoLine: number | null;
   theme: ResolvedTheme;
   textDirection: "ltr" | "rtl";
-  openLocalFile: (path: string) => void;
+  openLocalFile: (path: string, fragment: string | null) => void;
   largeDocument: boolean;
   forceLargePreview: boolean;
   onResizeImage: (
@@ -634,9 +634,9 @@ export function PreviewPane({
       return;
     }
 
-    const localPath = resolveLocalLinkPath(href, documentPath);
-    if (localPath) {
-      openLocalFile(localPath);
+    const local = resolveLocalLink(href, documentPath);
+    if (local) {
+      openLocalFile(local.path, local.fragment);
       return;
     }
 

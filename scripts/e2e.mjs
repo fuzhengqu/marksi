@@ -2530,12 +2530,14 @@ async function main() {
       "",
       "[Open Nested](notes/nested.txt)",
       "",
+      "[Jump Target](other.md#jump-target)",
+      "",
     ].join("\n");
 
     try {
       await mkdir(resolve(root, "notes"), { recursive: true });
       await writeFile(indexFile, source, "utf8");
-      await writeFile(otherFile, "# Other target\n", "utf8");
+      await writeFile(otherFile, "# Other target\n\n## Jump Target\n", "utf8");
       await writeFile(nestedFile, "Nested target\n", "utf8");
       await evaluate(
         `window.__MARKSI_DEV__.openPath(${JSON.stringify(indexFile)})`,
@@ -2545,7 +2547,7 @@ async function main() {
           JSON.stringify(indexFile),
         10_000,
       );
-      await evaluate("window.__MARKSI_DEV__.gotoLine(6)");
+      await evaluate("window.__MARKSI_DEV__.gotoLine(8)");
       await waitFor(
         'Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("Open Other"))',
         10_000,
@@ -2616,7 +2618,30 @@ async function main() {
           JSON.stringify(indexFile),
         10_000,
       );
-      await evaluate("window.__MARKSI_DEV__.gotoLine(6)");
+      await evaluate("window.__MARKSI_DEV__.gotoLine(8)");
+      await waitFor(
+        'Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("Jump Target"))',
+        10_000,
+      );
+      const jump = await linkPoint("Jump Target");
+      assert(jump, "fragment link is missing", jump);
+      await ctrlClick(jump);
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(otherFile) +
+          " && window.__MARKSI_DEV__.getState().cursor.line === 3",
+        10_000,
+      );
+
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(indexFile)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(indexFile),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(8)");
       await waitFor(
         'Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("Open Nested"))',
         10_000,
@@ -2648,15 +2673,16 @@ async function main() {
       );
       await evaluate('window.__MARKSI_DEV__.setViewMode("reading")');
       await waitFor(
-        'document.querySelector(".markdown-body a[href=\\"other.md\\"]")',
+        'document.querySelector(".markdown-body a[href=\\"other.md#jump-target\\"]")',
         10_000,
       );
       await evaluate(
-        'document.querySelector(".markdown-body a[href=\\"other.md\\"]")?.click()',
+        'document.querySelector(".markdown-body a[href=\\"other.md#jump-target\\"]")?.click()',
       );
       await waitFor(
         "window.__MARKSI_DEV__.getState().doc.path === " +
-          JSON.stringify(otherFile),
+          JSON.stringify(otherFile) +
+          " && window.__MARKSI_DEV__.getState().cursor.line === 3",
         10_000,
       );
     } finally {

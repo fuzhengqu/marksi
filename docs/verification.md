@@ -156,8 +156,9 @@ The E2E suite currently covers:
   document text stays unchanged.
 - Local links: Ctrl+Click opens a relative Markdown target and a nested text
   target from the live preview, and clicking a relative link in reading view
-  opens the same target. The target documents render and replace the current
-  document without rewriting either source file.
+  opens the same target. A `other.md#jump-target` link opens the target at the
+  matching heading line in both previews. The target documents render and
+  replace the current document without rewriting either source file.
 - Chinese CodeMirror search panel and Escape dismissal.
 - Source / live-preview / reading mode transitions, and reading content staying
   clear of the overlay sidebar at narrow window widths.
@@ -317,7 +318,7 @@ and width/height/fit handling, export profiles and page CSS, metadata escaping,
 custom-export argument parsing/expansion, PNG naming and capture-scale limits,
 Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, installer language configuration, MSI
-artifact-name normalization, link-target classification and local path
+artifact-name normalization, link-target classification and local path/fragment
 resolution, heading-anchor extraction, footnote scanning, list-marker detection
 and numbering, and analysis helpers.
 

@@ -27,15 +27,19 @@ function documentDirectory(path: string): string {
   return normalized.slice(0, index);
 }
 
+export interface ResolvedLocalLink {
+  path: string;
+  fragment: string | null;
+}
+
 /**
- * Resolves a relative Markdown/text link against the current document folder.
- * Absolute paths, URL schemes, missing extensions, and unsupported file types
- * return `null` so link clicks cannot hand arbitrary files to the editor.
+ * Resolves a relative Markdown/text link against the current document folder,
+ * preserving an optional `#fragment` for heading navigation.
  */
-export function resolveLocalLinkPath(
+export function resolveLocalLink(
   href: string,
   documentPath: string | null,
-): string | null {
+): ResolvedLocalLink | null {
   if (!documentPath) {
     return null;
   }
@@ -43,9 +47,16 @@ export function resolveLocalLinkPath(
   if (!value) {
     return null;
   }
+  let fragment: string | null = null;
   const hash = value.indexOf("#");
   if (hash >= 0) {
+    fragment = value.slice(hash + 1);
     value = value.slice(0, hash);
+    try {
+      fragment = decodeURIComponent(fragment);
+    } catch {
+      // Keep the raw fragment when it is not percent-encoded.
+    }
   }
   const query = value.indexOf("?");
   if (query >= 0) {
@@ -76,7 +87,43 @@ export function resolveLocalLinkPath(
     return null;
   }
   const base = documentDirectory(documentPath).replace(/\/+$/, "");
-  return base ? `${base}/${normalized}` : normalized;
+  return {
+    path: base ? `${base}/${normalized}` : normalized,
+    fragment: fragment?.trim() ? fragment : null,
+  };
+}
+
+/**
+ * Resolves the path portion of a local link. Kept for callers that do not need
+ * the fragment.
+ */
+export function resolveLocalLinkPath(
+  href: string,
+  documentPath: string | null,
+): string | null {
+  return resolveLocalLink(href, documentPath)?.path ?? null;
+}
+
+/**
+ * Finds the heading line matching a fragment, preferring an exact ID and then
+ * a case-insensitive match.
+ */
+export function headingAnchorLine(
+  anchors: readonly { id: string; line: number }[],
+  fragment: string,
+): number | null {
+  const wanted = fragment.trim();
+  if (!wanted) {
+    return null;
+  }
+  const exact = anchors.find((anchor) => anchor.id === wanted);
+  if (exact) {
+    return exact.line;
+  }
+  const folded = anchors.find(
+    (anchor) => anchor.id.toLowerCase() === wanted.toLowerCase(),
+  );
+  return folded?.line ?? null;
 }
 
 /**

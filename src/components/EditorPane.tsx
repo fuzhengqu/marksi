@@ -21,7 +21,7 @@ import {
 } from "../editor/livePreview";
 import { searchPhrases, translate } from "../i18n";
 import { clearImageCache } from "../lib/imageLoader";
-import { resolveLocalLinkPath } from "../lib/links";
+import { resolveLocalLink } from "../lib/links";
 import { openExternalLink } from "../lib/linkActions";
 import { clearImageSize, setImageFit, setImageSize } from "../lib/imageSize";
 import { minimalTextChange } from "../lib/textChange";
@@ -56,7 +56,7 @@ interface EditorPaneProps {
   language: Language;
   textDirection: "ltr" | "rtl";
   theme: ResolvedTheme;
-  openLocalFile: (path: string) => void;
+  openLocalFile: (path: string, fragment: string | null) => void;
 }
 
 function focusSearchField(view: EditorView, replace: boolean): void {
@@ -73,10 +73,10 @@ function openPreviewLocalLink(
   language: Language,
   documentPath: string | null,
   href: string,
-  openLocalFile: (path: string) => void,
+  openLocalFile: (path: string, fragment: string | null) => void,
 ): void {
-  const path = resolveLocalLinkPath(href, documentPath);
-  if (!path) {
+  const target = resolveLocalLink(href, documentPath);
+  if (!target) {
     useAppStore
       .getState()
       .showToast(
@@ -88,7 +88,7 @@ function openPreviewLocalLink(
       );
     return;
   }
-  openLocalFile(path);
+  openLocalFile(target.path, target.fragment);
 }
 
 function openPreviewLink(language: Language, url: string): void {
