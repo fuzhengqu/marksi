@@ -361,6 +361,13 @@ export default function App() {
     [confirmDiscard],
   );
 
+  const handleOpenLocalFile = useCallback(
+    (path: string) => {
+      void handleOpenPath(path);
+    },
+    [handleOpenPath],
+  );
+
   const applySavedSession = useCallback(
     async (saved: SessionSnapshot): Promise<boolean> => {
       let restored = false;
@@ -1950,6 +1957,7 @@ export default function App() {
             language={settings.language}
             textDirection={textDirection}
             theme={resolvedTheme}
+            openLocalFile={handleOpenLocalFile}
           />
           {viewMode === "reading" ? (
             <Suspense
@@ -1966,6 +1974,7 @@ export default function App() {
                 gotoLine={gotoLine}
                 theme={resolvedTheme}
                 textDirection={textDirection}
+                openLocalFile={handleOpenLocalFile}
                 largeDocument={largeFile}
                 forceLargePreview={forceLargePreview}
                 onResizeImage={handleResizeImage}

@@ -31,6 +31,7 @@ import {
 } from "../lib/images";
 import { renderMarkdown } from "../lib/markdown";
 import { renderMermaidDiagrams } from "../lib/mermaid";
+import { resolveLocalLinkPath } from "../lib/links";
 import {
   openExternal,
   openLocalPath,
@@ -49,6 +50,7 @@ interface PreviewPaneProps {
   gotoLine: number | null;
   theme: ResolvedTheme;
   textDirection: "ltr" | "rtl";
+  openLocalFile: (path: string) => void;
   largeDocument: boolean;
   forceLargePreview: boolean;
   onResizeImage: (
@@ -142,6 +144,7 @@ export function PreviewPane({
   gotoLine,
   theme,
   textDirection,
+  openLocalFile,
   largeDocument,
   forceLargePreview,
   onResizeImage,
@@ -631,10 +634,18 @@ export function PreviewPane({
       return;
     }
 
+    const localPath = resolveLocalLinkPath(href, documentPath);
+    if (localPath) {
+      openLocalFile(localPath);
+      return;
+    }
+
     useAppStore
       .getState()
       .showToast(
-        t("Local file links will open in a future milestone."),
+        t(
+          "Local links must point to a Markdown or text file in a saved document.",
+        ),
         "info",
       );
   }

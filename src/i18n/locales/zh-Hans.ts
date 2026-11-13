@@ -309,7 +309,7 @@ export const zhHans: Record<string, string> = {
   "Could not open image: {error}": "无法打开图片：{error}",
   "Could not reveal image: {error}": "无法在文件夹中显示图片：{error}",
   "Could not open link: {error}": "无法打开链接：{error}",
-  "Local file links will open in a future milestone.": "本地文件链接将在后续版本中支持。",
+  "Local links must point to a Markdown or text file in a saved document.": "本地链接必须指向已保存文档中的 Markdown 或文本文件。",
   "Zoom out (-)": "缩小 (-)",
   "Zoom in (+)": "放大 (+)",
   "Reset zoom": "重置缩放",

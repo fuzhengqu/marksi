@@ -21,6 +21,7 @@ import {
 } from "../editor/livePreview";
 import { searchPhrases, translate } from "../i18n";
 import { clearImageCache } from "../lib/imageLoader";
+import { resolveLocalLinkPath } from "../lib/links";
 import { openExternalLink } from "../lib/linkActions";
 import { clearImageSize, setImageFit, setImageSize } from "../lib/imageSize";
 import { minimalTextChange } from "../lib/textChange";
@@ -55,6 +56,7 @@ interface EditorPaneProps {
   language: Language;
   textDirection: "ltr" | "rtl";
   theme: ResolvedTheme;
+  openLocalFile: (path: string) => void;
 }
 
 function focusSearchField(view: EditorView, replace: boolean): void {
@@ -65,6 +67,28 @@ function focusSearchField(view: EditorView, replace: boolean): void {
     input?.focus();
     input?.select();
   });
+}
+
+function openPreviewLocalLink(
+  language: Language,
+  documentPath: string | null,
+  href: string,
+  openLocalFile: (path: string) => void,
+): void {
+  const path = resolveLocalLinkPath(href, documentPath);
+  if (!path) {
+    useAppStore
+      .getState()
+      .showToast(
+        translate(
+          language,
+          "Local links must point to a Markdown or text file in a saved document.",
+        ),
+        "info",
+      );
+    return;
+  }
+  openLocalFile(path);
 }
 
 function openPreviewLink(language: Language, url: string): void {
@@ -121,6 +145,7 @@ export function EditorPane({
   language,
   textDirection,
   theme,
+  openLocalFile,
 }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -148,6 +173,8 @@ export function EditorPane({
     footnoteLabel: translate(language, "Footnote"),
     theme,
     openLink: (url) => openPreviewLink(language, url),
+    openLocalLink: (href) =>
+      openPreviewLocalLink(language, documentPath, href, openLocalFile),
   });
   const languageRef = useRef(language);
   const [editableCompartment] = useState(() => new Compartment());
@@ -206,6 +233,8 @@ export function EditorPane({
       footnoteLabel: translate(language, "Footnote"),
       theme,
       openLink: (url) => openPreviewLink(language, url),
+      openLocalLink: (href) =>
+        openPreviewLocalLink(language, documentPath, href, openLocalFile),
     };
     languageRef.current = language;
   }, [
@@ -217,6 +246,7 @@ export function EditorPane({
     language,
     livePreviewMode,
     loadRemoteImages,
+    openLocalFile,
     smartPunctuation,
     theme,
     workspacePath,
@@ -378,6 +408,13 @@ export function EditorPane({
               footnoteLabel: translate(language, "Footnote"),
               theme,
               openLink: (url) => openPreviewLink(language, url),
+              openLocalLink: (href) =>
+                openPreviewLocalLink(
+                  language,
+                  documentPath,
+                  href,
+                  openLocalFile,
+                ),
             })
           : [],
       ),
@@ -390,6 +427,7 @@ export function EditorPane({
     livePreviewCompartment,
     livePreviewMode,
     loadRemoteImages,
+    openLocalFile,
     theme,
     workspacePath,
   ]);

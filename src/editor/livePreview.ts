@@ -96,6 +96,7 @@ export interface LivePreviewOptions {
   footnoteLabel: string;
   theme: ResolvedTheme;
   openLink: (url: string) => void;
+  openLocalLink: (href: string) => void;
 }
 
 const EMPTY_OPTIONS: LivePreviewOptions = {
@@ -112,6 +113,7 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   footnoteLabel: "Footnote",
   theme: "light",
   openLink: () => {},
+  openLocalLink: () => {},
 };
 
 const hidden = Decoration.replace({});
@@ -709,6 +711,12 @@ function createLinkInteraction(options: LivePreviewOptions) {
           scrollIntoView: true,
         });
         view.focus();
+        return true;
+      }
+      if (target.kind === "local") {
+        event.preventDefault();
+        event.stopPropagation();
+        options.openLocalLink(target.href);
         return true;
       }
       if (target.kind !== "external") {

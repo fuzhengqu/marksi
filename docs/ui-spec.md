@@ -249,11 +249,12 @@ ease-out; honor `prefers-reduced-motion`.
   opens `http:`, `https:`, and `mailto:` targets externally and jumps fragment
   links to their matching headings, while a plain click still edits. Inactive
   footnote references render as superscript badges; Ctrl+Click jumps to the
-  matching definition, and a plain click reveals the source marker. Inactive
-  unordered list markers render as accent bullets, ordered lists renumber from
-  their first source number with `.`/`)` delimiters preserved, and task
-  checkboxes stay visible. Local links stay in the editor, and unsafe schemes
-  such as `javascript:` or `data:` never reach the operating system. GFM
+  matching definition, and a plain click reveals the source marker. Relative
+  links to saved Markdown or text documents open in MarkSI from both previews;
+  absolute paths, unsupported extensions, and unsafe schemes show an explanatory
+  message instead. Inactive unordered list markers render as accent bullets,
+  ordered lists renumber from their first source number with `.`/`)` delimiters
+  preserved, and task checkboxes stay visible. GFM
   task
   markers on inactive
   lines render as checkboxes; clicking one or pressing Space/Enter rewrites

@@ -310,7 +310,7 @@ export const zhHant: Record<string, string> = {
   "Could not open image: {error}": "無法開啟圖片：{error}",
   "Could not reveal image: {error}": "無法在資料夾中顯示圖片：{error}",
   "Could not open link: {error}": "無法開啟連結：{error}",
-  "Local file links will open in a future milestone.": "本機檔案連結將在後續版本中提供。",
+  "Local links must point to a Markdown or text file in a saved document.": "本機連結必須指向已儲存文件中的 Markdown 或文字檔案。",
   "Zoom out (-)": "縮小 (-)",
   "Zoom in (+)": "放大 (+)",
   "Reset zoom": "重設縮放",

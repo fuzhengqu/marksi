@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   classifyLinkTarget,
   normalizeReferenceLabel,
+  resolveLocalLinkPath,
 } from "../src/lib/links";
 
 describe("classifyLinkTarget", () => {
@@ -60,5 +61,39 @@ describe("normalizeReferenceLabel", () => {
     expect(normalizeReferenceLabel("[Docs]")).toBe("docs");
     expect(normalizeReferenceLabel("[docs][]")).toBe("docs");
     expect(normalizeReferenceLabel("  My   Label ")).toBe("my label");
+  });
+});
+
+describe("resolveLocalLinkPath", () => {
+  const documentPath = "C:\\Docs\\index.md";
+
+  it("resolves relative Markdown and text links", () => {
+    expect(resolveLocalLinkPath("other.md", documentPath)).toBe(
+      "C:/Docs/other.md",
+    );
+    expect(resolveLocalLinkPath("../notes/other.markdown", documentPath)).toBe(
+      "C:/Docs/../notes/other.markdown",
+    );
+    expect(resolveLocalLinkPath("notes/nested.txt", documentPath)).toBe(
+      "C:/Docs/notes/nested.txt",
+    );
+  });
+
+  it("decodes percent escapes and ignores fragments and queries", () => {
+    expect(resolveLocalLinkPath("notes%20one.md#section", documentPath)).toBe(
+      "C:/Docs/notes one.md",
+    );
+    expect(resolveLocalLinkPath("other.txt?raw=1", documentPath)).toBe(
+      "C:/Docs/other.txt",
+    );
+  });
+
+  it("rejects unsaved documents, absolute paths, and unsupported files", () => {
+    expect(resolveLocalLinkPath("other.md", null)).toBeNull();
+    expect(resolveLocalLinkPath("/etc/passwd.md", documentPath)).toBeNull();
+    expect(resolveLocalLinkPath("C:\\Windows\\note.md", documentPath)).toBeNull();
+    expect(resolveLocalLinkPath("image.png", documentPath)).toBeNull();
+    expect(resolveLocalLinkPath("README", documentPath)).toBeNull();
+    expect(resolveLocalLinkPath("javascript:alert(1)", documentPath)).toBeNull();
   });
 });

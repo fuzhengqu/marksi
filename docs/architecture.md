@@ -208,8 +208,11 @@ are not handed to the operating system, and other schemes such as `javascript:`
 or `data:` are rejected by `lib/links.ts` before any opener call. Fragment links
 resolve against `headingAnchors` from the same Markdown pipeline as the reading
 view, including Setext headings and duplicate suffixes, then move the caret to
-the matching heading line. The opener is isolated in `lib/linkActions.ts`, so
-the development hook can replace it for controlled E2E checks while production
+the matching heading line. Relative Markdown/text links resolve against the
+current document folder only when they use a supported text extension; absolute
+paths, URL schemes, missing extensions, and unsupported files are rejected
+before any read. The opener is isolated in `lib/linkActions.ts`, so the
+development hook can replace it for controlled E2E checks while production
 uses the system opener.
 
 Footnotes use a dedicated `StateField` so the document is scanned only when it

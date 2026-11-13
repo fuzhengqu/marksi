@@ -2517,6 +2517,154 @@ async function main() {
     }
   });
 
+  await test("local links open Markdown and text documents", async () => {
+    await resetBase();
+    const root = resolve(fixtureDir, "local-links");
+    const indexFile = resolve(root, "index.md");
+    const otherFile = resolve(root, "other.md");
+    const nestedFile = resolve(root, "notes", "nested.txt");
+    const source = [
+      "# Local Links",
+      "",
+      "[Open Other](other.md)",
+      "",
+      "[Open Nested](notes/nested.txt)",
+      "",
+    ].join("\n");
+
+    try {
+      await mkdir(resolve(root, "notes"), { recursive: true });
+      await writeFile(indexFile, source, "utf8");
+      await writeFile(otherFile, "# Other target\n", "utf8");
+      await writeFile(nestedFile, "Nested target\n", "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(indexFile)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(indexFile),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(6)");
+      await waitFor(
+        'Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("Open Other"))',
+        10_000,
+      );
+
+      async function linkPoint(label) {
+        return evaluate(`(() => {
+          const root = document.querySelector(".cm-content");
+          if (!root) return null;
+          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+          let node;
+          while ((node = walker.nextNode())) {
+            const index = node.nodeValue?.indexOf(${JSON.stringify(label)}) ?? -1;
+            if (index < 0) continue;
+            const range = document.createRange();
+            range.setStart(node, index);
+            range.setEnd(node, index + ${label.length});
+            const box = range.getBoundingClientRect();
+            if (box.width > 0 && box.height > 0) {
+              return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+            }
+          }
+          return null;
+        })()`);
+      }
+
+      async function ctrlClick(point) {
+        await send("Input.dispatchMouseEvent", {
+          type: "mousePressed",
+          x: point.x,
+          y: point.y,
+          button: "left",
+          clickCount: 1,
+          modifiers: 2,
+        });
+        await send("Input.dispatchMouseEvent", {
+          type: "mouseReleased",
+          x: point.x,
+          y: point.y,
+          button: "left",
+          clickCount: 1,
+          modifiers: 2,
+        });
+      }
+
+      const other = await linkPoint("Open Other");
+      assert(other, "local Markdown link is missing", other);
+      await ctrlClick(other);
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(otherFile),
+        10_000,
+      );
+      const otherContent = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        otherContent.includes("Other target"),
+        "relative Markdown link should open its target",
+        otherContent,
+      );
+
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(indexFile)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(indexFile),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(6)");
+      await waitFor(
+        'Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("Open Nested"))',
+        10_000,
+      );
+      const nested = await linkPoint("Open Nested");
+      assert(nested, "nested text link is missing", nested);
+      await ctrlClick(nested);
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(nestedFile),
+        10_000,
+      );
+      const nestedContent = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        nestedContent.includes("Nested target"),
+        "nested text link should open its target",
+        nestedContent,
+      );
+
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(indexFile)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(indexFile),
+        10_000,
+      );
+      await evaluate('window.__MARKSI_DEV__.setViewMode("reading")');
+      await waitFor(
+        'document.querySelector(".markdown-body a[href=\\"other.md\\"]")',
+        10_000,
+      );
+      await evaluate(
+        'document.querySelector(".markdown-body a[href=\\"other.md\\"]")?.click()',
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(otherFile),
+        10_000,
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+      await resetBase();
+    }
+  });
+
   await test("editor search is localized and closes with Escape", async () => {
     await clickSelector(".cm-content");
     await keyWithCtrl("f", "KeyF", 70);
