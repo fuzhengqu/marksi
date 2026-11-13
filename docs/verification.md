@@ -389,8 +389,9 @@ is pushed, writes `SHA256SUMS.txt`, and uploads final installers and checksums
 for 14 days. A tag build also checks for `docs/releases/<tag>.md`; when present,
 the publish job creates a GitHub Release with the six installers, combined
 checksums, and Windows/Linux notices. Tags without a release-notes file remain
-tag-only and do not create a Release. The 0.41 run completed for both platforms
-and produced:
+tag-only and do not create a Release. The `v0.61` tag was the first published
+Release (`https://github.com/fuzhengqu/marksi/releases/tag/v0.61`). The 0.41 run
+completed for both platforms and produced:
 
 - `MarkSI_0.41.0_x64_en-US.msi` (6.92 MiB), SHA256
   `8E34A3DF60C21D16802287F441890F0C2C53AD8604F437103D38B61C1FE8182A`
@@ -710,28 +711,32 @@ re-hashed locally and all six matched the uploaded `SHA256SUMS.txt` entries:
 - `MarkSI_0.60.0_x86_64.flatpak` (6.06 MiB), SHA256
   `6D2FF7F0EA91B0B76F810EABC3C8659317EF0C2A6BFCD5C53C7EFD4F01F0004A`
 
-The 0.61 run repeated the same package set. The downloaded artifacts were
-re-hashed locally and all six matched the uploaded `SHA256SUMS.txt` entries:
+The 0.61 GitHub Release (`v0.61`, versionCode 61) was built from the tag, and
+its six installers were downloaded from the Release and re-hashed locally. All
+matched the combined `SHA256SUMS.txt`; the Release also contains both
+third-party notice files:
 
-- `MarkSI_0.61.0_x64.msi` (6.93 MiB), SHA256
-  `B5A83BEAFB98E55E15B575B923135A03191E277A0E932D99199722BDFB6CC4E7`
-- `MarkSI_0.61.0_x64-setup.exe` (5.66 MiB), SHA256
-  `10ABC7A521913C5FAFFFF4FCD69F0D2509B769C1384D0A9231F37637180FBE00`
-- `MarkSI_0.61.0_amd64.deb` (8.17 MiB), SHA256
-  `14699037D7036B2C83101F1900FEE1C88937F0A25EFC690752FA14C9A3F7AE7D`
-- `MarkSI-0.61.0-1.x86_64.rpm` (8.17 MiB), SHA256
-  `228D4000BF65B7198DC8AAB5F6D1380594AF17E156EC94EF4AE0D160911024B3`
-- `MarkSI_0.61.0_amd64.AppImage` (87.52 MiB), SHA256
-  `6DBAFB6DCD73E5D9BCDDD44F7DF6E9A91384A955E8B0E0CDF4B20C5265BF35B2`
-- `MarkSI_0.61.0_x86_64.flatpak` (6.05 MiB), SHA256
-  `7FC3D017A51C96D6F11E268E9958BDFC10AC23EBA64F9B1D990856045C94D037`
+- `MarkSI_0.61_x64.msi` (6.93 MiB), SHA256
+  `8B561B2EC9952695113BE65B6A72F323CF34970CD301A6D5C6FD3F80A54540D0`
+- `MarkSI_0.61_x64-setup.exe` (5.66 MiB), SHA256
+  `9341BFABF97DD21F30D96C7EBC23C06FD4183FEB00D1C02419D67D7571D6AC42`
+- `MarkSI_0.61_amd64.deb` (8.17 MiB), SHA256
+  `9D77F2EC4197B469626545A431A5F9CBCD2A168E64398C9B2E95D34E72601E4E`
+- `MarkSI-0.61-1.x86_64.rpm` (8.17 MiB), SHA256
+  `76C579C5A69B7A0DB7B29E313AABCEBE8BDC2E5501D7AACD069D522D9EA6DFDE`
+- `MarkSI_0.61_amd64.AppImage` (87.51 MiB), SHA256
+  `5288ABB7E40440686E3F147455996E77B905DD5B4EB53226E40BD3E951BDACD5`
+- `MarkSI_0.61_x86_64.flatpak` (6.05 MiB), SHA256
+  `37A38B40957B262B7C8FCE824842785610D920C051DBD261DBA6842AB21A3910`
 
 The 0.54 NSIS setup is 0.01 MiB larger than 0.53, consistent with embedding the
 Simplified and Traditional Chinese installer translations alongside English.
 The MSI remains a single `en-US` installer; its application payload still
 contains all three interface languages and does not select a separate English
 build. From 0.55 onward the release workflow strips the generated WiX language
-suffix, so the MSI path in `SHA256SUMS.txt` is `msi/MarkSI_<version>_x64.msi`.
+suffix. From 0.61 onward it also converts technical filenames to the two-part
+product version before checksums, so the MSI path is
+`msi/MarkSI_0.61_x64.msi`.
 
 The 0.48 AppImage is about 4.8 MiB larger than 0.47 while the deb, rpm, and
 Flatpak sizes are unchanged, and the Windows artifact is the same size. The
@@ -743,15 +748,17 @@ per-release payload growth.
 
 For 0.41, the downloaded artifacts were re-hashed locally; all six matched their
 `SHA256SUMS.txt` entries, and the archive contained no AppImage `AppDir` tree or
-deb staging tarballs. The 0.42 through 0.61 archives were inspected the
-same way and kept the same layout. Each platform artifact also contained a
+deb staging tarballs. The 0.42 through 0.60 archives were inspected the
+same way and kept the same layout. The 0.61 installers were downloaded from the
+GitHub Release and re-hashed. Each platform artifact also contained a
 `THIRD_PARTY_NOTICES.md` generated for that target: Windows reported 241 Rust
 crates and 90 license texts, Linux reported 316 and 98. Adding the notices file
 changed the upload artifact layout to retain the full
 `src-tauri/target/release/bundle` prefix; checksum paths inside the file are
 still relative to the bundle root. The first 0.31 packaging run exposed two
 upload and checksum defects, which were fixed before 0.32. The workflow does not
-sign, publish a release, or install the artifacts.
+sign or install the artifacts. Tags without a release-notes file remain tag-only;
+milestone tags publish a GitHub Release.
 
 ## Flatpak packaging
 
@@ -759,7 +766,8 @@ sign, publish a release, or install the artifacts.
 the `com.marksi.app` identifier and target the GNOME 51 runtime. The metadata
 check runs on every platform and asserts the manifest command/runtime/permissions,
 the desktop `Exec`/icon/MIME entry, the AppStream ID and launchable entry, and
-that the latest `<release>` version matches `package.json`. The staging test
+that the latest `<release>` version matches the two-part product version derived
+from `package.json`. The staging test
 copies a stand-in binary and verifies all four staged icon sizes.
 
 The Flatpak workflow runs on Ubuntu, builds the real Tauri release binary,
