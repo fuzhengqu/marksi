@@ -1,4 +1,9 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import {
+  nextReleaseVersion,
+  productVersion,
+  versionCodeFor,
+} from "./versioning.mjs";
 
 const packagePath = "package.json";
 const packageLockPath = "package-lock.json";
@@ -7,24 +12,55 @@ const cargoLockPath = "src-tauri/Cargo.lock";
 const tauriPath = "src-tauri/tauri.conf.json";
 const metainfoPath = "flatpak/com.marksi.app.metainfo.xml";
 
+function targetArgument(args) {
+  let target = null;
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (argument === "--to") {
+      target = args[index + 1];
+      index += 1;
+      continue;
+    }
+    if (argument.startsWith("--to=")) {
+      target = argument.slice("--to=".length);
+      continue;
+    }
+    throw new Error(`Unknown version argument: ${argument}`);
+  }
+  if (target === "") {
+    throw new Error("--to requires a version");
+  }
+  return target;
+}
+
 const packageJson = JSON.parse(readFileSync(packagePath, "utf8"));
 const current = packageJson.version;
-const match = /^0\.(\d+)\.0$/.exec(current);
-if (!match) {
+const currentCode =
+  packageJson.versionCode === undefined
+    ? versionCodeFor(current)
+    : Number(packageJson.versionCode);
+if (!Number.isInteger(currentCode) || currentCode !== versionCodeFor(current)) {
   throw new Error(
-    `Expected a 0.x.0 release version before bumping, received ${current}`,
+    `package.json versionCode ${packageJson.versionCode} does not match ${versionCodeFor(current)}`,
   );
 }
 
-const nextMinor = Number(match[1]) + 1;
-const next = `0.${nextMinor}.0`;
-const display = `0.${String(nextMinor).padStart(2, "0")}`;
+const next = nextReleaseVersion(current, targetArgument(process.argv.slice(2)));
+const nextCode = versionCodeFor(next);
+if (nextCode <= currentCode) {
+  throw new Error(`versionCode must increase: ${currentCode} -> ${nextCode}`);
+}
+const display = productVersion(next);
 
 packageJson.version = next;
+packageJson.versionCode = nextCode;
 writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
 
 const packageLock = JSON.parse(readFileSync(packageLockPath, "utf8"));
-if (packageLock.version !== current || packageLock.packages?.[""]?.version !== current) {
+if (
+  packageLock.version !== current ||
+  packageLock.packages?.[""]?.version !== current
+) {
   throw new Error("package-lock.json version does not match package.json");
 }
 packageLock.version = next;
@@ -65,10 +101,10 @@ writeFileSync(
   metainfoPath,
   metainfo.replace(
     releasePattern,
-    `<release version="${next}" date="${new Date().toISOString().slice(0, 10)}"/>`,
+    `<release version="${display}" date="${new Date().toISOString().slice(0, 10)}"/>`,
   ),
 );
 
 console.log(
-  `Version bumped ${current} -> ${next} (About displays ${display}).`,
+  `Version bumped ${current} -> ${next} (versionName ${display}, versionCode ${nextCode}).`,
 );

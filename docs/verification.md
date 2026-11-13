@@ -370,15 +370,27 @@ tree produced six entries for historical MSI and NSIS artifacts, including
 `MarkSI_0.25.0_x64_en-US.msi` and its setup executable.
 
 `scripts/artifact-names.mjs` has Vitest coverage for stripping the WiX language
-suffix from Tauri MSI names, preserving unrelated names, replacing stale files,
-and idempotent reruns. The release workflow runs `npm run release:normalize` on
-Windows before checksums, so current artifacts use the language-neutral
-`MarkSI_<version>_x64.msi` name. The installer UI itself remains `en-US`.
+suffix from Tauri MSI names, converting every installer filename from the
+technical version to the two-part product version, preserving unrelated names,
+replacing stale files, and idempotent reruns. The release workflow runs
+`npm run release:normalize` on both platforms before checksums, so current
+artifacts use names such as `MarkSI_0.61_x64.msi`; the installer UI itself
+remains `en-US`.
+
+`scripts/versioning.mjs` has Vitest coverage for two-part product versions,
+monotonic versionCodes, `0.99.0 → 1.0.0`, explicit milestone jumps, rejection of
+`0.100.0`, and tag names such as `v0.61`. `package.json` stores
+`versionCode = major × 100 + minor`; the bump script refuses mismatched,
+decreasing, or reused codes.
 
 `.github/workflows/release-package.yml` builds unsigned bundles on
 `windows-latest` and `ubuntu-latest` when dispatched manually or when a `v*` tag
-is pushed, writes `SHA256SUMS.txt`, and uploads only final installers and the
-checksum file for 14 days. The 0.41 run completed for both platforms and produced:
+is pushed, writes `SHA256SUMS.txt`, and uploads final installers and checksums
+for 14 days. A tag build also checks for `docs/releases/<tag>.md`; when present,
+the publish job creates a GitHub Release with the six installers, combined
+checksums, and Windows/Linux notices. Tags without a release-notes file remain
+tag-only and do not create a Release. The 0.41 run completed for both platforms
+and produced:
 
 - `MarkSI_0.41.0_x64_en-US.msi` (6.92 MiB), SHA256
   `8E34A3DF60C21D16802287F441890F0C2C53AD8604F437103D38B61C1FE8182A`

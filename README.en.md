@@ -68,7 +68,10 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
 
 ## Install and run
 
-No official download is published at this time. Run from source:
+Official downloads are published on
+[GitHub Releases](https://github.com/fuzhengqu/marksi/releases). Milestone
+versions include installers and checksums; routine versions only create a
+version tag. You can also run from source:
 
 ```bash
 npm install

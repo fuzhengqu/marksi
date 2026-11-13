@@ -14,8 +14,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  meta:
+    name: Release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.release.outputs.publish }}
+      tag: ${{ steps.release.outputs.tag }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Detect release notes
+        id: release
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" != refs/tags/v* ]]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          tag="$GITHUB_REF_NAME"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [[ -f "docs/releases/${tag}.md" ]]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+
   bundle:
     name: ${{ matrix.os }}
+    needs: meta
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -84,10 +112,6 @@ jobs:
       - name: Build bundles
         run: npm run tauri:build
 
-      - name: Normalize Windows artifact names
-        if: runner.os == 'Windows'
-        run: npm run release:normalize
-
       - name: Install Flatpak runtime
         if: runner.os == 'Linux'
         run: |
@@ -125,6 +149,9 @@ jobs:
             'if ldd /app/bin/marksi | grep "not found"; then echo "Unresolved shared libraries"; exit 1; fi'
           flatpak info com.marksi.app
 
+      - name: Normalize artifact names
+        run: npm run release:normalize
+
       - name: Write SHA256 checksums
         run: npm run release:checksums
 
@@ -147,3 +174,58 @@ jobs:
             src-tauri/target/release/bundle/flatpak/*.flatpak
           if-no-files-found: error
           retention-days: 14
+
+  publish:
+    name: Publish GitHub Release
+    needs:
+      - meta
+      - bundle
+    if: needs.meta.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download unsigned bundles
+        uses: actions/download-artifact@v4
+        with:
+          pattern: marksi-*-unsigned
+          path: artifacts
+
+      - name: Assemble release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          find artifacts -type f \
+            \( -name '*.msi' -o -name '*.exe' -o -name '*.deb' \
+               -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.flatpak' \) \
+            -exec cp {} release-assets/ \;
+          cp artifacts/marksi-windows-latest-unsigned/THIRD_PARTY_NOTICES.md \
+            release-assets/THIRD_PARTY_NOTICES-windows.md
+          cp artifacts/marksi-ubuntu-latest-unsigned/THIRD_PARTY_NOTICES.md \
+            release-assets/THIRD_PARTY_NOTICES-linux.md
+          cd release-assets
+          for extension in msi exe deb rpm AppImage flatpak; do
+            count="$(find . -maxdepth 1 -type f -name "*.${extension}" | wc -l)"
+            if [[ "$count" -ne 1 ]]; then
+              echo "Expected one .${extension} artifact, found ${count}"
+              exit 1
+            fi
+          done
+          sha256sum MarkSI* THIRD_PARTY_NOTICES-*.md > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.meta.outputs.tag }}
+        shell: bash
+        run: |
+          gh release create "$TAG" release-assets/* \
+            --title "MarkSI ${TAG#v}" \
+            --notes-file "docs/releases/${TAG}.md" \
+            --latest \
+            --verify-tag

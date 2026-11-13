@@ -483,6 +483,8 @@ save the imported document to choose its final location.
 | Feature | Status | Milestone |
 |---|---|---|
 | Windows 11 installer (NSIS/MSI) | done | M6 |
+| Monotonic versionCode and two-part release tags | done | M6 |
+| GitHub Releases for milestone versions | done | M6 |
 | Single NSIS installer with system-language selection | done | M6 |
 | Language-neutral MSI artifact name | done | M6 |
 | Linux deb/rpm/AppImage | done | M6 |

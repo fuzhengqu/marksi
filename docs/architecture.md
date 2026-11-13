@@ -373,6 +373,26 @@ folder. The resulting content opens as a dirty unsaved document. Unsupported
 media types and traversal paths are left literal, and the temporary workspace is
 removed when the command returns.
 
+## Release versioning and tagging
+
+Technical versions remain three-part semver in `package.json`, Cargo, and Tauri
+because those tools require it. Users, tags, release titles, and installer
+filenames use the two-part product version: `0.61.0` is published as `0.61`.
+`versionCode = major × 100 + minor` is stored in `package.json` and must increase
+on every release; `0.61.0` is 61 and `1.0.0` is 100. The bump script defaults to
+the next minor release, accepts explicit milestone jumps such as `--to 0.70`,
+moves `0.99.0` directly to `1.0.0`, and rejects `0.100.0` or any non-increasing
+versionCode.
+
+Every release creates an annotated tag such as `v0.61`. A tag build always
+builds and uploads workflow artifacts. A GitHub Release is created only when
+`docs/releases/<tag>.md` exists, which marks a milestone release; routine
+versions remain tag-only. The release job downloads both platform artifacts,
+verifies one installer of each type, combines the checksums, attaches Windows
+and Linux third-party notices, and publishes the six installers, checksum file,
+and notices. Artifact names are normalized from the technical version to the
+two-part product version before checksums are written.
+
 ## Third-party notices
 
 `scripts/notices.mjs` is the single source for `THIRD_PARTY_NOTICES.md`. It

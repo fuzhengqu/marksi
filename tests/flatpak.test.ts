@@ -16,7 +16,7 @@ describe("flatpak packaging", () => {
   it("keeps the manifest desktop entry and AppStream metadata aligned", async () => {
     const result = await checkFlatpak(".");
     expect(result.appId).toBe("com.marksi.app");
-    expect(result.version).toMatch(/^0\.\d+\.0$/);
+    expect(result.version).toMatch(/^\d+\.\d{2}$/);
     expect(result.paths.binary.endsWith("marksi")).toBe(true);
   });
 
@@ -54,10 +54,10 @@ describe("flatpak packaging", () => {
       );
       await writeFile(
         join(root, "package.json"),
-        JSON.stringify({ version: "9.9.9" }),
+        JSON.stringify({ version: "9.9.0" }),
       );
       await expect(checkFlatpak(root)).rejects.toThrow(
-        'AppStream metadata is missing <release version="9.9.9"',
+        'AppStream metadata is missing <release version="9.09"',
       );
     } finally {
       await rm(root, { recursive: true, force: true });

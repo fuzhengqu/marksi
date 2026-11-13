@@ -2,6 +2,7 @@ import { copyFile, mkdir, readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { productVersion } from "./versioning.mjs";
 
 const APP_ID = "com.marksi.app";
 const RUNTIME_VERSION = "51";
@@ -29,6 +30,7 @@ export async function checkFlatpak(root = ".") {
   const packageJson = JSON.parse(
     await readFile(resolve(root, "package.json"), "utf8"),
   );
+  const display = productVersion(packageJson.version);
   const manifest = await readFile(paths.manifest, "utf8");
   const desktop = await readFile(paths.desktop, "utf8");
   const metainfo = await readFile(paths.metainfo, "utf8");
@@ -61,7 +63,7 @@ export async function checkFlatpak(root = ".") {
     `<id>${APP_ID}</id>`,
     `<launchable type="desktop-id">${APP_ID}.desktop</launchable>`,
     `<project_license>MIT</project_license>`,
-    `<release version="${packageJson.version}"`,
+    `<release version="${display}"`,
   ]) {
     if (!metainfo.includes(expected)) {
       errors.push(`AppStream metadata is missing ${expected}`);
@@ -70,7 +72,7 @@ export async function checkFlatpak(root = ".") {
   if (errors.length > 0) {
     throw new Error(errors.join("\n"));
   }
-  return { appId: APP_ID, version: packageJson.version, paths };
+  return { appId: APP_ID, version: display, paths };
 }
 
 export async function stageFlatpak(
