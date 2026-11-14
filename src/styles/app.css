@@ -2416,6 +2416,51 @@
   background: #46515b;
 }
 
+.markdown-body .code-block-head.has-copy::after {
+  display: none;
+}
+
+.markdown-body .code-copy-button {
+  appearance: none;
+  margin: 0;
+  padding: 2px 9px;
+  border: 1px solid #3b444c;
+  border-radius: 999px;
+  background: transparent;
+  color: #8b959f;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.markdown-body .code-copy-button:hover {
+  border-color: #58636d;
+  background: #2b3137;
+  color: #d7dde2;
+}
+
+.markdown-body .code-copy-button:focus-visible {
+  outline: 2px solid #78c6b5;
+  outline-offset: 2px;
+}
+
+.markdown-body .code-copy-button[data-copied="true"] {
+  border-color: #78c6b5;
+  color: #78c6b5;
+}
+
+.markdown-body .code-copy-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 .markdown-body .mermaid-block {
   margin: 1.35em 0;
 }
@@ -4412,5 +4457,13 @@ body.is-resizing-image[data-resize-axis="height"] * {
 
   .markdown-body .image-resize-handle {
     display: none;
+  }
+
+  .markdown-body .code-copy-button {
+    display: none !important;
+  }
+
+  .markdown-body .code-block-head.has-copy::after {
+    display: block;
   }
 }

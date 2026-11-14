@@ -113,6 +113,14 @@ The E2E suite currently covers:
   writes the exact code text without fences through the injected clipboard
   handler, the first button briefly shows the localized copied label, and the
   document text is unchanged.
+- Reading-view code copy: three fenced blocks expose localized copy buttons in
+  their language headers; the empty block is disabled, clicking the others
+  writes the exact code text without fences through the injected clipboard
+  handler, the first button briefly shows the localized copied label and
+  accessible state, the disabled button writes nothing, and the source is
+  unchanged. The HTML export check includes a fenced block and confirms no copy
+  control is emitted; `shouldCaptureNode` keeps the same control out of PNG
+  capture.
 - Live-preview tables: an inactive top-level table renders one read-only table
   widget with headers, both body rows, inline emphasis, center/right column
   alignment, cell borders, and a striped fill; the Markdown pipes stay hidden,
@@ -191,7 +199,8 @@ The E2E suite currently covers:
 - Export dialog profile switching, front matter toggles, page setup, and the
   real HTML write. The test replaces only the native save-dialog boundary and
   verifies escaped metadata, localized document info, `@page` size/margins,
-  header/footer tokens, persisted options, and source retention.
+  header/footer tokens, persisted options, source retention, and that a rendered
+  code block carries no interactive copy control.
 - Custom export with a configured executable: HTML save, placeholder expansion,
   execution in the export folder, marker-file verification, success toast, and
   source retention. The test uses the platform shell only as a controlled test

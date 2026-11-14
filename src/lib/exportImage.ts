@@ -25,6 +25,18 @@ export function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
+/**
+ * Keeps reading-view copy controls out of PNG captures. A copy button above a
+ * code block is live chrome, not document content, so it is filtered from the
+ * cloned export tree.
+ */
+export function shouldCaptureNode(node: {
+  nodeType: number;
+  classList?: { contains(token: string): boolean };
+}): boolean {
+  return !(node.nodeType === 1 && node.classList?.contains("code-copy-button"));
+}
+
 export function imageExportName(documentName: string): string {
   const base = documentName.replace(/\.[^.\\/]+$/, "").trim() || "Untitled";
   return `${base}.png`;
@@ -159,6 +171,7 @@ export async function captureReadingView(): Promise<ImageCapture> {
       backgroundColor,
       cacheBust: false,
       skipAutoScale: true,
+      filter: shouldCaptureNode,
       // The app otherwise embeds every KaTeX face even when the document has
       // no math, producing multi-megabyte SVG data URLs that WebView2 may fail
       // to decode. System UI fonts do not need embedding.

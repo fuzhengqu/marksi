@@ -3,6 +3,7 @@ import {
   imageCaptureScale,
   imageExportName,
   imageExportPath,
+  shouldCaptureNode,
 } from "../src/lib/exportImage";
 
 describe("image export names", () => {
@@ -40,5 +41,26 @@ describe("imageCaptureScale", () => {
   it("returns a scale that the caller can reject as unreadable", () => {
     expect(imageCaptureScale(800, 100_000)).toBeLessThan(0.25);
     expect(imageCaptureScale(0, 0)).toBe(1);
+  });
+});
+
+describe("image export node filter", () => {
+  it("omits reading-view code copy controls", () => {
+    expect(
+      shouldCaptureNode({
+        nodeType: 1,
+        classList: { contains: (token) => token === "code-copy-button" },
+      }),
+    ).toBe(false);
+  });
+
+  it("keeps document nodes and text", () => {
+    expect(
+      shouldCaptureNode({
+        nodeType: 1,
+        classList: { contains: () => false },
+      }),
+    ).toBe(true);
+    expect(shouldCaptureNode({ nodeType: 3 })).toBe(true);
   });
 });

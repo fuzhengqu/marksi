@@ -229,6 +229,7 @@ translations are not shipped.
 | GitHub alerts in live preview | done | M7 |
 | Code block cards and language badges in live preview | done | M7 |
 | Code block copy button in live preview | done | M7 |
+| Code block copy button in reading view | done | M7 |
 | Tables in live preview | done | M7 |
 | Front matter card in live preview | done | M7 |
 | Math in live preview | done | M7 |
@@ -377,6 +378,11 @@ caret inside the block reveals the original YAML. Front matter delimiters are
 never styled as horizontal rules or headings, while `---` rules in the document
 body keep their normal divider treatment.
 
+Fenced code blocks in the reading view show a localized copy button in their
+language header. It writes the highlighted code text without fences, briefly
+shows a copied state, and disables itself when the block is empty. The control
+is preview-only: print, PNG capture, and exported HTML stay static.
+
 Inline `$...$` and display `$$...$$` math on inactive lines render with KaTeX
 in the editable live preview. Display spans that occupy whole lines become
 centered blocks; clicking either form, or placing the caret on its line,
@@ -423,7 +429,9 @@ limits the canvas by dimension and total pixels so the browser can allocate it.
 Documents below the minimum readable scale are rejected with a clear message
 instead of producing an unreadable or blank file. Remote images remain
 placeholders unless the user has explicitly enabled the remote cache; capture
-never starts a new network request on its own.
+never starts a new network request on its own. Reading-view code copy controls
+are hidden from print and filtered out of PNG capture, and exported HTML never
+contains interactive copy controls.
 
 Pandoc export is optional and works only with an externally installed Pandoc.
 Preferences stores an optional executable path; empty means `pandoc` from PATH.

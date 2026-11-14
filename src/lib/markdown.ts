@@ -65,6 +65,7 @@ interface MarkdownEnvironment {
   imageResizeLabel?: string;
   imageHeightResizeLabel?: string;
   imageResizable?: boolean;
+  codeCopyLabel?: string;
 }
 
 const md = new MarkdownIt({
@@ -281,7 +282,7 @@ md.renderer.rules.toc = (tokens, index) => {
   ].join("");
 };
 
-md.renderer.rules.fence = (tokens, index) => {
+md.renderer.rules.fence = (tokens, index, _options, environment) => {
   const token = tokens[index];
   const info = token.info.trim();
   const language = info.split(/\s+/)[0]?.toLowerCase() ?? "";
@@ -320,9 +321,22 @@ md.renderer.rules.fence = (tokens, index) => {
   }
 
   const label = language || "code";
+  const copyLabel =
+    environment?.imageMode === "export"
+      ? undefined
+      : (environment as MarkdownEnvironment | undefined)?.codeCopyLabel;
   return [
     `<div class="code-block" data-language="${escapeHtml(label)}">`,
-    `<div class="code-block-head"><span>${escapeHtml(label)}</span></div>`,
+    `<div class="code-block-head${copyLabel ? " has-copy" : ""}">`,
+    `<span>${escapeHtml(label)}</span>`,
+    copyLabel
+      ? `<button type="button" class="code-copy-button" aria-label="${escapeHtml(
+          copyLabel,
+        )}"${token.content.trim() ? "" : " disabled"}>${escapeHtml(
+          copyLabel,
+        )}</button>`
+      : "",
+    `</div>`,
     `<pre><code class="hljs">${highlighted}</code></pre>`,
     "</div>\n",
   ].join("");
@@ -531,6 +545,7 @@ export function renderMarkdownHtml(
     imageResizeLabel?: string;
     imageHeightResizeLabel?: string;
     imageResizable?: boolean;
+    codeCopyLabel?: string;
     strictMode?: boolean;
   } = {},
 ): string {
@@ -544,6 +559,7 @@ export function renderMarkdownHtml(
     imageHeightResizeLabel:
       options.imageHeightResizeLabel ?? "Resize image height",
     imageResizable: options.imageResizable ?? true,
+    codeCopyLabel: options.codeCopyLabel,
   };
   const renderingSource =
     options.strictMode === false ? normalizeLaxMarkdown(source) : source;
@@ -558,6 +574,7 @@ export function renderMarkdown(
     imageResizeLabel?: string;
     imageHeightResizeLabel?: string;
     imageResizable?: boolean;
+    codeCopyLabel?: string;
     strictMode?: boolean;
   } = {},
 ): string {

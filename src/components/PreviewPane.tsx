@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { intlLocale, useT } from "../i18n";
+import { copyCodeText } from "../lib/codeCopy";
 import { clampImageHeight, clampImageWidth } from "../lib/imageSize";
 import {
   clearImageCache,
@@ -181,6 +182,7 @@ export function PreviewPane({
             imageResizeLabel: resizeLabel,
             imageHeightResizeLabel: heightResizeLabel,
             imageResizable: !readOnlyMode,
+            codeCopyLabel: t("Copy code"),
             strictMode,
           }),
     [
@@ -190,9 +192,11 @@ export function PreviewPane({
       readOnlyMode,
       resizeLabel,
       strictMode,
+      t,
     ],
   );
   const surfaceRef = useRef<HTMLElement | null>(null);
+  const copyTimers = useRef<Set<number>>(new Set());
   const [lightbox, setLightbox] = useState<LightboxImage | null>(null);
   const lightboxRef = useRef<HTMLDivElement | null>(null);
   useFocusTrap(Boolean(lightbox), lightboxRef);
@@ -327,6 +331,16 @@ export function PreviewPane({
 
   useEffect(() => {
     setContextMenu(null);
+  }, [html]);
+
+  useEffect(() => {
+    const timers = copyTimers.current;
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+      timers.clear();
+    };
   }, [html]);
 
   useEffect(() => {
@@ -584,6 +598,47 @@ export function PreviewPane({
     }
     const target = event.target;
     if (!(target instanceof Element)) {
+      return;
+    }
+
+    const copyButton = target.closest("button.code-copy-button");
+    if (copyButton instanceof HTMLButtonElement) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (copyButton.disabled) {
+        return;
+      }
+      const code = copyButton
+        .closest(".code-block")
+        ?.querySelector("pre code");
+      const text = (code?.textContent ?? "").replace(/\r?\n$/, "");
+      if (!text) {
+        return;
+      }
+      const copyLabel = t("Copy code");
+      const copiedLabel = t("Copied");
+      void copyCodeText(text)
+        .then(() => {
+          if (!copyButton.isConnected) {
+            return;
+          }
+          copyButton.textContent = copiedLabel;
+          copyButton.setAttribute("aria-label", copiedLabel);
+          copyButton.dataset.copied = "true";
+          const timer = window.setTimeout(() => {
+            copyTimers.current.delete(timer);
+            if (!copyButton.isConnected) {
+              return;
+            }
+            copyButton.textContent = copyLabel;
+            copyButton.setAttribute("aria-label", copyLabel);
+            delete copyButton.dataset.copied;
+          }, 1200);
+          copyTimers.current.add(timer);
+        })
+        .catch(() => {
+          // Keep the copy label when clipboard access is denied.
+        });
       return;
     }
 

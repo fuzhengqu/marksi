@@ -2609,6 +2609,145 @@ async function main() {
     }
   });
 
+  await test("reading view copies fenced code", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "reading-copy-code.md");
+    const fence = String.fromCharCode(96, 96, 96);
+    const source = [
+      "# Reading copy",
+      "",
+      `${fence}js`,
+      "const x = 1;",
+      "console.log(x);",
+      fence,
+      "",
+      `${fence}text`,
+      "plain text",
+      fence,
+      "",
+      `${fence}js`,
+      fence,
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setViewMode("reading")',
+      );
+      await waitFor(
+        'document.querySelectorAll(".markdown-body .code-copy-button").length === 3',
+        10_000,
+      );
+
+      const initial = await evaluate(`(() => {
+        const buttons = Array.from(document.querySelectorAll(".markdown-body .code-copy-button"));
+        return {
+          labels: buttons.map((button) => button.textContent),
+          disabled: buttons[2]?.disabled ?? null,
+          headers: document.querySelectorAll(".markdown-body .code-block-head.has-copy").length
+        };
+      })()`);
+      assert(
+        initial.labels.every((label) => label === "复制代码"),
+        "reading view should show localized copy labels",
+        initial,
+      );
+      assert(
+        initial.disabled === true,
+        "empty code block copy should be disabled",
+        initial,
+      );
+      assert(
+        initial.headers === 3,
+        "read code headers should reserve the copy layout",
+        initial,
+      );
+
+      await evaluate(`(() => {
+        window.__copiedCode = [];
+        window.__MARKSI_DEV__.setCodeCopyHandler((text) => {
+          window.__copiedCode.push(text);
+          return Promise.resolve();
+        });
+      })()`);
+
+      await evaluate(
+        'document.querySelectorAll(".markdown-body .code-copy-button")[0]?.click()',
+      );
+      await waitFor("window.__copiedCode.length === 1", 10_000);
+      const first = await evaluate("window.__copiedCode[0]");
+      assert(
+        first === "const x = 1;\nconsole.log(x);",
+        "reading view should copy the first block without fences",
+        first,
+      );
+      await waitFor(
+        'document.querySelectorAll(".markdown-body .code-copy-button")[0]?.textContent === "已复制"',
+        10_000,
+      );
+      const copied = await evaluate(`(() => {
+        const button = document.querySelectorAll(".markdown-body .code-copy-button")[0];
+        return {
+          text: button?.textContent ?? null,
+          aria: button?.getAttribute("aria-label") ?? null,
+          state: button?.dataset.copied ?? null
+        };
+      })()`);
+      assert(
+        copied.aria === "已复制" && copied.state === "true",
+        "reading view copied state should be announced",
+        copied,
+      );
+
+      await evaluate(
+        'document.querySelectorAll(".markdown-body .code-copy-button")[1]?.click()',
+      );
+      await waitFor("window.__copiedCode.length === 2", 10_000);
+      const second = await evaluate("window.__copiedCode[1]");
+      assert(
+        second === "plain text",
+        "reading view should copy the second block",
+        second,
+      );
+
+      await evaluate(
+        'document.querySelectorAll(".markdown-body .code-copy-button")[2]?.click()',
+      );
+      await sleep(150);
+      const afterDisabled = await evaluate("window.__copiedCode.length");
+      assert(
+        afterDisabled === 2,
+        "disabled copy button must not write to the clipboard",
+        afterDisabled,
+      );
+
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "copying code must not rewrite the reading source",
+        content,
+      );
+    } finally {
+      await evaluate(`(() => {
+        window.__MARKSI_DEV__.setCodeCopyHandler(null);
+        delete window.__copiedCode;
+      })()`).catch(() => {});
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("local links open Markdown and text documents", async () => {
     await resetBase();
     const root = resolve(fixtureDir, "local-links");
@@ -5269,6 +5408,10 @@ async function main() {
       "# Body",
       "",
       "Hello.",
+      "",
+      "```js",
+      "const answer = 42;",
+      "```",
     ].join("\n");
     try {
       await evaluate(
@@ -5390,6 +5533,13 @@ async function main() {
 
       const html = await readFile(exportPath, "utf8");
       assert(html.includes("<title>Export Test</title>"), "front matter title missing", html.slice(0, 500));
+      assert(
+        html.includes('data-language="js"') &&
+          html.includes('<code class="hljs">'),
+        "exported code block missing",
+        html.slice(0, 1200),
+      );
+      assert(!html.includes("code-copy-button"), "exported HTML should not include live copy controls");
       assert(html.includes("size: Letter landscape;"), "page size or orientation missing", html.slice(0, 800));
       assert(html.includes("margin: 26mm 24mm;"), "wide margins missing", html.slice(0, 800));
       assert(html.includes("@top-center") && html.includes('content: "Export Test";'), "header tokens missing", html.slice(0, 800));

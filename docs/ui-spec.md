@@ -220,6 +220,10 @@ ease-out; honor `prefers-reduced-motion`.
 - Reading view renders the full sanitized document with images, tables, code
   fences, Mermaid diagrams, and math. It is read-only; the status bar returns
   to source, and the View menu can open it from any mode.
+- Reading-view fenced code blocks show a localized copy button in the language
+  header. It copies the highlighted code without fences, briefly shows a copied
+  state, and disables itself for empty blocks. The control is omitted from
+  print, PNG capture, and exported HTML.
 - Live preview is intentionally text-first: rendering complex blocks inline is
   an ongoing M7 polish area, while the reading view remains the complete
   rendered representation. Local images on inactive lines already render

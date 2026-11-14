@@ -283,7 +283,10 @@ enhancements (task lists, footnote handles, table wrappers). Footnote, highlight
 subscript, superscript, GitHub-alert, and image-attribute behavior comes from
 small MIT-licensed plugins, including `markdown-it-attrs` restricted to image
 widths. The pipeline remains HTML-disabled: raw HTML is escaped before
-sanitization, and DOMPurify is the final boundary.
+sanitization, and DOMPurify is the final boundary. Fenced code blocks accept an
+optional `codeCopyLabel`; when present, the fence header receives a copy button.
+Export mode suppresses the label, so exported HTML and clipboard documents stay
+static even if a caller passes one.
 
 Heading IDs are generated during the core pass from the heading's plain inline
 text, with duplicate suffixes. A later core rule replaces a `[TOC]` paragraph
@@ -354,9 +357,11 @@ fonts, and Mermaid state, measures the reading view, chooses a pixel ratio under
 both the 16,000-pixel dimension limit and the 80-million-pixel area limit, and
 uses `html-to-image` to serialize the rendered element to a PNG blob. Documents
 that would fall below a 0.25 scale are rejected. Remote images are already
-placeholders, so capture does not depend on network access. The PNG is sent to
-Rust as base64 and written with the same atomic replacement strategy as other
-exports; binary exports are capped at 128 MB.
+placeholders, so capture does not depend on network access. The capture filter
+omits reading-view code copy controls, because they are live chrome rather than
+document content. The PNG is sent to Rust as base64 and written with the same
+atomic replacement strategy as other exports; binary exports are capped at
+128 MB.
 
 Pandoc export is an optional external-tool integration. `src/lib/pandoc.ts`
 owns format metadata and filename helpers. The dialog probes
@@ -488,7 +493,10 @@ Lezer tree, filtered against active selection lines, sorted, and installed as
 replace decorations. Selection or document changes rebuild the decorations.
 The rendered `PreviewPane` is reserved for `reading` mode and print; switching
 between source, live preview, and reading never changes the Markdown source or
-undo history.
+undo history. Its fenced-code header buttons copy the code element's text
+through `lib/codeCopy.ts`, show a localized copied state for 1.2 seconds, and
+never reveal or rewrite the source. The handlers are delegated from the preview
+surface, so the rendered HTML carries no separate application state.
 
 ## Text direction
 
@@ -743,7 +751,7 @@ window starts with an empty document rather than duplicating main state.
 - `src/lib/linkActions.ts` owns the replaceable external-link opener used by the
   live preview and the development test hook.
 - `src/lib/codeCopy.ts` owns the replaceable fenced-code clipboard writer used by
-  the live preview and the development test hook.
+  the live preview, the reading view, and the development test hook.
 - `src/lib/mathSpans.ts` owns inline/display math scanning, ignore ranges, and
   preview caps; it is covered by unit tests.
 - `src/lib/textChange.ts` owns minimal text-diff calculation for programmatic
