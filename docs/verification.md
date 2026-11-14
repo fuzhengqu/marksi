@@ -408,10 +408,10 @@ decreasing, or reused codes.
 `.github/workflows/release-package.yml` builds unsigned bundles on
 `windows-latest` and `ubuntu-latest` when dispatched manually or when a `v*` tag
 is pushed, writes `SHA256SUMS.txt`, and uploads final installers and checksums
-for 14 days. A tag build also checks for `docs/releases/<tag>.md`; when present,
-the publish job creates a GitHub Release with the six installers, combined
-checksums, and Windows/Linux notices. Tags without a release-notes file remain
-tag-only and do not create a Release. The `v0.61` tag was the first published
+for 14 days. Every version tag publishes a GitHub Release with the six
+installers, combined checksums, and Windows/Linux notices. Curated notes in
+`docs/releases/<tag>.md` take precedence; otherwise the workflow generates notes
+from commits since the previous tag. The `v0.61` tag was the first published
 Release (`https://github.com/fuzhengqu/marksi/releases/tag/v0.61`). The 0.41 run
 completed for both platforms and produced:
 
@@ -751,9 +751,9 @@ third-party notice files:
 - `MarkSI_0.61_x86_64.flatpak` (6.05 MiB), SHA256
   `37A38B40957B262B7C8FCE824842785610D920C051DBD261DBA6842AB21A3910`
 
-The 0.62 tag built both platforms without a Release, as intended for a routine
-version. The six workflow artifacts were downloaded and re-hashed against the
-per-platform `SHA256SUMS.txt` entries; no v0.62 GitHub Release exists:
+The 0.62 tag built both platforms. The six workflow artifacts were downloaded
+and re-hashed against the per-platform `SHA256SUMS.txt` entries; the v0.62
+GitHub Release now carries these assets:
 
 - `MarkSI_0.62_x64.msi` (6.93 MiB), SHA256
   `AEA6A5DF22C7E0196E5D89B6FC09D11F91A016C16D997762E84B3262F63C125E`
@@ -768,9 +768,9 @@ per-platform `SHA256SUMS.txt` entries; no v0.62 GitHub Release exists:
 - `MarkSI_0.62_x86_64.flatpak` (6.06 MiB), SHA256
   `5D836BFD68AB3868710BBAB57D86F5F063903501A3CE8D141358C78E88D54EE2`
 
-The 0.63 tag also built both platforms without a Release. The six workflow
-artifacts were downloaded and re-hashed against the per-platform
-`SHA256SUMS.txt` entries; no v0.63 GitHub Release exists:
+The 0.63 tag also built both platforms. The six workflow artifacts were
+downloaded and re-hashed against the per-platform `SHA256SUMS.txt` entries; the
+v0.63 GitHub Release now carries these assets:
 
 - `MarkSI_0.63_x64.msi` (6.93 MiB), SHA256
   `59E29B1D5550951D05724C804898C2C89905415C3080C883D21677C8FCB3CF15`
@@ -785,9 +785,9 @@ artifacts were downloaded and re-hashed against the per-platform
 - `MarkSI_0.63_x86_64.flatpak` (6.06 MiB), SHA256
   `547F1BACA72BC18E030C72B3BB8AA1297231284CA328EF87A53B098728D0FBE6`
 
-The 0.64 tag also built both platforms without a Release. The six workflow
-artifacts were downloaded and re-hashed against the per-platform
-`SHA256SUMS.txt` entries; no v0.64 GitHub Release exists:
+The 0.64 tag also built both platforms. The six workflow artifacts were
+downloaded and re-hashed against the per-platform `SHA256SUMS.txt` entries; the
+v0.64 GitHub Release now carries these assets:
 
 - `MarkSI_0.64_x64.msi` (6.93 MiB), SHA256
   `00B9903BD1810AABA24D58BCDC08F42FE8B684A9F6C68754956D6752C32F555F`
@@ -802,9 +802,9 @@ artifacts were downloaded and re-hashed against the per-platform
 - `MarkSI_0.64_x86_64.flatpak` (6.06 MiB), SHA256
   `676D121D97C61211FBA794C64C1CFAFF8810C6A7042C2A6EDE244455983BD328`
 
-The 0.65 tag also built both platforms without a Release. The six workflow
-artifacts were downloaded and re-hashed against the per-platform
-`SHA256SUMS.txt` entries; no v0.65 GitHub Release exists:
+The 0.65 tag also built both platforms. The six workflow artifacts were
+downloaded and re-hashed against the per-platform `SHA256SUMS.txt` entries; the
+v0.65 GitHub Release now carries these assets:
 
 - `MarkSI_0.65_x64.msi` (6.93 MiB), SHA256
   `9669DE97FFBD3E4C79B6AEAF2E0715711ABDFCD8D6F57FE8749BABC9973A9F5C`
@@ -819,9 +819,9 @@ artifacts were downloaded and re-hashed against the per-platform
 - `MarkSI_0.65_x86_64.flatpak` (6.06 MiB), SHA256
   `A6F7BE21FD4346393C56D4D52C13DB40C57D5DF1C056B0077859F48D52C66458`
 
-The 0.66 tag also built both platforms without a Release. The six workflow
-artifacts were downloaded and re-hashed against the per-platform
-`SHA256SUMS.txt` entries; no v0.66 GitHub Release exists:
+The 0.66 tag also built both platforms. The six workflow artifacts were
+downloaded and re-hashed against the per-platform `SHA256SUMS.txt` entries; the
+v0.66 GitHub Release now carries these assets:
 
 - `MarkSI_0.66_x64.msi` (6.93 MiB), SHA256
   `3302A3A29FAB1C238643156D74FC1249A5E321F078F493B19817A0A0670D7A84`
@@ -858,15 +858,20 @@ For 0.41, the downloaded artifacts were re-hashed locally; all six matched their
 deb staging tarballs. The 0.42 through 0.60 archives were inspected the
 same way and kept the same layout. The 0.61 installers were downloaded from the
 GitHub Release and re-hashed; the 0.62 through 0.66 installers came from their
-tag workflow artifacts. Each platform artifact also contained a
+tag workflow artifacts and were later attached to their GitHub Releases. Each
+platform artifact also contained a
 `THIRD_PARTY_NOTICES.md` generated for that target: Windows reported 241 Rust
 crates and 90 license texts, Linux reported 316 and 98. Adding the notices file
 changed the upload artifact layout to retain the full
 `src-tauri/target/release/bundle` prefix; checksum paths inside the file are
 still relative to the bundle root. The first 0.31 packaging run exposed two
 upload and checksum defects, which were fixed before 0.32. The workflow does not
-sign or install the artifacts. Tags without a release-notes file remain tag-only;
-milestone tags publish a GitHub Release.
+sign or install the artifacts. Every version tag publishes a GitHub Release;
+0.62 through 0.66 were backfilled on 2026-11-14. Each release's combined
+`SHA256SUMS.txt`, Windows `setup.exe`, and Linux `.deb` were downloaded again
+from the Release and compared byte-for-byte with the locally verified artifacts;
+all matched, and `v0.66` is the latest release. Future tags use curated notes
+from `docs/releases/<tag>.md` when present, otherwise generated change notes.
 
 ## Flatpak packaging
 

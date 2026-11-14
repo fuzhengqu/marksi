@@ -113,6 +113,6 @@ git(["update-ref", `refs/tags/${tag}`, head]);
 console.log(`Created ${tag} at ${head} (versionCode ${versionCode}).`);
 console.log(
   publishes
-    ? `Release notes found: ${notesPath}; the tag build will publish a GitHub Release.`
-    : `No ${notesPath}; the tag build will only retain workflow artifacts.`,
+    ? `Release notes found: ${notesPath}; the tag build will publish a GitHub Release with all installers.`
+    : `No ${notesPath}; the tag build will publish a GitHub Release with notes generated from commits.`,
 );

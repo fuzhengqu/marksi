@@ -18,28 +18,20 @@ jobs:
     name: Release metadata
     runs-on: ubuntu-latest
     outputs:
-      publish: ${{ steps.release.outputs.publish }}
       tag: ${{ steps.release.outputs.tag }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Detect release notes
+      - name: Read release tag
         id: release
         shell: bash
         run: |
           if [[ "$GITHUB_REF" != refs/tags/v* ]]; then
-            echo "publish=false" >> "$GITHUB_OUTPUT"
             echo "tag=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          tag="$GITHUB_REF_NAME"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          if [[ -f "docs/releases/${tag}.md" ]]; then
-            echo "publish=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
 
   bundle:
     name: ${{ matrix.os }}
@@ -180,13 +172,15 @@ jobs:
     needs:
       - meta
       - bundle
-    if: needs.meta.outputs.publish == 'true'
+    if: needs.meta.outputs.tag != ''
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download unsigned bundles
         uses: actions/download-artifact@v4
@@ -218,14 +212,69 @@ jobs:
           sha256sum MarkSI* THIRD_PARTY_NOTICES-*.md > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
+      - name: Prepare release notes
+        env:
+          TAG: ${{ needs.meta.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f "docs/releases/${TAG}.md" ]]; then
+            cp "docs/releases/${TAG}.md" release-notes.md
+            exit 0
+          fi
+          version="${TAG#v}"
+          version_code="$(node -p "require('./package.json').versionCode")"
+          previous="$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)"
+          {
+            echo "# MarkSI ${version}"
+            echo
+            echo "MarkSI ${version}（versionCode \`${version_code}\`）。"
+            echo
+            echo "## 变更"
+            echo
+            if [[ -n "$previous" ]]; then
+              range="${previous}..${TAG}"
+            else
+              range="${TAG}"
+            fi
+            changes="$(git log --no-merges --pretty=format:'%s' "$range" | grep -v '^Record ' || true)"
+            if [[ -z "$changes" ]]; then
+              changes="Release ${version}."
+            fi
+            echo "$changes" | sed 's/^/- /'
+            echo
+            echo
+            echo "## 下载"
+            echo
+            echo "- **推荐**：\`MarkSI_${version}_x64-setup.exe\`，单个安装器内置英文、简体中文和繁体中文界面，并按系统语言选择。"
+            echo "- **企业部署**：\`MarkSI_${version}_x64.msi\`，安装界面为 \`en-US\`，应用仍包含三种界面语言。"
+            echo "- **Linux**：\`.deb\`、\`.rpm\`、\`.AppImage\` 和 \`.flatpak\`。"
+            echo "- 所有安装包均未签名；Windows 可能显示 SmartScreen 提示。"
+            echo
+            echo "## 校验"
+            echo
+            echo "Release 附带合并的 \`SHA256SUMS.txt\` 和 Windows/Linux 两份第三方声明。请先校验下载文件的 SHA-256，再运行安装包。"
+          } > release-notes.md
+          cat release-notes.md
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.meta.outputs.tag }}
         shell: bash
         run: |
-          gh release create "$TAG" release-assets/* \
-            --title "MarkSI ${TAG#v}" \
-            --notes-file "docs/releases/${TAG}.md" \
-            --latest \
-            --verify-tag
+          set -euo pipefail
+          title="MarkSI ${TAG#v}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-assets/* --clobber
+            gh release edit "$TAG" \
+              --title "$title" \
+              --notes-file release-notes.md \
+              --latest
+          else
+            gh release create "$TAG" release-assets/* \
+              --title "$title" \
+              --notes-file release-notes.md \
+              --latest \
+              --verify-tag
+          fi

@@ -71,9 +71,12 @@ declarations so a theme cannot trigger network loads.
 and writes `SHA256SUMS.txt` with uppercase SHA-256 digests and relative paths.
 The Release packages workflow builds unsigned Windows and Linux artifacts on
 manual dispatch or version tags, writes the same checksum file, and uploads only
-final installers (MSI, NSIS, deb, rpm, AppImage). It produced deb, rpm, and
-AppImage packages on Ubuntu and MSI/NSIS packages on Windows. Code signing is
-not configured.
+final installers (MSI, NSIS, deb, rpm, AppImage). Every version tag publishes a
+GitHub Release with all six installers, Flatpak, the combined checksum file, and
+third-party notices. Curated notes in `docs/releases/<tag>.md` take precedence;
+otherwise the workflow generates change notes from commits since the previous
+tag. It produced deb, rpm, and AppImage packages on Ubuntu and MSI/NSIS packages
+on Windows. Code signing is not configured.
 
 Linux packaging also includes a Flatpak manifest under `flatpak/` with desktop
 and AppStream metadata. `npm run flatpak:stage` copies the release binary and
@@ -504,7 +507,7 @@ save the imported document to choose its final location.
 |---|---|---|
 | Windows 11 installer (NSIS/MSI) | done | M6 |
 | Monotonic versionCode and two-part release tags | done | M6 |
-| GitHub Releases for milestone versions | done | M6 |
+| GitHub Releases with installers for every product tag | done | M6 |
 | Single NSIS installer with system-language selection | done | M6 |
 | Language-neutral MSI artifact name | done | M6 |
 | Linux deb/rpm/AppImage | done | M6 |

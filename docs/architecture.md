@@ -400,14 +400,15 @@ the next minor release, accepts explicit milestone jumps such as `--to 0.70`,
 moves `0.99.0` directly to `1.0.0`, and rejects `0.100.0` or any non-increasing
 versionCode.
 
-Every release creates an annotated tag such as `v0.61`. A tag build always
-builds and uploads workflow artifacts. A GitHub Release is created only when
-`docs/releases/<tag>.md` exists, which marks a milestone release; routine
-versions remain tag-only. The release job downloads both platform artifacts,
-verifies one installer of each type, combines the checksums, attaches Windows
-and Linux third-party notices, and publishes the six installers, checksum file,
-and notices. Artifact names are normalized from the technical version to the
-two-part product version before checksums are written.
+Every release creates an annotated tag such as `v0.61`, and every version tag
+publishes a GitHub Release. A tag build always builds and uploads workflow
+artifacts. If `docs/releases/<tag>.md` exists it supplies curated notes;
+otherwise the workflow generates notes from the commits since the previous tag.
+The release job downloads both platform artifacts, verifies one installer of
+each type, combines the checksums, attaches Windows and Linux third-party
+notices, and publishes the six installers, checksum file, and notices. Artifact
+names are normalized from the technical version to the two-part product version
+before checksums are written.
 
 ## Third-party notices
 

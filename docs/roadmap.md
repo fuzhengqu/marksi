@@ -21,8 +21,9 @@ The public security and version policies are enforced by
   memory, the native title bar, advanced JSON settings, release checksums,
   Linux packages, the Windows/Linux build-test matrix, and the three-language
   i18n framework. Release governance now includes a monotonic versionCode,
-  two-part product tags, milestone GitHub Releases, and two-part artifact
-  filenames. First-run interface language now follows the system locale,
+  two-part product tags, GitHub Releases with installers for every product tag,
+  and two-part artifact filenames. First-run interface language now follows the
+  system locale,
   the NSIS setup is a single installer with English, Simplified Chinese, and
   Traditional Chinese translations, and the MSI artifact name is
   language-neutral. M7 has started with IME/CJK input coverage, a keyboard/focus

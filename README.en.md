@@ -8,9 +8,8 @@ MarkSI is a free, open-source Markdown editor built with Rust and Tauri. It offe
 source, editable live preview, and reading views, plus workspace search, local
 images, math, and Mermaid diagrams — with your documents kept on your machine.
 
-> Early development: features and file formats may change. No official download
-> is published yet; a source build can produce unsigned Windows MSI/NSIS
-> installers locally.
+> Early development: features and file formats may change. Official installers
+> are unsigned; Windows may show a SmartScreen warning.
 
 ## Features
 
@@ -70,9 +69,11 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
 ## Install and run
 
 Official downloads are published on
-[GitHub Releases](https://github.com/fuzhengqu/marksi/releases). Milestone
-versions include installers and checksums; routine versions only create a
-version tag. You can also run from source:
+[GitHub Releases](https://github.com/fuzhengqu/marksi/releases). **Every version
+tag publishes a GitHub Release with Windows/Linux installers, a combined
+`SHA256SUMS.txt`, and third-party notices**, so the latest version is always
+available without a source build. Milestone versions include curated notes;
+routine versions use generated change notes. You can also run from source:
 
 ```bash
 npm install
