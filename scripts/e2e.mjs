@@ -2354,6 +2354,145 @@ async function main() {
     }
   });
 
+  await test("live preview styles footnote definition cards", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-footnote-cards.md");
+    const source = [
+      "# Footnotes",
+      "",
+      "Text[^1].",
+      "",
+      "[^1]: First footnote.",
+      "Lazy continuation.",
+      "",
+      "    Second paragraph.",
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(9)");
+      await waitFor(
+        'document.querySelectorAll(".cm-line.cm-live-footnote-definition").length === 4',
+        10_000,
+      );
+
+      const rendered = await evaluate(`(() => {
+        const lines = Array.from(
+          document.querySelectorAll(".cm-line.cm-live-footnote-definition")
+        );
+        const first = lines[0];
+        const last = lines[lines.length - 1];
+        const badge = document.querySelector(
+          ".cm-live-footnote-definition-badge"
+        );
+        return {
+          count: lines.length,
+          firstText: first?.textContent ?? null,
+          lastText: last?.textContent ?? null,
+          firstClass: first?.className ?? null,
+          lastClass: last?.className ?? null,
+          badge: badge?.textContent ?? null,
+          badgeLabel: badge?.getAttribute("aria-label") ?? null,
+          sourceVisible: lines.some((line) =>
+            (line.textContent ?? "").includes("[^1]:")
+          ),
+          background: first ? getComputedStyle(first).backgroundColor : null,
+          borderLeft: first ? getComputedStyle(first).borderLeftWidth : null,
+          firstRadius: first
+            ? getComputedStyle(first).borderTopRightRadius
+            : null,
+          lastRadius: last
+            ? getComputedStyle(last).borderBottomRightRadius
+            : null
+        };
+      })()`);
+      assert(
+        rendered.count === 4,
+        "footnote card should include lazy and indented continuations",
+        rendered,
+      );
+      assert(
+        rendered.badge === "1" && rendered.badgeLabel === "脚注 1",
+        "footnote card should show an accessible label badge",
+        rendered,
+      );
+      assert(
+        rendered.sourceVisible === false,
+        "inactive footnote definition marker should be hidden",
+        rendered,
+      );
+      assert(
+        rendered.firstText?.includes("First footnote.") &&
+          rendered.lastText?.includes("Second paragraph."),
+        "footnote card should keep its content",
+        rendered,
+      );
+      assert(
+        rendered.firstClass?.includes(
+          "cm-live-footnote-definition-first",
+        ) &&
+          rendered.lastClass?.includes(
+            "cm-live-footnote-definition-last",
+          ),
+        "footnote card should mark its first and last lines",
+        rendered,
+      );
+      assert(
+        rendered.background &&
+          rendered.background !== "rgba(0, 0, 0, 0)" &&
+          Number.parseFloat(rendered.borderLeft ?? "0") >= 2.5 &&
+          rendered.firstRadius === "8px" &&
+          rendered.lastRadius === "8px",
+        "footnote card should paint a bordered surface",
+        rendered,
+      );
+
+      await evaluate(
+        'document.querySelector(".cm-live-footnote-definition-badge")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().cursor.line === 5",
+        10_000,
+      );
+      await waitFor(
+        'document.querySelectorAll(".cm-live-footnote-definition-badge").length === 0 && Array.from(document.querySelectorAll(".cm-line")).some((node) => node.textContent?.includes("[^1]:"))',
+        10_000,
+      );
+      const active = await evaluate(`({
+        cards: document.querySelectorAll(".cm-line.cm-live-footnote-definition").length,
+        content: window.__MARKSI_DEV__.getState().doc.content
+      })`);
+      assert(
+        active.cards === 4,
+        "footnote card should persist while its source is revealed",
+        active,
+      );
+      assert(
+        active.content === source,
+        "footnote card interaction must not rewrite the document",
+        active,
+      );
+
+      await evaluate("window.__MARKSI_DEV__.gotoLine(9)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-footnote-definition-badge").length === 1 && !Array.from(document.querySelectorAll(".cm-line.cm-live-footnote-definition")).some((node) => node.textContent?.includes("[^1]:"))',
+        10_000,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
   await test("live preview renders unordered list bullets", async () => {
     await resetBase();
     const file = resolve(fixtureDir, "live-preview-lists.md");

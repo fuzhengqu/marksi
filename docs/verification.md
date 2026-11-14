@@ -157,6 +157,12 @@ The E2E suite currently covers:
 - Live-preview footnotes: inactive `[^1]` and `[^note]` references render two
   superscript badges with hidden delimiters, Ctrl+Click moves the caret to each
   definition line, and the document text stays unchanged.
+- Live-preview footnote definition cards: a definition with a lazy
+  continuation, a blank line, and an indented paragraph spans four card lines;
+  the marker is hidden behind a localized badge, the card background, left
+  border, and corner radii are painted, first/last classes are present,
+  clicking the badge moves the caret to the marker and reveals the source while
+  the card stays in place, and the document text stays unchanged.
 - Live-preview unordered lists: inactive `-`, `*`, and `+` markers become five
   accent bullets across plain, nested, task, and quoted lists; task checkboxes
   remain interactive, clicking a bullet reveals the source marker, and the

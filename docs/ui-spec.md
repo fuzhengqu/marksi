@@ -498,7 +498,10 @@ ease-out; honor `prefers-reduced-motion`.
   built from the document headings. The block updates as headings change, and
   the placeholder disappears when there are no headings.
 - Footnotes use `[^label]` definitions or inline `^[note]` syntax. Footnote
-  links and backlinks scroll within preview.
+  links and backlinks scroll within preview. In the editable live preview,
+  inactive definitions render as compact labeled cards: lazy and indented
+  continuation lines share the surface, clicking the badge reveals the
+  `[^label]:` marker, and the definition text stays editable.
 - GitHub alerts use `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`,
   `> [!WARNING]`, or `> [!CAUTION]`. They render as labeled, theme-aware
   callouts in the reading view. In the editable live preview, top-level alerts

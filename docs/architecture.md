@@ -221,10 +221,14 @@ uses the system opener.
 Footnotes use a dedicated `StateField` so the document is scanned only when it
 changes. `lib/footnotes.ts` finds references and definitions outside YAML front
 matter, fenced code, and inline code; definitions must start a line with at most
-three leading spaces, and duplicate labels keep the first definition. Inactive
-references become superscript badges; Ctrl+Click moves the caret to the matching
-definition line, while a plain click moves to the reference source. Active lines
-keep their literal `[^label]` source.
+three leading spaces, and duplicate labels keep the first definition. A
+definition records its marker and full block range, including lazy continuation
+lines, blank-line-separated indented paragraphs, and stopping at a new block or
+definition. Inactive references become superscript badges; Ctrl+Click moves the
+caret to the matching definition line, while a plain click moves to the
+reference source. Inactive definition markers become label badges, and their
+line ranges gain a card surface with first/last classes. Active lines keep their
+literal `[^label]` source.
 
 Unordered list markers use the same line pass. On inactive lines, `-`, `*`, and
 `+` are replaced by a one-character accent bullet; ordered numbers stay literal
@@ -746,8 +750,8 @@ window starts with an empty document rather than duplicating main state.
   reading view and live preview; it is covered by unit tests.
 - `src/lib/links.ts` owns link-target classification and reference-label
   normalization; it is covered by unit tests.
-- `src/lib/footnotes.ts` owns footnote reference/definition scanning and label
-  normalization; it is covered by unit tests.
+- `src/lib/footnotes.ts` owns footnote reference/definition scanning, label
+  normalization, and multi-line definition ranges; it is covered by unit tests.
 - `src/lib/linkActions.ts` owns the replaceable external-link opener used by the
   live preview and the development test hook.
 - `src/lib/codeCopy.ts` owns the replaceable fenced-code clipboard writer used by

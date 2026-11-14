@@ -237,6 +237,7 @@ translations are not shipped.
 | Ctrl+Click external links in live preview | done | M7 |
 | Anchor links in live preview | done | M7 |
 | Footnotes in live preview | done | M7 |
+| Footnote definition cards in live preview | done | M7 |
 | Local Markdown/text links | done | M7 |
 | Local link heading fragments | done | M7 |
 | Unordered list bullets in live preview | done | M7 |
@@ -364,6 +365,10 @@ blocks also replace the opening fence with a language badge and hide the
 closing fence. Clicking the badge or activating the fence line reveals the
 canonical source. Code text keeps its editor syntax colors and is never
 rewritten.
+
+Footnote definitions on inactive lines render as labeled cards. Lazy and
+indented continuation lines share the card surface, clicking the label reveals
+the `[^label]:` source, and the definition text remains directly editable.
 
 Top-level GFM tables on inactive lines render as read-only tables with header
 styling, column alignment, striping, and inline cell formatting. Clicking the

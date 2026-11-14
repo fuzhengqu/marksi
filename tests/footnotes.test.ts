@@ -30,8 +30,24 @@ describe("scanFootnotes", () => {
       "[^1]",
     );
     expect(scan.definitions).toEqual([
-      { label: "1", line: 5, from: source.indexOf("[^1]:") },
-      { label: "note", line: 6, from: source.indexOf("[^note]:") },
+      {
+        label: "1",
+        line: 5,
+        endLine: 5,
+        from: source.indexOf("[^1]:"),
+        markerTo: source.indexOf("[^1]:") + "[^1]:".length,
+        to: source.indexOf("First footnote.") + "First footnote.".length,
+      },
+      {
+        label: "note",
+        line: 6,
+        endLine: 6,
+        from: source.indexOf("[^note]:"),
+        markerTo: source.indexOf("[^note]:") + "[^note]:".length,
+        to:
+          source.indexOf("Second footnote.") +
+          "Second footnote.".length,
+      },
     ]);
   });
 
@@ -46,7 +62,14 @@ describe("scanFootnotes", () => {
     const scan = scanFootnotes(source);
     expect(scan.references[0].label).toBe("note");
     expect(scan.definitions).toEqual([
-      { label: "note", line: 3, from: source.indexOf("[^note]:") },
+      {
+        label: "note",
+        line: 3,
+        endLine: 3,
+        from: source.indexOf("[^note]:"),
+        markerTo: source.indexOf("[^note]:") + "[^note]:".length,
+        to: source.indexOf("First.") + "First.".length,
+      },
     ]);
   });
 
@@ -74,7 +97,16 @@ describe("scanFootnotes", () => {
       },
     ]);
     expect(scan.definitions).toEqual([
-      { label: "real", line: 11, from: source.indexOf("[^real]:") },
+      {
+        label: "real",
+        line: 11,
+        endLine: 11,
+        from: source.indexOf("[^real]:"),
+        markerTo: source.indexOf("[^real]:") + "[^real]:".length,
+        to:
+          source.indexOf("Real definition.") +
+          "Real definition.".length,
+      },
     ]);
   });
 
@@ -87,11 +119,79 @@ describe("scanFootnotes", () => {
 
     const scan = scanFootnotes(source);
     expect(scan.definitions).toEqual([
-      { label: "a", line: 2, from: source.indexOf("[^a]:") },
+      {
+        label: "a",
+        line: 2,
+        endLine: 3,
+        from: source.indexOf("[^a]:"),
+        markerTo: source.indexOf("[^a]:") + "[^a]:".length,
+        to:
+          source.indexOf("Four spaces is code.") +
+          "Four spaces is code.".length,
+      },
     ]);
     expect(scan.references.map((reference) => reference.label)).toEqual([
       "a",
       "b",
+    ]);
+  });
+
+  it("includes lazy and blank-line-indented continuations", () => {
+    const source = [
+      "Text[^a].",
+      "",
+      "[^a]: First line.",
+      "Lazy continuation.",
+      "",
+      "    Second paragraph.",
+      "",
+      "After.",
+    ].join("\n");
+
+    const scan = scanFootnotes(source);
+    expect(scan.definitions).toEqual([
+      {
+        label: "a",
+        line: 3,
+        endLine: 6,
+        from: source.indexOf("[^a]:"),
+        markerTo: source.indexOf("[^a]:") + "[^a]:".length,
+        to:
+          source.indexOf("Second paragraph.") +
+          "Second paragraph.".length,
+      },
+    ]);
+  });
+
+  it("stops at another definition or a new block", () => {
+    const source = [
+      "Text[^a][^b].",
+      "",
+      "[^a]: First.",
+      "[^b]: Second.",
+      "# Heading",
+      "",
+      "After.",
+    ].join("\n");
+
+    const scan = scanFootnotes(source);
+    expect(scan.definitions).toEqual([
+      {
+        label: "a",
+        line: 3,
+        endLine: 3,
+        from: source.indexOf("[^a]:"),
+        markerTo: source.indexOf("[^a]:") + "[^a]:".length,
+        to: source.indexOf("First.") + "First.".length,
+      },
+      {
+        label: "b",
+        line: 4,
+        endLine: 4,
+        from: source.indexOf("[^b]:"),
+        markerTo: source.indexOf("[^b]:") + "[^b]:".length,
+        to: source.indexOf("Second.") + "Second.".length,
+      },
     ]);
   });
 });

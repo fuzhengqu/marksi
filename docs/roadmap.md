@@ -7,8 +7,8 @@ The public security and version policies are enforced by
 
 ## Current snapshot
 
-- Product version: **0.64**
-- Technical version: **0.64.0**
+- Product version: **0.65**
+- Technical version: **0.65.0**
 - Foundation milestones M0, M1, and M3 are complete.
 - M2 core is complete; golden Markdown fixtures now cover its compatibility
   edge cases.
@@ -35,14 +35,14 @@ The public security and version policies are enforced by
   live-preview Mermaid diagrams, live-preview GitHub alert cards, Ctrl+Click
   external links, anchor-link heading jumps, footnote badges, unordered list
   bullets, ordered list numbering, local Markdown/text links, local-link
-  heading fragments, code-block copy buttons in the live preview, and code-block
-  copy buttons in the reading view.
+  heading fragments, code-block copy buttons in the live preview, code-block
+  copy buttons in the reading view, and live-preview footnote definition cards.
 - The latest full gate is green: Vitest, Rust, frontend build, real-WebView
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **138 done, 3 wip,
-3 todo, 2 deferred** across 146 items.
+is the source for exact status values. Current raw count: **139 done, 3 wip,
+3 todo, 2 deferred** across 147 items.
 
 ## Milestone definitions
 
@@ -166,8 +166,8 @@ rendering, the live-preview front matter card, live-preview math, live-preview
 Mermaid diagrams, live-preview GitHub alert cards, Ctrl+Click external links,
 anchor-link heading jumps, footnote badges, unordered list bullets, ordered
 list numbering, local Markdown/text links, local-link heading fragments,
-code-block copy buttons in the live preview, and code-block copy buttons in the
-reading view are complete.
+code-block copy buttons in the live preview, code-block copy buttons in the
+reading view, and live-preview footnote definition cards are complete.
 
 ## Delivery rules
 

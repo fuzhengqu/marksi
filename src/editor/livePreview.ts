@@ -1006,6 +1006,42 @@ class LiveFootnoteWidget extends WidgetType {
   }
 }
 
+class LiveFootnoteDefinitionWidget extends WidgetType {
+  constructor(
+    readonly from: number,
+    readonly label: string,
+    readonly name: string,
+  ) {
+    super();
+  }
+
+  eq(other: LiveFootnoteDefinitionWidget): boolean {
+    return (
+      this.from === other.from &&
+      this.label === other.label &&
+      this.name === other.name
+    );
+  }
+
+  toDOM(view: EditorView): HTMLElement {
+    const badge = document.createElement("span");
+    badge.className = "cm-live-footnote-definition-badge";
+    badge.contentEditable = "false";
+    badge.spellcheck = false;
+    badge.tabIndex = 0;
+    badge.setAttribute("role", "note");
+    badge.setAttribute("aria-label", `${this.name} ${this.label}`);
+    badge.title = `${this.name} ${this.label}`;
+    badge.textContent = this.label;
+    addPreviewReveal(badge, view, this.from);
+    return badge;
+  }
+
+  ignoreEvent(): boolean {
+    return true;
+  }
+}
+
 class LiveAlertLabelWidget extends WidgetType {
   constructor(
     readonly from: number,
@@ -1488,6 +1524,35 @@ function buildDecorations(
     });
   }
 
+  for (const definition of footnotes.definitions) {
+    if (definition.from < frontMatterTo) {
+      continue;
+    }
+    if (activeLines.has(definition.line)) {
+      continue;
+    }
+    if (
+      !view.visibleRanges.some(
+        (range) =>
+          definition.from <= range.to &&
+          definition.markerTo >= range.from,
+      )
+    ) {
+      continue;
+    }
+    ranges.push({
+      from: definition.from,
+      to: definition.markerTo,
+      decoration: Decoration.replace({
+        widget: new LiveFootnoteDefinitionWidget(
+          definition.from,
+          definition.label,
+          options.footnoteLabel,
+        ),
+      }),
+    });
+  }
+
   for (const visible of view.visibleRanges) {
     tree.iterate({
       from: visible.from,
@@ -1701,11 +1766,23 @@ function buildHeadingDecorations(view: EditorView): DecorationSet {
 function buildBlockDecorations(
   view: EditorView,
   mermaid: MermaidPreviewState,
+  footnotes: FootnoteScan,
 ): DecorationSet {
   const quoteDepths = new Map<number, number>();
   const alertClasses = new Map<number, string>();
   const alertWidgets: Range<Decoration>[] = [];
   const codeClasses = new Map<number, Set<string>>();
+  const footnoteClasses = new Map<number, Set<string>>();
+  const definitionLines = new Set<number>();
+  for (const definition of footnotes.definitions) {
+    const start = view.state.doc.lineAt(definition.from);
+    const end = view.state.doc.lineAt(
+      Math.max(definition.from, definition.to - 1),
+    );
+    for (let number = start.number; number <= end.number; number += 1) {
+      definitionLines.add(view.state.doc.line(number).from);
+    }
+  }
   const visible = view.visibleRanges;
   const isVisible = (from: number, to: number) =>
     visible.some((range) => from <= range.to && to >= range.from);
@@ -1765,6 +1842,9 @@ function buildBlockDecorations(
         if (!isVisible(line.from, line.to)) {
           continue;
         }
+        if (node.name === "CodeBlock" && definitionLines.has(line.from)) {
+          continue;
+        }
         const classes = codeClasses.get(line.from) ?? new Set<string>();
         classes.add("cm-live-code");
         if (number === start.number) {
@@ -1784,6 +1864,27 @@ function buildBlockDecorations(
     classes.add(className);
     lineClasses.set(from, classes);
   };
+  for (const definition of footnotes.definitions) {
+    const start = view.state.doc.lineAt(definition.from);
+    const end = view.state.doc.lineAt(
+      Math.max(definition.from, definition.to - 1),
+    );
+    for (let number = start.number; number <= end.number; number += 1) {
+      const line = view.state.doc.line(number);
+      if (!isVisible(line.from, line.to)) {
+        continue;
+      }
+      const classes = footnoteClasses.get(line.from) ?? new Set<string>();
+      classes.add("cm-live-footnote-definition");
+      if (number === start.number) {
+        classes.add("cm-live-footnote-definition-first");
+      }
+      if (number === end.number) {
+        classes.add("cm-live-footnote-definition-last");
+      }
+      footnoteClasses.set(line.from, classes);
+    }
+  }
   for (const [from, depth] of quoteDepths) {
     addLineClass(from, quoteClassForDepth(depth));
   }
@@ -1791,6 +1892,14 @@ function buildBlockDecorations(
     addLineClass(from, className);
   }
   for (const [from, classes] of codeClasses) {
+    for (const className of classes) {
+      addLineClass(from, className);
+    }
+  }
+  for (const [from, classes] of footnoteClasses) {
+    if (codeClasses.has(from)) {
+      continue;
+    }
     for (const className of classes) {
       addLineClass(from, className);
     }
@@ -1917,6 +2026,7 @@ function createTablePreviewField(options: LivePreviewOptions) {
 
 function createBlockPreviewPlugin(
   mermaidField: StateField<MermaidPreviewState>,
+  footnoteField: StateField<FootnoteScan>,
 ) {
   return ViewPlugin.fromClass(
     class {
@@ -1926,6 +2036,7 @@ function createBlockPreviewPlugin(
         this.decorations = buildBlockDecorations(
           view,
           view.state.field(mermaidField),
+          view.state.field(footnoteField),
         );
       }
 
@@ -1938,6 +2049,7 @@ function createBlockPreviewPlugin(
           this.decorations = buildBlockDecorations(
             update.view,
             update.state.field(mermaidField),
+            update.state.field(footnoteField),
           );
         }
       }
@@ -2029,7 +2141,8 @@ function createLivePreviewPlugin(
  * syntax visible for precise editing. Headings gain their reading-view
  * hierarchy, block quotes gain a quote rule, horizontal rules become dividers,
  * fenced and indented code blocks gain a card surface and language badge,
- * leading YAML front matter becomes a metadata card, inactive tables render as
+ * leading YAML front matter becomes a metadata card, footnote definitions gain
+ * labeled cards, inactive tables render as
  * read-only tables with click-to-edit source, local images render inline, and
  * remote images stay inert until the user enables remote loading in
  * Preferences.
@@ -2048,7 +2161,7 @@ export function livePreview(
     footnoteField,
     createTablePreviewField(options),
     createLinkInteraction(options),
-    createBlockPreviewPlugin(mermaidField),
+    createBlockPreviewPlugin(mermaidField, footnoteField),
     createHeadingPreviewPlugin(),
     createLivePreviewPlugin(options, mathField, mermaidField, footnoteField),
   ];

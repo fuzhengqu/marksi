@@ -1755,6 +1755,52 @@
   outline-offset: 2px;
 }
 
+/* Inactive footnote definitions become compact cards. The marker turns into
+   a label badge, lazy and indented continuation lines share the surface, and
+   clicking the badge reveals the source. */
+.cm-live-preview .cm-line.cm-live-footnote-definition {
+  border-right: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-elevated));
+  padding-right: 0.9em;
+  padding-left: 0.75em;
+}
+
+.cm-live-preview .cm-line.cm-live-footnote-definition-first {
+  padding-top: 0.3em;
+  border-top: 1px solid var(--border);
+  border-top-right-radius: 8px;
+}
+
+.cm-live-preview .cm-line.cm-live-footnote-definition-last {
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--border);
+  border-bottom-right-radius: 8px;
+}
+
+.cm-live-footnote-definition-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35em;
+  margin-right: 0.4em;
+  padding: 0 0.38em;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.7em;
+  font-weight: 700;
+  line-height: 1.45;
+  vertical-align: 0.06em;
+  cursor: text;
+}
+
+.cm-live-footnote-definition-badge:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Inactive unordered list markers become compact bullets. The source marker
    returns on the active line and when the bullet is clicked. */
 .cm-live-list-bullet {
