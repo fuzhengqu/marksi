@@ -1836,6 +1836,19 @@
   cursor: text;
 }
 
+.cm-live-mermaid-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.cm-live-mermaid-badge {
+  cursor: pointer;
+}
+
 .cm-live-mermaid:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
@@ -2558,8 +2571,66 @@
 }
 
 .markdown-body .mermaid-source summary {
-  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
   cursor: pointer;
+  list-style: none;
+}
+
+.markdown-body .mermaid-source summary::-webkit-details-marker {
+  display: none;
+}
+
+.markdown-body .mermaid-source summary::before {
+  content: "▸";
+  color: var(--fg-faint);
+  transition: transform 120ms ease;
+}
+
+.markdown-body .mermaid-source[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.markdown-body .mermaid-source summary > span {
+  flex: 1;
+}
+
+.markdown-body .mermaid-copy-button {
+  appearance: none;
+  margin: 0;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    color 120ms ease;
+}
+
+.markdown-body .mermaid-copy-button:hover {
+  border-color: var(--border-strong);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.markdown-body .mermaid-copy-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.markdown-body .mermaid-copy-button[data-copied="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .markdown-body .mermaid-source pre {
@@ -4505,7 +4576,8 @@ body.is-resizing-image[data-resize-axis="height"] * {
     display: none;
   }
 
-  .markdown-body .code-copy-button {
+  .markdown-body .code-copy-button,
+  .markdown-body .mermaid-copy-button {
     display: none !important;
   }
 

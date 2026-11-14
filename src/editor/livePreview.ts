@@ -94,6 +94,7 @@ export interface LivePreviewOptions {
   frontMatterLabel: string;
   mathLabel: string;
   mermaidLabel: string;
+  mermaidCopyLabel: string;
   footnoteLabel: string;
   codeCopyLabel: string;
   codeCopiedLabel: string;
@@ -113,6 +114,7 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   frontMatterLabel: "Front matter",
   mathLabel: "Math",
   mermaidLabel: "Mermaid diagram",
+  mermaidCopyLabel: "Copy source",
   footnoteLabel: "Footnote",
   codeCopyLabel: "Copy code",
   codeCopiedLabel: "Copied",
@@ -418,6 +420,44 @@ class LiveRuleWidget extends WidgetType {
   }
 }
 
+function wireCopyButton(
+  button: HTMLButtonElement,
+  text: string,
+  copyLabel: string,
+  copiedLabel: string,
+): void {
+  button.addEventListener("mousedown", (event) => {
+    event.stopPropagation();
+  });
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!text) {
+      return;
+    }
+    void copyCodeText(text)
+      .then(() => {
+        if (!button.isConnected) {
+          return;
+        }
+        button.textContent = copiedLabel;
+        button.setAttribute("aria-label", copiedLabel);
+        button.dataset.copied = "true";
+        window.setTimeout(() => {
+          if (!button.isConnected) {
+            return;
+          }
+          button.textContent = copyLabel;
+          button.setAttribute("aria-label", copyLabel);
+          delete button.dataset.copied;
+        }, 1200);
+      })
+      .catch(() => {
+        // Keep the copy label when clipboard access is denied.
+      });
+  });
+}
+
 class LiveCodeBadgeWidget extends WidgetType {
   constructor(
     readonly from: number,
@@ -474,28 +514,7 @@ class LiveCodeBadgeWidget extends WidgetType {
     copy.contentEditable = "false";
     copy.spellcheck = false;
     copy.disabled = this.code.length === 0;
-    copy.addEventListener("mousedown", (event) => {
-      event.stopPropagation();
-    });
-    copy.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (!this.code) {
-        return;
-      }
-      void copyCodeText(this.code)
-        .then(() => {
-          copy.textContent = this.copiedLabel;
-          copy.dataset.copied = "true";
-          window.setTimeout(() => {
-            copy.textContent = this.copyLabel;
-            delete copy.dataset.copied;
-          }, 1200);
-        })
-        .catch(() => {
-          // Keep the copy label when clipboard access is denied.
-        });
-    });
+    wireCopyButton(copy, this.code, this.copyLabel, this.copiedLabel);
 
     header.append(badge, copy);
     return header;
@@ -1078,6 +1097,8 @@ class LiveMermaidWidget extends WidgetType {
     readonly to: number,
     readonly source: string,
     readonly label: string,
+    readonly copyLabel: string,
+    readonly copiedLabel: string,
     readonly theme: ResolvedTheme,
   ) {
     super();
@@ -1089,6 +1110,8 @@ class LiveMermaidWidget extends WidgetType {
       this.to === other.to &&
       this.source === other.source &&
       this.label === other.label &&
+      this.copyLabel === other.copyLabel &&
+      this.copiedLabel === other.copiedLabel &&
       this.theme === other.theme
     );
   }
@@ -1103,11 +1126,34 @@ class LiveMermaidWidget extends WidgetType {
     card.setAttribute("aria-label", this.label);
     card.title = this.label;
 
+    const header = document.createElement("div");
+    header.className = "cm-live-mermaid-head";
+    const badge = document.createElement("span");
+    badge.className = "cm-live-code-badge cm-live-mermaid-badge";
+    badge.textContent = "Mermaid";
+    badge.setAttribute("aria-hidden", "true");
+
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "cm-live-code-copy cm-live-mermaid-copy";
+    copy.textContent = this.copyLabel;
+    copy.title = this.copyLabel;
+    copy.setAttribute("aria-label", this.copyLabel);
+    copy.contentEditable = "false";
+    copy.spellcheck = false;
+    wireCopyButton(
+      copy,
+      this.source.replace(/\r?\n$/, ""),
+      this.copyLabel,
+      this.copiedLabel,
+    );
+    header.append(badge, copy);
+
     const diagram = document.createElement("div");
     diagram.className = "mermaid-diagram";
     diagram.dataset.mermaidSource = encodeURIComponent(this.source);
     diagram.setAttribute("aria-busy", "true");
-    card.append(diagram);
+    card.append(header, diagram);
 
     addPreviewReveal(card, view, this.from);
     void renderMermaidDiagrams(card, this.theme);
@@ -1299,6 +1345,8 @@ function buildMermaidPreviewState(
           block.to,
           block.content,
           options.mermaidLabel,
+          options.mermaidCopyLabel,
+          options.codeCopiedLabel,
           options.theme,
         ),
       }).range(block.from, block.to),

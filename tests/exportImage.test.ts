@@ -54,6 +54,15 @@ describe("image export node filter", () => {
     ).toBe(false);
   });
 
+  it("omits reading-view Mermaid copy controls", () => {
+    expect(
+      shouldCaptureNode({
+        nodeType: 1,
+        classList: { contains: (token) => token === "mermaid-copy-button" },
+      }),
+    ).toBe(false);
+  });
+
   it("keeps document nodes and text", () => {
     expect(
       shouldCaptureNode({

@@ -139,9 +139,10 @@ The E2E suite currently covers:
   unchanged.
 - Live-preview Mermaid: an inactive top-level `mermaid` fence renders one
   sanitized SVG card while the source stays hidden, a `text` fence keeps its
-  code card, the diagram contains no script or `foreignObject`, clicking the
-  card reveals the fence, moving away restores the diagram, and the document
-  text is unchanged.
+  code card, the diagram contains no script or `foreignObject`, the localized
+  copy action writes the exact fence content without revealing or rewriting
+  it, clicking the card reveals the fence, moving away restores the diagram,
+  and the document text is unchanged.
 - Live-preview GitHub alerts: note and warning blocks style every line with the
   matching accent and one title label each, inactive `[!NOTE]` markers stay
   hidden, an ordinary quote keeps quote styling without an alert class,
@@ -313,7 +314,8 @@ The E2E suite currently covers:
   data-URL embedding, unsaved dirty document state, source name, import filter,
   and rendered image in reading view.
 - Pandoc detection from Preferences, including the reported version.
-- Mermaid rendering in reading mode, including SVG sanitization checks.
+- Mermaid rendering in reading mode, including SVG sanitization checks and the
+  localized source disclosure with its copy action.
 - Auto pairing, smart punctuation, and emoji completion.
 - Local image context menu and lightbox action.
 - Image width/height attributes, width and height drag handles, contain/cover

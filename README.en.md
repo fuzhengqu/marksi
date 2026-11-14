@@ -19,12 +19,12 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   completion, IME composition support, and find/replace; inline images, heading
   hierarchy, block quotes and rules, GitHub alert cards, code block cards with
   language badges and copy buttons, table rendering, front matter cards, math
-  formulas, Mermaid diagrams, unordered and ordered list markers, clickable task
-  checkboxes, Ctrl+Click link opening or heading jumps, footnote reference
-  jumps, footnote definition cards, local Markdown/text links with heading
-  fragments in the live preview, and code-block copy buttons in the reading
-  view. Automatic or explicit LTR/RTL document direction keeps code and math
-  LTR.
+  formulas, Mermaid diagrams with source-copy actions, unordered and ordered
+  list markers, clickable task checkboxes, Ctrl+Click link opening or heading
+  jumps, footnote reference jumps, footnote definition cards, local
+  Markdown/text links with heading fragments in the live preview, and code-block
+  copy buttons in the reading view. Automatic or explicit LTR/RTL document
+  direction keeps code and math LTR.
 - **Markdown**: CommonMark/GFM, tables, task lists, footnotes, table of contents,
   YAML front matter, callouts, syntax highlighting, KaTeX math, Mermaid
   diagrams, and strict/lax heading, nested-list, continuation, and quoted-list

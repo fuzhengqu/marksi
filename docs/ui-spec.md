@@ -248,8 +248,12 @@ ease-out; honor `prefers-reduced-motion`.
   delimiters. Math inside code, front matter, URLs, and HTML stays literal.
   Top-level `mermaid` fences on inactive lines render as sanitized diagrams in a
   bordered card; clicking the diagram or placing the caret inside the fence
-  reveals the original source. Other languages and nested fences keep their
-  code cards. Top-level GitHub alert quotes render with a per-kind accent,
+  reveals the original source. The card header shows a Mermaid label and a
+  localized copy-source button that writes the fence content without revealing
+  or rewriting it. In reading view, the collapsed source disclosure is localized
+  and carries the same copy action; copying does not expand it. Other languages
+  and nested fences keep their code cards. Top-level GitHub alert quotes render
+  with a per-kind accent,
   background, and title label; clicking the label or activating its line reveals
   the `[!NOTE]`-style marker. Link text keeps its accent underline; Ctrl+Click
   opens `http:`, `https:`, and `mailto:` targets externally and jumps fragment

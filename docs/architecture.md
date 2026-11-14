@@ -185,8 +185,10 @@ block widget. `lib/mermaidBlocks.ts` reuses the shared fence scanner in
 `lib/textRanges.ts`, keeps the info string and content offsets, skips front
 matter, and accepts only the `mermaid` language token. Inactive fences are
 replaced by a card whose diagram reuses `lib/mermaid.ts`, so strict security,
-SVG sanitization, and lazy loading match the reading view. Clicking the card
-moves the caret to the opening fence and reveals the source. The Mermaid field
+SVG sanitization, and lazy loading match the reading view. The card header shows
+a Mermaid badge and a localized copy-source button; both copy paths use
+`lib/codeCopy.ts` and never reveal the fence. Clicking the card moves the caret
+to the opening fence and reveals the source. The Mermaid field
 also records blocked ranges so the code-card, syntax, table, and math passes do
 not decorate the same lines. A document-length limit and a diagram cap keep
 decoration rebuilds bounded.
@@ -318,7 +320,9 @@ HTML and MathML profiles enabled. Link reference definitions are handled by
 markdown-it itself.
 
 Mermaid fences become a placeholder plus a collapsed source disclosure during
-synchronous Markdown rendering. `src/lib/mermaid.ts` lazy-loads Mermaid only
+synchronous Markdown rendering. The fence renderer accepts a localized source
+label and an optional copy label; export mode suppresses the copy control while
+keeping the localized label. `src/lib/mermaid.ts` lazy-loads Mermaid only
 when a placeholder exists, initializes it with strict security, HTML labels
 disabled, bounded text/edges, and theme variables derived from the MarkSI
 palette, then replaces the placeholder with sanitized SVG. A per-element render

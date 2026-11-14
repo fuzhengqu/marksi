@@ -1891,6 +1891,46 @@ async function main() {
         rendered,
       );
 
+      const copyLabel = await evaluate(
+        'document.querySelector(".cm-live-mermaid-copy")?.textContent ?? null',
+      );
+      assert(
+        copyLabel === "复制源码",
+        "Mermaid preview should show a localized copy label",
+        copyLabel,
+      );
+      await evaluate(`(() => {
+        window.__copiedMermaid = [];
+        window.__MARKSI_DEV__.setCodeCopyHandler((text) => {
+          window.__copiedMermaid.push(text);
+          return Promise.resolve();
+        });
+      })()`);
+      await evaluate(
+        'document.querySelector(".cm-live-mermaid-copy")?.click()',
+      );
+      await waitFor("window.__copiedMermaid.length === 1", 10_000);
+      const copied = await evaluate("window.__copiedMermaid[0]");
+      assert(
+        copied === "graph TD\n  A[Start] --> B[Ship]",
+        "Mermaid preview should copy the source without fences",
+        copied,
+      );
+      await waitFor(
+        'document.querySelector(".cm-live-mermaid-copy")?.textContent === "已复制"',
+        10_000,
+      );
+      const afterCopy = await evaluate(`({
+        widget: document.querySelectorAll(".cm-live-mermaid").length,
+        sourceVisible: Array.from(document.querySelectorAll(".cm-line"))
+          .some((node) => node.textContent?.includes("A[Start] --> B[Ship]"))
+      })`);
+      assert(
+        afterCopy.widget === 1 && afterCopy.sourceVisible === false,
+        "copying Mermaid source must not reveal or remove the diagram",
+        afterCopy,
+      );
+
       await evaluate(
         'document.querySelector(".cm-live-mermaid")?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }))',
       );
@@ -1913,6 +1953,10 @@ async function main() {
         content,
       );
     } finally {
+      await evaluate(`(() => {
+        window.__MARKSI_DEV__.setCodeCopyHandler(null);
+        delete window.__copiedMermaid;
+      })()`).catch(() => {});
       await rm(file, { force: true });
       await resetBase();
     }
@@ -6278,23 +6322,85 @@ async function main() {
   }
 
   await test("Mermaid diagrams render in reading view without script or foreignObject", async () => {
-    await evaluate(`window.__MARKSI_DEV__.getState().setContent(${JSON.stringify(
-      ["```mermaid", "graph TD", "  A[Start] --> B[Ship]", "```"].join("\n"),
-    )})`);
-    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("reading")');
-    await waitFor(
-      'document.querySelector(".mermaid-diagram[data-mermaid-state=ready] svg")',
-      20_000,
+    const source = ["```mermaid", "graph TD", "  A[Start] --> B[Ship]", "```"].join(
+      "\n",
     );
-    const state = await evaluate(`({
-      svg: document.querySelectorAll(".mermaid-diagram svg").length,
-      scripts: document.querySelectorAll(".mermaid-diagram script").length,
-      foreignObjects: document.querySelectorAll(".mermaid-diagram foreignObject").length
-    })`);
-    assert(state.svg === 1, "Mermaid SVG missing", state);
-    assert(state.scripts === 0 && state.foreignObjects === 0, "unsafe SVG content", state);
-    await evaluate('window.__MARKSI_DEV__.getState().setViewMode("preview")');
-    await sleep(200);
+    try {
+      await evaluate(
+        `window.__MARKSI_DEV__.getState().setContent(${JSON.stringify(source)})`,
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setViewMode("reading")',
+      );
+      await waitFor(
+        'document.querySelector(".mermaid-diagram[data-mermaid-state=ready] svg")',
+        20_000,
+      );
+      const state = await evaluate(`({
+        svg: document.querySelectorAll(".mermaid-diagram svg").length,
+        scripts: document.querySelectorAll(".mermaid-diagram script").length,
+        foreignObjects: document.querySelectorAll(".mermaid-diagram foreignObject").length,
+        sourceLabel: document.querySelector(".mermaid-source summary > span")?.textContent ?? null,
+        copyLabel: document.querySelector(".mermaid-copy-button")?.textContent ?? null
+      })`);
+      assert(state.svg === 1, "Mermaid SVG missing", state);
+      assert(
+        state.scripts === 0 && state.foreignObjects === 0,
+        "unsafe SVG content",
+        state,
+      );
+      assert(
+        state.sourceLabel === "Mermaid 源码" &&
+          state.copyLabel === "复制源码",
+        "Mermaid source controls should be localized",
+        state,
+      );
+
+      await evaluate(`(() => {
+        window.__copiedMermaid = [];
+        window.__MARKSI_DEV__.setCodeCopyHandler((text) => {
+          window.__copiedMermaid.push(text);
+          return Promise.resolve();
+        });
+      })()`);
+      await evaluate(
+        'document.querySelector(".mermaid-copy-button")?.click()',
+      );
+      await waitFor("window.__copiedMermaid.length === 1", 10_000);
+      const copied = await evaluate("window.__copiedMermaid[0]");
+      assert(
+        copied === "graph TD\n  A[Start] --> B[Ship]",
+        "reading view should copy Mermaid source without fences",
+        copied,
+      );
+      await waitFor(
+        'document.querySelector(".mermaid-copy-button")?.textContent === "已复制"',
+        10_000,
+      );
+      const afterCopy = await evaluate(`({
+        open: document.querySelector(".mermaid-source")?.open ?? null,
+        content: window.__MARKSI_DEV__.getState().doc.content
+      })`);
+      assert(
+        afterCopy.open === false,
+        "copying Mermaid source must not expand the source panel",
+        afterCopy,
+      );
+      assert(
+        afterCopy.content === source,
+        "copying Mermaid source must not rewrite the document",
+        afterCopy,
+      );
+    } finally {
+      await evaluate(`(() => {
+        window.__MARKSI_DEV__.setCodeCopyHandler(null);
+        delete window.__copiedMermaid;
+      })()`).catch(() => {});
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setViewMode("preview")',
+      ).catch(() => {});
+      await sleep(200);
+    }
   });
 
   await test("smart typing pairs Markdown, converts quotes, and inserts emoji", async () => {

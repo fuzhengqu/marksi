@@ -901,6 +901,7 @@ export default function App() {
         theme: resolvedTheme,
         diagrams: format === "html",
         strictMode: state.settings.strictMode,
+        language: state.settings.language,
       });
 
       if (format === "html") {

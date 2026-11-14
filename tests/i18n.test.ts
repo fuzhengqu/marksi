@@ -94,6 +94,10 @@ describe("translate", () => {
     expect(translate("zh-Hant", "Copy code")).toBe("複製程式碼");
     expect(translate("zh-Hans", "Copied")).toBe("已复制");
     expect(translate("zh-Hant", "Copied")).toBe("已複製");
+    expect(translate("zh-Hans", "Copy source")).toBe("复制源码");
+    expect(translate("zh-Hant", "Copy source")).toBe("複製原始碼");
+    expect(translate("zh-Hans", "Mermaid source")).toBe("Mermaid 源码");
+    expect(translate("zh-Hant", "Mermaid source")).toBe("Mermaid 原始碼");
   });
 
   it("returns the source label for English", () => {

@@ -183,6 +183,8 @@ export function PreviewPane({
             imageHeightResizeLabel: heightResizeLabel,
             imageResizable: !readOnlyMode,
             codeCopyLabel: t("Copy code"),
+            mermaidSourceLabel: t("Mermaid source"),
+            mermaidCopyLabel: t("Copy source"),
             strictMode,
           }),
     [
@@ -592,6 +594,39 @@ export function PreviewPane({
     });
   }
 
+  function copyWithFeedback(
+    button: HTMLButtonElement,
+    text: string,
+    copyLabel: string,
+  ): void {
+    if (!text) {
+      return;
+    }
+    const copiedLabel = t("Copied");
+    void copyCodeText(text)
+      .then(() => {
+        if (!button.isConnected) {
+          return;
+        }
+        button.textContent = copiedLabel;
+        button.setAttribute("aria-label", copiedLabel);
+        button.dataset.copied = "true";
+        const timer = window.setTimeout(() => {
+          copyTimers.current.delete(timer);
+          if (!button.isConnected) {
+            return;
+          }
+          button.textContent = copyLabel;
+          button.setAttribute("aria-label", copyLabel);
+          delete button.dataset.copied;
+        }, 1200);
+        copyTimers.current.add(timer);
+      })
+      .catch(() => {
+        // Keep the copy label when clipboard access is denied.
+      });
+  }
+
   function handleClick(event: MouseEvent<HTMLElement>): void {
     if (event.button !== 0) {
       return;
@@ -611,34 +646,26 @@ export function PreviewPane({
       const code = copyButton
         .closest(".code-block")
         ?.querySelector("pre code");
-      const text = (code?.textContent ?? "").replace(/\r?\n$/, "");
-      if (!text) {
-        return;
-      }
-      const copyLabel = t("Copy code");
-      const copiedLabel = t("Copied");
-      void copyCodeText(text)
-        .then(() => {
-          if (!copyButton.isConnected) {
-            return;
-          }
-          copyButton.textContent = copiedLabel;
-          copyButton.setAttribute("aria-label", copiedLabel);
-          copyButton.dataset.copied = "true";
-          const timer = window.setTimeout(() => {
-            copyTimers.current.delete(timer);
-            if (!copyButton.isConnected) {
-              return;
-            }
-            copyButton.textContent = copyLabel;
-            copyButton.setAttribute("aria-label", copyLabel);
-            delete copyButton.dataset.copied;
-          }, 1200);
-          copyTimers.current.add(timer);
-        })
-        .catch(() => {
-          // Keep the copy label when clipboard access is denied.
-        });
+      copyWithFeedback(
+        copyButton,
+        (code?.textContent ?? "").replace(/\r?\n$/, ""),
+        t("Copy code"),
+      );
+      return;
+    }
+
+    const mermaidCopyButton = target.closest("button.mermaid-copy-button");
+    if (mermaidCopyButton instanceof HTMLButtonElement) {
+      event.preventDefault();
+      event.stopPropagation();
+      const source = mermaidCopyButton
+        .closest(".mermaid-block")
+        ?.querySelector(".mermaid-source code");
+      copyWithFeedback(
+        mermaidCopyButton,
+        (source?.textContent ?? "").replace(/\r?\n$/, ""),
+        t("Copy source"),
+      );
       return;
     }
 

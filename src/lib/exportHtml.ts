@@ -353,6 +353,7 @@ export async function buildStandaloneHtml({
     renderMarkdown(content, {
       imageMode: "export",
       mathOutput: "mathml",
+      mermaidSourceLabel: translate(language, "Mermaid source"),
       strictMode,
     }),
     "light",

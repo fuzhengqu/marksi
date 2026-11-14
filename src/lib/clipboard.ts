@@ -2,6 +2,8 @@ import { copyText } from "./clipboardText";
 import { renderMarkdown } from "./markdown";
 import { renderMermaidMarkup } from "./mermaid";
 import type { ResolvedTheme } from "./theme";
+import { translate } from "../i18n/dictionary";
+import type { Language } from "../types";
 
 export interface ClipboardDocument {
   html: string;
@@ -122,12 +124,18 @@ export async function buildClipboardDocument(
     theme?: ResolvedTheme;
     diagrams?: boolean;
     strictMode?: boolean;
+    language?: Language;
   } = {},
 ): Promise<ClipboardDocument> {
   const strictMode = options.strictMode ?? true;
+  const mermaidSourceLabel = translate(
+    options.language ?? "en",
+    "Mermaid source",
+  );
   let html = renderMarkdown(source, {
     imageMode: "export",
     mathOutput: "mathml",
+    mermaidSourceLabel,
     strictMode,
   });
   if (options.diagrams && html.includes('class="mermaid-diagram"')) {
@@ -136,6 +144,7 @@ export async function buildClipboardDocument(
   const textHtml = renderMarkdown(source, {
     imageMode: "export",
     mathOutput: "html",
+    mermaidSourceLabel,
     strictMode,
   });
   const parsedHtml = new DOMParser().parseFromString(html, "text/html");

@@ -234,6 +234,7 @@ translations are not shipped.
 | Front matter card in live preview | done | M7 |
 | Math in live preview | done | M7 |
 | Mermaid in live preview | done | M7 |
+| Mermaid source copy in live and reading views | done | M7 |
 | Ctrl+Click external links in live preview | done | M7 |
 | Anchor links in live preview | done | M7 |
 | Footnotes in live preview | done | M7 |
@@ -369,6 +370,10 @@ rewritten.
 Footnote definitions on inactive lines render as labeled cards. Lazy and
 indented continuation lines share the card surface, clicking the label reveals
 the `[^label]:` source, and the definition text remains directly editable.
+
+Top-level Mermaid cards and the reading-view Mermaid source disclosure expose a
+localized copy-source action. Copying keeps the diagram and disclosure state
+unchanged and never reveals the fence.
 
 Top-level GFM tables on inactive lines render as read-only tables with header
 styling, column alignment, striping, and inline cell formatting. Clicking the

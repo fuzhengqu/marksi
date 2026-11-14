@@ -66,6 +66,8 @@ interface MarkdownEnvironment {
   imageHeightResizeLabel?: string;
   imageResizable?: boolean;
   codeCopyLabel?: string;
+  mermaidSourceLabel?: string;
+  mermaidCopyLabel?: string;
 }
 
 const md = new MarkdownIt({
@@ -286,6 +288,12 @@ md.renderer.rules.fence = (tokens, index, _options, environment) => {
   const token = tokens[index];
   const info = token.info.trim();
   const language = info.split(/\s+/)[0]?.toLowerCase() ?? "";
+  const env = environment as MarkdownEnvironment | undefined;
+  const copyLabel = env?.imageMode === "export" ? undefined : env?.codeCopyLabel;
+  const mermaidSourceLabel =
+    env?.mermaidSourceLabel ?? "Mermaid source";
+  const mermaidCopyLabel =
+    env?.imageMode === "export" ? undefined : env?.mermaidCopyLabel;
   let highlighted: string;
 
   if (language === "mermaid") {
@@ -299,7 +307,15 @@ md.renderer.rules.fence = (tokens, index, _options, environment) => {
       `<div class="mermaid-diagram" data-mermaid-source="${encodeURIComponent(
         token.content,
       )}" aria-busy="true"></div>`,
-      `<details class="mermaid-source"><summary>Mermaid source</summary>`,
+      `<details class="mermaid-source"><summary><span>${escapeHtml(
+        mermaidSourceLabel,
+      )}</span>`,
+      mermaidCopyLabel
+        ? `<button type="button" class="mermaid-copy-button" aria-label="${escapeHtml(
+            mermaidCopyLabel,
+          )}">${escapeHtml(mermaidCopyLabel)}</button>`
+        : "",
+      `</summary>`,
       `<pre><code class="language-mermaid">${escapeHtml(
         token.content,
       )}</code></pre></details>`,
@@ -321,10 +337,6 @@ md.renderer.rules.fence = (tokens, index, _options, environment) => {
   }
 
   const label = language || "code";
-  const copyLabel =
-    environment?.imageMode === "export"
-      ? undefined
-      : (environment as MarkdownEnvironment | undefined)?.codeCopyLabel;
   return [
     `<div class="code-block" data-language="${escapeHtml(label)}">`,
     `<div class="code-block-head${copyLabel ? " has-copy" : ""}">`,
@@ -546,6 +558,8 @@ export function renderMarkdownHtml(
     imageHeightResizeLabel?: string;
     imageResizable?: boolean;
     codeCopyLabel?: string;
+    mermaidSourceLabel?: string;
+    mermaidCopyLabel?: string;
     strictMode?: boolean;
   } = {},
 ): string {
@@ -560,6 +574,8 @@ export function renderMarkdownHtml(
       options.imageHeightResizeLabel ?? "Resize image height",
     imageResizable: options.imageResizable ?? true,
     codeCopyLabel: options.codeCopyLabel,
+    mermaidSourceLabel: options.mermaidSourceLabel,
+    mermaidCopyLabel: options.mermaidCopyLabel,
   };
   const renderingSource =
     options.strictMode === false ? normalizeLaxMarkdown(source) : source;
@@ -575,6 +591,8 @@ export function renderMarkdown(
     imageHeightResizeLabel?: string;
     imageResizable?: boolean;
     codeCopyLabel?: string;
+    mermaidSourceLabel?: string;
+    mermaidCopyLabel?: string;
     strictMode?: boolean;
   } = {},
 ): string {

@@ -26,15 +26,19 @@ export function blobToBase64(blob: Blob): Promise<string> {
 }
 
 /**
- * Keeps reading-view copy controls out of PNG captures. A copy button above a
- * code block is live chrome, not document content, so it is filtered from the
- * cloned export tree.
+ * Keeps reading-view copy controls out of PNG captures. Copy buttons above
+ * code and Mermaid blocks are live chrome, not document content, so they are
+ * filtered from the cloned export tree.
  */
 export function shouldCaptureNode(node: {
   nodeType: number;
   classList?: { contains(token: string): boolean };
 }): boolean {
-  return !(node.nodeType === 1 && node.classList?.contains("code-copy-button"));
+  return !(
+    node.nodeType === 1 &&
+    (node.classList?.contains("code-copy-button") ||
+      node.classList?.contains("mermaid-copy-button"))
+  );
 }
 
 export function imageExportName(documentName: string): string {
