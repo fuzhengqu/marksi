@@ -228,6 +228,7 @@ translations are not shipped.
 | Block quotes and horizontal rules in live preview | done | M7 |
 | GitHub alerts in live preview | done | M7 |
 | Code block cards and language badges in live preview | done | M7 |
+| Code block copy button in live preview | done | M7 |
 | Tables in live preview | done | M7 |
 | Front matter card in live preview | done | M7 |
 | Math in live preview | done | M7 |

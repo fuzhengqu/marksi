@@ -90,6 +90,10 @@ describe("translate", () => {
     expect(translate("zh-Hant", "Mermaid diagram")).toBe("Mermaid 圖表");
     expect(translate("zh-Hans", "Footnote")).toBe("脚注");
     expect(translate("zh-Hant", "Footnote")).toBe("腳註");
+    expect(translate("zh-Hans", "Copy code")).toBe("复制代码");
+    expect(translate("zh-Hant", "Copy code")).toBe("複製程式碼");
+    expect(translate("zh-Hans", "Copied")).toBe("已复制");
+    expect(translate("zh-Hant", "Copied")).toBe("已複製");
   });
 
   it("returns the source label for English", () => {

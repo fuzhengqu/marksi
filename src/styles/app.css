@@ -1584,6 +1584,49 @@
   outline-offset: 2px;
 }
 
+.cm-live-code-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  vertical-align: middle;
+}
+
+.cm-live-code-copy {
+  appearance: none;
+  padding: 0.16em 0.58em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68em;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.cm-live-code-copy:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--fg);
+}
+
+.cm-live-code-copy:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cm-live-code-copy[data-copied="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cm-live-code-copy:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Leading YAML front matter in the editable live preview. The card shows a
    compact metadata summary and reveals the canonical source when activated. */
 .cm-live-frontmatter {

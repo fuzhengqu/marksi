@@ -40,6 +40,7 @@ import {
   frontMatterSummary,
   type FrontMatterEntry,
 } from "../lib/frontMatter";
+import { copyCodeText } from "../lib/codeCopy";
 import { headingAnchors, renderMarkdown } from "../lib/markdown";
 import {
   scanFootnotes,
@@ -94,6 +95,8 @@ export interface LivePreviewOptions {
   mathLabel: string;
   mermaidLabel: string;
   footnoteLabel: string;
+  codeCopyLabel: string;
+  codeCopiedLabel: string;
   theme: ResolvedTheme;
   openLink: (url: string) => void;
   openLocalLink: (href: string) => void;
@@ -111,6 +114,8 @@ const EMPTY_OPTIONS: LivePreviewOptions = {
   mathLabel: "Math",
   mermaidLabel: "Mermaid diagram",
   footnoteLabel: "Footnote",
+  codeCopyLabel: "Copy code",
+  codeCopiedLabel: "Copied",
   theme: "light",
   openLink: () => {},
   openLocalLink: () => {},
@@ -417,15 +422,27 @@ class LiveCodeBadgeWidget extends WidgetType {
   constructor(
     readonly from: number,
     readonly label: string,
+    readonly code: string,
+    readonly copyLabel: string,
+    readonly copiedLabel: string,
   ) {
     super();
   }
 
   eq(other: LiveCodeBadgeWidget): boolean {
-    return this.from === other.from && this.label === other.label;
+    return (
+      this.from === other.from &&
+      this.label === other.label &&
+      this.code === other.code &&
+      this.copyLabel === other.copyLabel &&
+      this.copiedLabel === other.copiedLabel
+    );
   }
 
   toDOM(view: EditorView): HTMLElement {
+    const header = document.createElement("span");
+    header.className = "cm-live-code-header";
+
     const badge = document.createElement("span");
     badge.className = "cm-live-code-badge";
     badge.textContent = this.label;
@@ -447,7 +464,41 @@ class LiveCodeBadgeWidget extends WidgetType {
         reveal(event);
       }
     });
-    return badge;
+
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "cm-live-code-copy";
+    copy.textContent = this.copyLabel;
+    copy.title = this.copyLabel;
+    copy.setAttribute("aria-label", this.copyLabel);
+    copy.contentEditable = "false";
+    copy.spellcheck = false;
+    copy.disabled = this.code.length === 0;
+    copy.addEventListener("mousedown", (event) => {
+      event.stopPropagation();
+    });
+    copy.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!this.code) {
+        return;
+      }
+      void copyCodeText(this.code)
+        .then(() => {
+          copy.textContent = this.copiedLabel;
+          copy.dataset.copied = "true";
+          window.setTimeout(() => {
+            copy.textContent = this.copyLabel;
+            delete copy.dataset.copied;
+          }, 1200);
+        })
+        .catch(() => {
+          // Keep the copy label when clipboard access is denied.
+        });
+    });
+
+    header.append(badge, copy);
+    return header;
   }
 
   ignoreEvent(): boolean {
@@ -1520,11 +1571,23 @@ function buildDecorations(
               const label = fenceLanguageLabel(
                 info ? view.state.doc.sliceString(info.from, info.to) : "",
               );
+              const codeNode = fence.getChild("CodeText");
+              const code = codeNode
+                ? view.state.doc
+                    .sliceString(codeNode.from, codeNode.to)
+                    .replace(/\r?\n$/, "")
+                : "";
               ranges.push({
                 from: node.from,
                 to: end,
                 decoration: Decoration.replace({
-                  widget: new LiveCodeBadgeWidget(node.from, label),
+                  widget: new LiveCodeBadgeWidget(
+                    node.from,
+                    label,
+                    code,
+                    options.codeCopyLabel,
+                    options.codeCopiedLabel,
+                  ),
                 }),
               });
             }

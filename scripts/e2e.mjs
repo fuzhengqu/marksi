@@ -1316,6 +1316,7 @@ async function main() {
           codeLines: document.querySelectorAll(".cm-line.cm-live-code").length,
           badgeText: badge?.textContent ?? null,
           openingText: opening?.textContent ?? null,
+          copyText: document.querySelector(".cm-live-code-copy")?.textContent ?? null,
           firstText: firstCode?.textContent ?? null,
           fenceLines: lines.filter((node) => node.textContent?.trim().startsWith(String.fromCharCode(96, 96, 96))).length,
           background: firstCode ? style(firstCode).backgroundColor : null,
@@ -1336,8 +1337,14 @@ async function main() {
         state,
       );
       assert(
-        state.openingText === "ts",
+        state.openingText?.startsWith("ts") &&
+          !state.openingText.includes(String.fromCharCode(96, 96, 96)),
         "the opening fence should hide its backticks",
+        state,
+      );
+      assert(
+        state.copyText === "复制代码",
+        "the opening fence should show its copy button",
         state,
       );
       assert(
@@ -2512,6 +2519,91 @@ async function main() {
         content,
       );
     } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
+  });
+
+  await test("live preview copies fenced code", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "live-preview-copy-code.md");
+    const fence = String.fromCharCode(96, 96, 96);
+    const source = [
+      "# Copy",
+      "",
+      `${fence}js`,
+      "const x = 1;",
+      "console.log(x);",
+      fence,
+      "",
+      `${fence}text`,
+      "plain text",
+      fence,
+      "",
+    ].join("\n");
+
+    try {
+      await writeFile(file, source, "utf8");
+      await evaluate(
+        `window.__MARKSI_DEV__.openPath(${JSON.stringify(file)})`,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        10_000,
+      );
+      await evaluate("window.__MARKSI_DEV__.gotoLine(11)");
+      await waitFor(
+        'document.querySelectorAll(".cm-live-code-copy").length === 2',
+        10_000,
+      );
+      await evaluate(`(() => {
+        window.__copiedCode = [];
+        window.__MARKSI_DEV__.setCodeCopyHandler((text) => {
+          window.__copiedCode.push(text);
+          return Promise.resolve();
+        });
+      })()`);
+
+      await evaluate(
+        'document.querySelectorAll(".cm-live-code-copy")[0]?.click()',
+      );
+      await waitFor("window.__copiedCode.length === 1", 10_000);
+      const first = await evaluate("window.__copiedCode[0]");
+      assert(
+        first === "const x = 1;\nconsole.log(x);",
+        "first code block should be copied without fences",
+        first,
+      );
+      await waitFor(
+        'document.querySelectorAll(".cm-live-code-copy")[0]?.textContent === "已复制"',
+        10_000,
+      );
+
+      await evaluate(
+        'document.querySelectorAll(".cm-live-code-copy")[1]?.click()',
+      );
+      await waitFor("window.__copiedCode.length === 2", 10_000);
+      const second = await evaluate("window.__copiedCode[1]");
+      assert(
+        second === "plain text",
+        "second code block should be copied",
+        second,
+      );
+
+      const content = await evaluate(
+        "window.__MARKSI_DEV__.getState().doc.content",
+      );
+      assert(
+        content === source,
+        "copying code must not rewrite the document",
+        content,
+      );
+    } finally {
+      await evaluate(`(() => {
+        window.__MARKSI_DEV__.setCodeCopyHandler(null);
+        delete window.__copiedCode;
+      })()`).catch(() => {});
       await rm(file, { force: true });
       await resetBase();
     }

@@ -145,10 +145,11 @@ the syntax tree exposes those lines as code text.
 Code blocks use the same line-only pass. `FencedCode` and `CodeBlock` nodes add
 card classes to every visible line, with first and last classes supplying the
 rounded edges. The inline pass replaces the opening `CodeMark` and `CodeInfo`
-with a language badge and hides the closing `CodeMark` on inactive lines. The
-badge carries the opening offset, so activating it moves the caret to the
-canonical fence. Code text is never replaced and keeps the editor's syntax
-colors.
+with a language badge and copy button and hides the closing `CodeMark` on
+inactive lines. The badge carries the opening offset, so activating it moves the
+caret to the canonical fence; the copy button writes the fence's `CodeText`
+through `lib/codeCopy.ts` without revealing or changing the source. Code text is
+never replaced and keeps the editor's syntax colors.
 
 Tables need block widgets, which CodeMirror only accepts from a `StateField`,
 not a `ViewPlugin`. A dedicated field walks top-level `Table` nodes and replaces
@@ -741,6 +742,8 @@ window starts with an empty document rather than duplicating main state.
   normalization; it is covered by unit tests.
 - `src/lib/linkActions.ts` owns the replaceable external-link opener used by the
   live preview and the development test hook.
+- `src/lib/codeCopy.ts` owns the replaceable fenced-code clipboard writer used by
+  the live preview and the development test hook.
 - `src/lib/mathSpans.ts` owns inline/display math scanning, ignore ranges, and
   preview caps; it is covered by unit tests.
 - `src/lib/textChange.ts` owns minimal text-diff calculation for programmatic

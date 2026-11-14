@@ -171,6 +171,8 @@ export function EditorPane({
     mathLabel: translate(language, "Math"),
     mermaidLabel: translate(language, "Mermaid diagram"),
     footnoteLabel: translate(language, "Footnote"),
+    codeCopyLabel: translate(language, "Copy code"),
+    codeCopiedLabel: translate(language, "Copied"),
     theme,
     openLink: (url) => openPreviewLink(language, url),
     openLocalLink: (href) =>
@@ -231,6 +233,8 @@ export function EditorPane({
       mathLabel: translate(language, "Math"),
       mermaidLabel: translate(language, "Mermaid diagram"),
       footnoteLabel: translate(language, "Footnote"),
+      codeCopyLabel: translate(language, "Copy code"),
+      codeCopiedLabel: translate(language, "Copied"),
       theme,
       openLink: (url) => openPreviewLink(language, url),
       openLocalLink: (href) =>
@@ -406,6 +410,8 @@ export function EditorPane({
               mathLabel: translate(language, "Math"),
               mermaidLabel: translate(language, "Mermaid diagram"),
               footnoteLabel: translate(language, "Footnote"),
+              codeCopyLabel: translate(language, "Copy code"),
+              codeCopiedLabel: translate(language, "Copied"),
               theme,
               openLink: (url) => openPreviewLink(language, url),
               openLocalLink: (href) =>

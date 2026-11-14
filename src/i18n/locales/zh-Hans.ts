@@ -17,6 +17,8 @@ export const zhHans: Record<string, string> = {
   "Math": "数学公式",
   "Mermaid diagram": "Mermaid 图表",
   "Footnote": "脚注",
+  "Copy code": "复制代码",
+  "Copied": "已复制",
   "Files": "文件",
   "Outline": "大纲",
   "Search": "搜索",

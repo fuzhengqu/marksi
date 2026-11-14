@@ -109,6 +109,10 @@ The E2E suite currently covers:
   code content stays literal, inline code is unaffected, the active fence
   reveals its source while keeping the card, and clicking the badge reveals
   the opening fence.
+- Live-preview code copy: two fenced blocks expose copy buttons; clicking each
+  writes the exact code text without fences through the injected clipboard
+  handler, the first button briefly shows the localized copied label, and the
+  document text is unchanged.
 - Live-preview tables: an inactive top-level table renders one read-only table
   widget with headers, both body rows, inline emphasis, center/right column
   alignment, cell borders, and a striped fill; the Markdown pipes stay hidden,
@@ -320,7 +324,7 @@ Pandoc format metadata plus export/import filenames, minimal text-change
 calculation, quick-open ranking, installer language configuration, MSI
 artifact-name normalization, link-target classification and local path/fragment
 resolution, heading-anchor extraction, footnote scanning, list-marker detection
-and numbering, and analysis helpers.
+and numbering, localized copy labels, and analysis helpers.
 
 Golden Markdown fixtures under `tests/fixtures/markdown/` pair 18 hand-written
 sources with their exact rendered HTML. They cover ATX/setext headings and

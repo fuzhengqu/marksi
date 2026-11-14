@@ -230,7 +230,9 @@ ease-out; honor `prefers-reduced-motion`.
   subtle background, and nested indentation. Horizontal rules render as a
   centered divider until the line is activated. Fenced code blocks on inactive
   lines show a card surface and language badge while hiding their fences;
-  clicking the badge reveals the source. Top-level tables on inactive lines
+  clicking the badge reveals the source. A copy button beside the badge writes
+  the fenced code to the clipboard and briefly shows a copied state without
+  revealing the source. Top-level tables on inactive lines
   render as read-only tables with header styling, alignment, striping, and
   inline cell formatting; clicking a table or placing the caret on one of its
   lines reveals its Markdown source. Tables inside code fences, quotes, or list

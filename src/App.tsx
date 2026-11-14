@@ -107,6 +107,7 @@ import {
   editorWindowCount,
   closeEditorWindow,
 } from "./lib/platform";
+import { setCodeCopyHandler } from "./lib/codeCopy";
 import { setExternalLinkHandler } from "./lib/linkActions";
 import {
   clearWindowFrame,
@@ -1820,6 +1821,7 @@ export default function App() {
       getState: () => useAppStore.getState(),
       gotoLine: (line: number) => useAppStore.getState().requestGotoLine(line),
       setExternalLinkHandler,
+      setCodeCopyHandler,
       toggleView: handleToggleView,
       setViewMode: (mode: "source" | "preview" | "reading") =>
         useAppStore.getState().setViewMode(mode),
