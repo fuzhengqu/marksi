@@ -800,6 +800,23 @@ artifacts were downloaded and re-hashed against the per-platform
 - `MarkSI_0.64_x86_64.flatpak` (6.06 MiB), SHA256
   `676D121D97C61211FBA794C64C1CFAFF8810C6A7042C2A6EDE244455983BD328`
 
+The 0.65 tag also built both platforms without a Release. The six workflow
+artifacts were downloaded and re-hashed against the per-platform
+`SHA256SUMS.txt` entries; no v0.65 GitHub Release exists:
+
+- `MarkSI_0.65_x64.msi` (6.93 MiB), SHA256
+  `9669DE97FFBD3E4C79B6AEAF2E0715711ABDFCD8D6F57FE8749BABC9973A9F5C`
+- `MarkSI_0.65_x64-setup.exe` (5.66 MiB), SHA256
+  `90668898CBE301A8D34470ADC265F36A782D09DA3C142FDE83F4D260D8A12FB8`
+- `MarkSI_0.65_amd64.deb` (8.17 MiB), SHA256
+  `1AAF70FDF2A60862DC1B21532C1C36D34BFC926DDA7A03E8DD6203E3896E17DB`
+- `MarkSI-0.65-1.x86_64.rpm` (8.17 MiB), SHA256
+  `C47DECF8A2B856BB6CD42339C0AF09D610FDF01AC4FE00797FE2C1EBD954CE36`
+- `MarkSI_0.65_amd64.AppImage` (87.51 MiB), SHA256
+  `A103FE92D2A68A88A0C7EA325D0FCDB9725C63F23C76A47DA7A08584B1C3E8D3`
+- `MarkSI_0.65_x86_64.flatpak` (6.06 MiB), SHA256
+  `A6F7BE21FD4346393C56D4D52C13DB40C57D5DF1C056B0077859F48D52C66458`
+
 The 0.54 NSIS setup is 0.01 MiB larger than 0.53, consistent with embedding the
 Simplified and Traditional Chinese installer translations alongside English.
 The MSI remains a single `en-US` installer; its application payload still
@@ -812,7 +829,7 @@ product version before checksums, so the MSI path is
 The 0.48 AppImage is about 4.8 MiB larger than 0.47 while the deb, rpm, and
 Flatpak sizes are unchanged, and the Windows artifact is the same size. The
 growth is confined to the AppImage's bundled runtime libraries on the Linux
-runner, not the application payload. The 0.49 through 0.64 AppImages are within
+runner, not the application payload. The 0.49 through 0.65 AppImages are within
 0.02 MiB of 0.48 and the other package sizes are within 0.02 MiB, which confirms
 that the earlier growth was a stable runner-runtime difference rather than
 per-release payload growth.
@@ -821,7 +838,7 @@ For 0.41, the downloaded artifacts were re-hashed locally; all six matched their
 `SHA256SUMS.txt` entries, and the archive contained no AppImage `AppDir` tree or
 deb staging tarballs. The 0.42 through 0.60 archives were inspected the
 same way and kept the same layout. The 0.61 installers were downloaded from the
-GitHub Release and re-hashed; the 0.62, 0.63, and 0.64 installers came from their
+GitHub Release and re-hashed; the 0.62 through 0.65 installers came from their
 tag workflow artifacts. Each platform artifact also contained a
 `THIRD_PARTY_NOTICES.md` generated for that target: Windows reported 241 Rust
 crates and 90 license texts, Linux reported 316 and 98. Adding the notices file
@@ -848,7 +865,7 @@ stages it, validates the AppStream file, builds an unsigned bundle with
 desktop and metainfo files. It also runs `ldd` inside the sandbox and fails on
 unresolved shared libraries. The release workflow builds the same bundle after
 the Linux installers, adds it to the shared checksum file, and uploads it with
-the Linux artifact. The 0.41 through 0.64 runs completed both paths and the
+the Linux artifact. The 0.41 through 0.65 runs completed both paths and the
 downloaded `.flatpak` matched its `SHA256SUMS.txt` entry in each run. `flatpak-builder` is Linux-only,
 so the Windows development host runs the metadata and staging checks but cannot
 build the bundle locally.
