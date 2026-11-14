@@ -380,8 +380,12 @@ and a pending recovered draft takes precedence.
 
 Windows installers register the Markdown extensions listed in
 `tauri.conf.json`. Installing, verifying Explorer double-click behavior, and
-uninstalling the association remain manual release checks. Opening a second file
-starts a second process because single-instance forwarding is not implemented.
+uninstalling the association remain manual release checks. A second launch is
+handled by the loopback single-instance handoff: the new process forwards one
+supported file path (or a focus request) and exits before creating a window.
+Rust tests cover file and focus-only handoffs and stale-lock recovery; the
+real-WebView E2E launches the application binary a second time and confirms the
+running window opens the forwarded file.
 
 ## Release packaging
 

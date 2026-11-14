@@ -22,8 +22,8 @@ The public security and version policies are enforced by
   Linux packages, the Windows/Linux build-test matrix, and the three-language
   i18n framework. Release governance now includes a monotonic versionCode,
   two-part product tags, GitHub Releases with installers for every product tag,
-  and two-part artifact filenames. First-run interface language now follows the
-  system locale,
+  single-instance file forwarding, and two-part artifact filenames. First-run
+  interface language now follows the system locale,
   the NSIS setup is a single installer with English, Simplified Chinese, and
   Traditional Chinese translations, and the MSI artifact name is
   language-neutral. M7 has started with IME/CJK input coverage, a keyboard/focus
@@ -43,8 +43,8 @@ The public security and version policies are enforced by
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **140 done, 3 wip,
-3 todo, 2 deferred** across 148 items.
+is the source for exact status values. Current raw count: **141 done, 3 wip,
+2 todo, 2 deferred** across 148 items.
 
 ## Milestone definitions
 
@@ -151,7 +151,7 @@ shortcut editor, Windows installer validation, Linux packages, CLI open, file
 associations, window flags, multiple document windows, window/session memory,
 the native title bar option, advanced JSON settings, and the three-language i18n
 framework are complete. Release checksums are automated; code signing,
-auto-update, single-instance forwarding, and default Snap Layouts remain open.
+auto-update, and default Snap Layouts remain open.
 
 ### M7 — Performance, accessibility, and internationalization depth
 

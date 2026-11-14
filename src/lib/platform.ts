@@ -124,6 +124,24 @@ export async function takeStartupFile(): Promise<string | null> {
   return invoke<string | null>("take_startup_file");
 }
 
+/**
+ * Subscribes to file handoffs from a second MarkSI process. The primary Rust
+ * instance validates and forwards the path, then focuses the main window.
+ */
+export async function onOpenFileRequested(
+  handler: (path: string) => void,
+): Promise<() => void> {
+  if (!isTauri()) {
+    return () => {};
+  }
+  const { listen } = await import("@tauri-apps/api/event");
+  return listen<string>("marksi://open-file", (event) => {
+    if (event.payload) {
+      handler(event.payload);
+    }
+  });
+}
+
 export async function openDocument(): Promise<DocumentPayload | null> {
   if (!isTauri()) {
     const file = await pickBrowserFile();

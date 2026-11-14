@@ -24,7 +24,7 @@ that design decisions do not paint us into a corner.
 | System appearance following | done | M6 |
 | Zoom in/out/reset | done | M4 |
 | Windows 11 snap layouts support | todo | M6 |
-| Single instance / file forwarding | todo | M6 |
+| Single instance / file forwarding | done | M6 |
 | CLI file open | done | M6 |
 
 System theme mode follows `prefers-color-scheme` live, including while the app
@@ -530,6 +530,13 @@ workflow regenerates the file for each runner target before building, so
 Windows and Linux packages describe their own dependency trees. The About dialog
 includes the generated text in an expandable section, and no network or
 telemetry is involved at runtime.
+
+A second MarkSI launch claims the existing per-user instance through a
+loopback endpoint protected by a random token. When the new process was given a
+supported Markdown/text path, it forwards that path to the running main window
+and exits before creating a window. Without a path it only raises and focuses
+the existing window. The main window applies the normal unsaved-change guard
+before opening forwarded files.
 
 ## Explicit non-goals
 

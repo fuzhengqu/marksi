@@ -17,6 +17,10 @@ const productVersion = appVersion.replace(/^0\.(\d+)\.0$/, "0.$1");
 const pandocExecutable = resolve(
   ".tmp/pandoc/portable/pandoc-3.12.1/pandoc.exe",
 );
+const appBinary = resolve(
+  "src-tauri/target/debug",
+  process.platform === "win32" ? "marksi.exe" : "marksi",
+);
 const fixtureMarkdown = [
   "# 标题",
   "",
@@ -482,6 +486,40 @@ async function main() {
       "sidebar tabs should be Chinese",
       state,
     );
+  });
+
+  await test("second instance forwards a file to the running window", async () => {
+    await resetBase();
+    const file = resolve(fixtureDir, "forwarded-instance.md");
+    const source = "# Forwarded\n\nFrom another process.";
+
+    try {
+      await writeFile(file, source, "utf8");
+      await execFileAsync(appBinary, [file], { timeout: 20_000 });
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.path === " +
+          JSON.stringify(file),
+        15_000,
+      );
+      await waitFor(
+        "window.__MARKSI_DEV__.getState().doc.content === " +
+          JSON.stringify(source),
+        10_000,
+      );
+      const state = await evaluate(`({
+        path: window.__MARKSI_DEV__.getState().doc.path,
+        content: window.__MARKSI_DEV__.getState().doc.content,
+        windows: window.__MARKSI_DEV__.editorWindowCount?.() ?? null
+      })`);
+      assert(
+        state.path === file && state.content === source,
+        "the running window should receive the forwarded file",
+        state,
+      );
+    } finally {
+      await rm(file, { force: true });
+      await resetBase();
+    }
   });
 
   await test("sidebar has four workspace actions and no footer", async () => {

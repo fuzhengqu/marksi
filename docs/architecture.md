@@ -621,9 +621,24 @@ window-frame memory run only in the main window. Settings, recent files, and
 themes remain shared through the common origin, which is why the secondary
 window starts with an empty document rather than duplicating main state.
 
+## Single instance
+
+`src-tauri/src/single_instance.rs` elects one process per user before Tauri
+starts. The primary instance binds a random loopback port and writes a tokenized
+lock file under the app-data directory. A second process reads that file,
+performs a short JSON handshake, forwards at most one supported file path (or an
+empty focus request), and exits before creating a window. The primary validates
+the token and the path again, emits `marksi://open-file` to the main window, and
+restores/focuses it; the frontend opens the path through the normal
+unsaved-change guard. Stale locks are replaced after bounded retries, and any
+IPC failure degrades to a normal launch instead of blocking the editor.
+
 ## Frontend boundaries
 
 - `src/lib/platform.ts` is the only place that calls Tauri APIs for file IO.
+- `src-tauri/src/single_instance.rs` owns per-user election, tokenized loopback
+  handoff, stale-lock recovery, and path validation before the UI opens a
+  forwarded file.
   Browser builds use a file input/download fallback.
 - `src/lib/quickOpen.ts` is a pure ranking module; it has no DOM or Tauri
   dependencies and is covered by unit tests.

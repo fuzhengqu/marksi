@@ -1,9 +1,10 @@
 mod commands;
+mod single_instance;
 
 use std::path::Path;
 use std::sync::Mutex;
 
-use tauri::State;
+use tauri::{Emitter, Manager, State};
 
 pub struct StartupFile(Mutex<Option<String>>);
 
@@ -28,10 +29,39 @@ fn take_startup_file(state: State<'_, StartupFile>) -> Option<String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let startup_file = parse_startup_file(std::env::args().skip(1));
+    let context = tauri::generate_context!();
+    let instance = single_instance::data_dir(&context.config().identifier).and_then(|directory| {
+        std::fs::create_dir_all(&directory).ok()?;
+        Some(single_instance::claim(&directory, startup_file.as_deref()))
+    });
+    let primary = match instance {
+        Some(single_instance::Claim::Primary(primary)) => Some(primary),
+        Some(single_instance::Claim::Secondary) => return,
+        Some(single_instance::Claim::Unavailable) | None => None,
+    };
+
     tauri::Builder::default()
         .manage(StartupFile(Mutex::new(startup_file)))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .setup(move |app| {
+            if let Some(primary) = primary {
+                let handle = app.handle().clone();
+                if let Err(error) = primary.start(move |path| {
+                    if let Some(path) = path {
+                        let _ = handle.emit_to("main", "marksi://open-file", path);
+                    }
+                    if let Some(window) = handle.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.unminimize();
+                        let _ = window.set_focus();
+                    }
+                }) {
+                    eprintln!("single-instance listener failed: {error}");
+                }
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             take_startup_file,
             commands::document::read_document,
@@ -66,7 +96,7 @@ pub fn run() {
             commands::image::save_image_data,
             commands::image::read_image_data_url,
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running MarkSI");
 }
 

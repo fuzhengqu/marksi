@@ -84,6 +84,7 @@ import {
   openDocument,
   openEditorWindow,
   openFolder,
+  onOpenFileRequested,
   pandocImport,
   pandocVersion,
   pickImageFile,
@@ -418,6 +419,32 @@ export default function App() {
     },
     [],
   );
+
+  useEffect(() => {
+    if (!isTauri() || !MAIN_WINDOW) {
+      return;
+    }
+    let unlisten: (() => void) | null = null;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const remove = await onOpenFileRequested((path) => {
+          void handleOpenPath(path);
+        });
+        if (cancelled) {
+          remove();
+        } else {
+          unlisten = remove;
+        }
+      } catch {
+        // File forwarding is best-effort and must not block startup.
+      }
+    })();
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [handleOpenPath]);
 
   useEffect(() => {
     if (!isTauri() || draftToRecover || bootStartedRef.current) {

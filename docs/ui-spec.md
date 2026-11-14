@@ -124,6 +124,10 @@ ease-out; honor `prefers-reduced-motion`.
   document. Each window keeps its own recovery draft; the main window keeps
   session restore and window-frame memory. Closing a dirty secondary window asks
   before discarding unsaved changes.
+- Launching MarkSI again focuses the running main window instead of creating a
+  second application instance. If the new launch carried a supported file path,
+  the running window opens that file after the normal unsaved-change guard; the
+  second process exits without showing a window.
 - Sidebar tabs are keyboard reachable and preserve state. An empty workspace
   shows four actions above Recent files: Open file, Open folder, Quick open,
   and New document. There is no footer action row.
