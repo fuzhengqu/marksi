@@ -240,6 +240,8 @@ export const zhHant: Record<string, string> = {
   "Markdown": "Markdown",
   "Strict mode": "嚴格模式",
   "Require whitespace after ATX heading markers and use strict list indentation. Disable for compact headings such as ###Title and lax nested lists.": "要求 ATX 標題標記後方必須有空白，並使用嚴格的清單縮排。關閉後可辨識 ###標題 這類緊湊標題與寬鬆的巢狀清單。",
+  "Render raw HTML": "渲染原始 HTML",
+  "Render raw HTML with a strict sanitizer. Scripts, styles, images, forms, and embedded content are removed; links keep safe protocols.": "使用嚴格清洗器渲染原始 HTML。腳本、樣式、圖片、表單和嵌入內容會被移除；連結僅保留安全協議。",
   "Spell check": "拼字檢查",
   "Use the operating system dictionary while writing.": "寫作時使用作業系統字典。",
   "Auto pair": "自動配對",

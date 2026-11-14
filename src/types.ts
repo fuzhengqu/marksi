@@ -162,6 +162,7 @@ export interface AppSettings {
   smartPunctuation: boolean;
   emojiAutocomplete: boolean;
   strictMode: boolean;
+  renderRawHtml: boolean;
   exportOptions: ExportOptions;
   customExportProgram: string;
   customExportArgs: string;

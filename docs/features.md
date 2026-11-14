@@ -280,15 +280,19 @@ translations are not shipped.
 | Code fences with language highlight | done | M2 |
 | GitHub alerts | done | M4 |
 | Highlight / sub / sup | done | M4 |
-| Raw HTML preview (sanitized) | deferred | — |
+| Raw HTML preview (sanitized) | done | M2 |
 | Link reference definitions | done | M4 |
 | Strict mode toggle (headings and nested lists) | done | M5 |
 | Lax list indentation (nested markers) | done | M5 |
 | Lax list continuation/quote indentation | done | M5 |
 
-Raw HTML preview remains deferred by design. MarkSI keeps raw HTML escaped and
-inert in both preview and export; enabling it would weaken the current
-sanitization boundary and is not planned unless that safety requirement changes.
+Raw HTML preview is opt-in from Preferences > Markdown and off by default. When
+off, raw HTML remains escaped and inert. When on, MarkSI sanitizes user HTML
+with a strict allowlist before the normal renderer: scripts, styles, images,
+forms, embedded content, classes, ids, and event handlers are removed, while
+safe structural tags, tables, details, and `http`/`https`/`mailto`/relative
+links remain. Links still open only on explicit activation, and app-generated
+code, image, table, and math markup is unaffected.
 
 Strict mode controls ATX heading spacing and lax list indentation. MarkSI
 defaults to strict mode; disabling it makes compact headings such as

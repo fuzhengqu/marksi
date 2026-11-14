@@ -529,6 +529,21 @@ export function SettingsDialog() {
                 onChange={(value) => update("strictMode", value)}
               />
             </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Render raw HTML")}</span>
+                <small>
+                  {t(
+                    "Render raw HTML with a strict sanitizer. Scripts, styles, images, forms, and embedded content are removed; links keep safe protocols.",
+                  )}
+                </small>
+              </div>
+              <Toggle
+                label={t("Render raw HTML")}
+                checked={settings.renderRawHtml}
+                onChange={(value) => update("renderRawHtml", value)}
+              />
+            </div>
           </section>
 
           <section className="settings-section">

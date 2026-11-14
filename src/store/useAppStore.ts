@@ -142,6 +142,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   smartPunctuation: false,
   emojiAutocomplete: true,
   strictMode: true,
+  renderRawHtml: false,
   exportOptions: { ...DEFAULT_EXPORT_OPTIONS },
   customExportProgram: "",
   customExportArgs: "",
@@ -481,6 +482,10 @@ export const useAppStore = create<AppStore>()(
             exportOptions: normalizeExportOptions(
               saved.settings?.exportOptions,
             ),
+            renderRawHtml:
+              typeof saved.settings?.renderRawHtml === "boolean"
+                ? saved.settings.renderRawHtml
+                : false,
             customExportProgram: persistedString(
               saved.settings?.customExportProgram,
               1024,

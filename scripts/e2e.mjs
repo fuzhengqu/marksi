@@ -4835,6 +4835,153 @@ async function main() {
     await resetBase();
   });
 
+  await test("raw HTML preview is opt-in and strictly sanitized", async () => {
+    await resetBase();
+    const source = [
+      "# Raw HTML",
+      "",
+      '<div class="evil" style="color:red" onclick="window.__rawHtmlPwned = true"><strong>Safe strong</strong><script>window.__rawHtmlPwned = true</script><img src="https://example.com/x.png" alt="remote"><a href="javascript:window.__rawHtmlPwned = true">bad link</a><a href="https://example.com">safe link</a><details open><summary>More</summary><p>Inside</p></details></div>',
+      "",
+      "```js",
+      "const x = 1;",
+      "```",
+      "",
+      "After.",
+      "",
+    ].join("\n");
+
+    try {
+      await evaluate(
+        `window.__MARKSI_DEV__.setContent(${JSON.stringify(source)})`,
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setSettingsOpen(true)',
+      );
+      await waitFor('document.querySelector(".settings-dialog")');
+      const toggled = await evaluate(`(() => {
+        const node = document.querySelector(
+          '.settings-dialog [role="switch"][aria-label="渲染原始 HTML"]'
+        );
+        node?.click();
+        return Boolean(node);
+      })()`);
+      assert(toggled, "raw HTML setting toggle is missing");
+      await clickSelector(".settings-close");
+      await waitFor('!document.querySelector(".settings-dialog")');
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setViewMode("reading")',
+      );
+      await waitFor(
+        'document.querySelector(".markdown-body strong")?.textContent === "Safe strong"',
+        10_000,
+      );
+
+      const rendered = await evaluate(`(() => {
+        const strong = document.querySelector(".markdown-body strong");
+        const container = strong?.closest("div");
+        const anchors = Array.from(
+          document.querySelectorAll(".markdown-body a")
+        );
+        const bad = anchors.find((node) => node.textContent === "bad link");
+        const safe = anchors.find((node) => node.textContent === "safe link");
+        const attributes = container
+          ? Array.from(container.attributes).map((attribute) => attribute.name)
+          : [];
+        return {
+          strong: strong?.textContent ?? null,
+          container: container?.tagName ?? null,
+          attributes,
+          scripts: document.querySelectorAll(".markdown-body script").length,
+          images: document.querySelectorAll(".markdown-body img").length,
+          badHref: bad?.getAttribute("href") ?? null,
+          safeHref: safe?.getAttribute("href") ?? null,
+          detailsOpen: document.querySelector(".markdown-body details")?.open ?? null,
+          copyButtons: document.querySelectorAll(".markdown-body .code-copy-button").length,
+          pwned: Boolean(window.__rawHtmlPwned)
+        };
+      })()`);
+      assert(
+        rendered.strong === "Safe strong" &&
+          rendered.container === "DIV",
+        "enabled raw HTML should render its safe structure",
+        rendered,
+      );
+      assert(
+        !rendered.attributes.includes("class") &&
+          !rendered.attributes.includes("style") &&
+          !rendered.attributes.includes("onclick") &&
+          !rendered.attributes.includes("id"),
+        "raw HTML classes, styles, ids, and handlers must be removed",
+        rendered,
+      );
+      assert(
+        rendered.scripts === 0 && rendered.images === 0,
+        "raw scripts and images must be removed",
+        rendered,
+      );
+      assert(
+        !rendered.badHref?.toLowerCase().startsWith("javascript:") &&
+          rendered.safeHref?.startsWith("https://example.com"),
+        "raw HTML links must keep only safe protocols",
+        rendered,
+      );
+      assert(
+        rendered.detailsOpen === true,
+        "safe raw HTML details should remain interactive",
+        rendered,
+      );
+      assert(
+        rendered.copyButtons === 1,
+        "raw HTML filtering must not remove app-generated code controls",
+        rendered,
+      );
+      assert(
+        rendered.pwned === false,
+        "raw HTML scripts must never execute",
+        rendered,
+      );
+
+      await evaluate(
+        'window.__MARKSI_DEV__.getState().setSettingsOpen(true)',
+      );
+      await waitFor('document.querySelector(".settings-dialog")');
+      const disabled = await evaluate(`(() => {
+        const node = document.querySelector(
+          '.settings-dialog [role="switch"][aria-label="渲染原始 HTML"]'
+        );
+        node?.click();
+        return Boolean(node);
+      })()`);
+      assert(disabled, "raw HTML setting toggle is missing after enabling");
+      await clickSelector(".settings-close");
+      await waitFor('!document.querySelector(".settings-dialog")');
+      await waitFor(
+        '!document.querySelector(".markdown-body strong") && document.querySelector(".markdown-body")?.textContent?.includes(\'<div class="evil"\')',
+        10_000,
+      );
+      const disabledState = await evaluate(`({
+        setting: window.__MARKSI_DEV__.getState().settings.renderRawHtml,
+        strong: document.querySelectorAll(".markdown-body strong").length,
+        escaped: document.querySelector(".markdown-body")?.textContent?.includes('<div class="evil"') ?? false,
+        copyButtons: document.querySelectorAll(".markdown-body .code-copy-button").length
+      })`);
+      assert(
+        disabledState.setting === false &&
+          disabledState.strong === 0 &&
+          disabledState.escaped === true,
+        "disabling raw HTML should restore escaped source",
+        disabledState,
+      );
+      assert(
+        disabledState.copyButtons === 1,
+        "disabling raw HTML must keep code controls",
+        disabledState,
+      );
+    } finally {
+      await resetBase();
+    }
+  });
+
   await test("flat file list shows nested workspace files", async () => {
     await resetBase();
     const flatDir = resolve(fixtureDir, "flat-workspace");

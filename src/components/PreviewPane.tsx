@@ -155,6 +155,7 @@ export function PreviewPane({
   const t = useT();
   const debouncedContent = useDebouncedValue(content, 90);
   const readOnlyMode = useAppStore((state) => state.settings.readOnlyMode);
+  const renderRawHtml = useAppStore((state) => state.settings.renderRawHtml);
   const language = useAppStore((state) => state.settings.language);
   const strictMode = useAppStore((state) => state.settings.strictMode);
   const loadRemoteImages = useAppStore(
@@ -185,6 +186,7 @@ export function PreviewPane({
             codeCopyLabel: t("Copy code"),
             mermaidSourceLabel: t("Mermaid source"),
             mermaidCopyLabel: t("Copy source"),
+            rawHtml: renderRawHtml,
             strictMode,
           }),
     [
@@ -192,6 +194,7 @@ export function PreviewPane({
       heightResizeLabel,
       needsLargePreviewConfirmation,
       readOnlyMode,
+      renderRawHtml,
       resizeLabel,
       strictMode,
       t,

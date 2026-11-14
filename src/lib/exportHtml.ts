@@ -12,6 +12,7 @@ export interface ExportDocumentOptions {
   content: string;
   language?: Language;
   strictMode?: boolean;
+  rawHtml?: boolean;
   exportOptions?: ExportOptions;
 }
 
@@ -332,6 +333,7 @@ export async function buildStandaloneHtml({
   content,
   language = "zh-Hans",
   strictMode = true,
+  rawHtml = false,
   exportOptions,
 }: ExportDocumentOptions): Promise<string> {
   const options = normalizeExportOptions(exportOptions);
@@ -354,6 +356,7 @@ export async function buildStandaloneHtml({
       imageMode: "export",
       mathOutput: "mathml",
       mermaidSourceLabel: translate(language, "Mermaid source"),
+      rawHtml,
       strictMode,
     }),
     "light",

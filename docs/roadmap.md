@@ -43,8 +43,8 @@ The public security and version policies are enforced by
   E2E, and the publication audit.
 
 Feature-count progress is not schedule or effort progress. The detailed table
-is the source for exact status values. Current raw count: **141 done, 3 wip,
-2 todo, 2 deferred** across 148 items.
+is the source for exact status values. Current raw count: **142 done, 3 wip,
+2 todo, 1 deferred** across 148 items.
 
 ## Milestone definitions
 
@@ -88,8 +88,8 @@ Exit criteria:
 
 Current gap: complete cross-platform export coverage. Golden fixtures now lock
 CommonMark/GFM rendering, but the CommonMark + GFM row stays `wip` because
-markdown-it is not a certified full-spec implementation and raw HTML remains a
-deferred, sanitized preview path.
+markdown-it is not a certified full-spec implementation. Raw HTML is now an
+opt-in, strictly sanitized preview path rather than a deferred gap.
 
 ### M3 — Workspace and reliability
 

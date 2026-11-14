@@ -239,6 +239,8 @@ export const zhHans: Record<string, string> = {
   "Markdown": "Markdown",
   "Strict mode": "严格模式",
   "Require whitespace after ATX heading markers and use strict list indentation. Disable for compact headings such as ###Title and lax nested lists.": "要求 ATX 标题标记后必须有空格，并使用严格列表缩进。关闭后可识别 ###标题 这类紧凑标题和宽松嵌套列表。",
+  "Render raw HTML": "渲染原始 HTML",
+  "Render raw HTML with a strict sanitizer. Scripts, styles, images, forms, and embedded content are removed; links keep safe protocols.": "使用严格清洗器渲染原始 HTML。脚本、样式、图片、表单和嵌入内容会被移除；链接仅保留安全协议。",
   "Spell check": "拼写检查",
   "Use the operating system dictionary while writing.": "写作时使用操作系统词典。",
   "Auto pair": "自动配对",

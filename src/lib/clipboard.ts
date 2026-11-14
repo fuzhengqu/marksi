@@ -124,10 +124,12 @@ export async function buildClipboardDocument(
     theme?: ResolvedTheme;
     diagrams?: boolean;
     strictMode?: boolean;
+    rawHtml?: boolean;
     language?: Language;
   } = {},
 ): Promise<ClipboardDocument> {
   const strictMode = options.strictMode ?? true;
+  const rawHtml = options.rawHtml === true;
   const mermaidSourceLabel = translate(
     options.language ?? "en",
     "Mermaid source",
@@ -136,6 +138,7 @@ export async function buildClipboardDocument(
     imageMode: "export",
     mathOutput: "mathml",
     mermaidSourceLabel,
+    rawHtml,
     strictMode,
   });
   if (options.diagrams && html.includes('class="mermaid-diagram"')) {
@@ -145,6 +148,7 @@ export async function buildClipboardDocument(
     imageMode: "export",
     mathOutput: "html",
     mermaidSourceLabel,
+    rawHtml,
     strictMode,
   });
   const parsedHtml = new DOMParser().parseFromString(html, "text/html");

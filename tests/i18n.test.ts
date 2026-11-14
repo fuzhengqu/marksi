@@ -98,6 +98,8 @@ describe("translate", () => {
     expect(translate("zh-Hant", "Copy source")).toBe("複製原始碼");
     expect(translate("zh-Hans", "Mermaid source")).toBe("Mermaid 源码");
     expect(translate("zh-Hant", "Mermaid source")).toBe("Mermaid 原始碼");
+    expect(translate("zh-Hans", "Render raw HTML")).toBe("渲染原始 HTML");
+    expect(translate("zh-Hant", "Render raw HTML")).toBe("渲染原始 HTML");
   });
 
   it("returns the source label for English", () => {

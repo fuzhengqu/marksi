@@ -56,8 +56,10 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   file forwarding, fullscreen and always-on-top, keyboard-accessible dialogs and
   sidebar, an optional native title bar, and interface zoom.
 - **Privacy**: no account and no telemetry; documents stay on your machine; raw
-  HTML is not executed; remote images are off by default, cached locally only
-  when enabled, and can be cleared at any time; images are never uploaded.
+  HTML is escaped by default, and an opt-in strict-sanitized mode keeps safe
+  structural tags while removing scripts, styles, images, forms, and embedded
+  content; remote images are off by default, cached locally only when enabled,
+  and can be cleared at any time; images are never uploaded.
 
 ## Requirements
 

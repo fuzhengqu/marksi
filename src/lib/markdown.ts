@@ -68,6 +68,7 @@ interface MarkdownEnvironment {
   codeCopyLabel?: string;
   mermaidSourceLabel?: string;
   mermaidCopyLabel?: string;
+  sanitizeRawHtml?: (html: string) => string;
 }
 
 const md = new MarkdownIt({
@@ -284,8 +285,7 @@ md.renderer.rules.toc = (tokens, index) => {
   ].join("");
 };
 
-md.renderer.rules.fence = (tokens, index, _options, environment) => {
-  const token = tokens[index];
+md.renderer.rules.fence = (tokens, index, _options, environment) => {  const token = tokens[index];
   const info = token.info.trim();
   const language = info.split(/\s+/)[0]?.toLowerCase() ?? "";
   const env = environment as MarkdownEnvironment | undefined;
@@ -352,6 +352,154 @@ md.renderer.rules.fence = (tokens, index, _options, environment) => {
     `<pre><code class="hljs">${highlighted}</code></pre>`,
     "</div>\n",
   ].join("");
+};
+
+const userHtmlTags = [
+  "a",
+  "abbr",
+  "address",
+  "article",
+  "aside",
+  "b",
+  "blockquote",
+  "br",
+  "caption",
+  "cite",
+  "code",
+  "col",
+  "colgroup",
+  "dd",
+  "del",
+  "details",
+  "dfn",
+  "div",
+  "dl",
+  "dt",
+  "em",
+  "figcaption",
+  "figure",
+  "footer",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "header",
+  "hr",
+  "i",
+  "ins",
+  "kbd",
+  "li",
+  "main",
+  "mark",
+  "nav",
+  "ol",
+  "p",
+  "pre",
+  "q",
+  "rp",
+  "rt",
+  "ruby",
+  "s",
+  "samp",
+  "section",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "summary",
+  "sup",
+  "table",
+  "tbody",
+  "td",
+  "tfoot",
+  "th",
+  "thead",
+  "time",
+  "tr",
+  "u",
+  "ul",
+  "var",
+  "wbr",
+];
+
+const userHtmlAttributes = [
+  "abbr",
+  "cite",
+  "colspan",
+  "datetime",
+  "dir",
+  "headers",
+  "href",
+  "lang",
+  "open",
+  "reversed",
+  "rowspan",
+  "scope",
+  "span",
+  "start",
+  "title",
+  "type",
+  "value",
+];
+
+const userHtmlSanitizeConfig = {
+  ALLOWED_TAGS: userHtmlTags,
+  ALLOWED_ATTR: userHtmlAttributes,
+  ALLOW_ARIA_ATTR: false,
+  ALLOW_DATA_ATTR: false,
+  ALLOW_UNKNOWN_PROTOCOLS: false,
+  FORBID_ATTR: [
+    "class",
+    "id",
+    "src",
+    "srcset",
+    "style",
+    "target",
+  ],
+  FORBID_TAGS: [
+    "audio",
+    "base",
+    "button",
+    "embed",
+    "form",
+    "iframe",
+    "img",
+    "input",
+    "link",
+    "math",
+    "meta",
+    "object",
+    "option",
+    "picture",
+    "script",
+    "select",
+    "source",
+    "style",
+    "svg",
+    "template",
+    "textarea",
+    "video",
+  ],
+};
+
+function sanitizeUserHtml(html: string): string {
+  return DOMPurify.sanitize(html, userHtmlSanitizeConfig);
+}
+
+md.renderer.rules.html_block = (tokens, index, _options, environment) => {
+  const html = tokens[index].content;
+  const sanitizer = (environment as MarkdownEnvironment | undefined)
+    ?.sanitizeRawHtml;
+  return sanitizer ? sanitizer(html) : escapeHtml(html);
+};
+
+md.renderer.rules.html_inline = (tokens, index, _options, environment) => {
+  const html = tokens[index].content;
+  const sanitizer = (environment as MarkdownEnvironment | undefined)
+    ?.sanitizeRawHtml;
+  return sanitizer ? sanitizer(html) : escapeHtml(html);
 };
 
 function imageDimensionAttributes(token: Token): string {
@@ -560,6 +708,8 @@ export function renderMarkdownHtml(
     codeCopyLabel?: string;
     mermaidSourceLabel?: string;
     mermaidCopyLabel?: string;
+    rawHtml?: boolean;
+    sanitizeRawHtml?: (html: string) => string;
     strictMode?: boolean;
   } = {},
 ): string {
@@ -576,10 +726,17 @@ export function renderMarkdownHtml(
     codeCopyLabel: options.codeCopyLabel,
     mermaidSourceLabel: options.mermaidSourceLabel,
     mermaidCopyLabel: options.mermaidCopyLabel,
+    sanitizeRawHtml: options.sanitizeRawHtml,
   };
   const renderingSource =
     options.strictMode === false ? normalizeLaxMarkdown(source) : source;
-  return md.render(renderingSource, environment);
+  const previousHtml = md.options.html;
+  md.options.html = options.rawHtml === true;
+  try {
+    return md.render(renderingSource, environment);
+  } finally {
+    md.options.html = previousHtml;
+  }
 }
 
 export function renderMarkdown(
@@ -593,10 +750,17 @@ export function renderMarkdown(
     codeCopyLabel?: string;
     mermaidSourceLabel?: string;
     mermaidCopyLabel?: string;
+    rawHtml?: boolean;
+    sanitizeRawHtml?: (html: string) => string;
     strictMode?: boolean;
   } = {},
 ): string {
-  const rendered = renderMarkdownHtml(source, options);
+  const rawHtml = options.rawHtml === true;
+  const rendered = renderMarkdownHtml(source, {
+    ...options,
+    rawHtml,
+    sanitizeRawHtml: rawHtml ? sanitizeUserHtml : undefined,
+  });
   const sanitized = DOMPurify.sanitize(rendered, {
     USE_PROFILES: { html: true, mathMl: true },
     ADD_ATTR: [

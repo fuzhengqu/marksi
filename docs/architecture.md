@@ -288,11 +288,17 @@ golden fixtures; `renderMarkdown` then applies DOMPurify and the DOM-only
 enhancements (task lists, footnote handles, table wrappers). Footnote, highlight,
 subscript, superscript, GitHub-alert, and image-attribute behavior comes from
 small MIT-licensed plugins, including `markdown-it-attrs` restricted to image
-widths. The pipeline remains HTML-disabled: raw HTML is escaped before
-sanitization, and DOMPurify is the final boundary. Fenced code blocks accept an
-optional `codeCopyLabel`; when present, the fence header receives a copy button.
-Export mode suppresses the label, so exported HTML and clipboard documents stay
-static even if a caller passes one.
+widths. The pipeline is HTML-disabled by default: raw HTML is escaped before
+sanitization, and DOMPurify is the final boundary. The opt-in raw HTML path
+sets markdown-it's HTML option for one synchronous render and routes
+`html_block`/`html_inline` through a strict allowlist before the normal pass.
+That allowlist keeps structural and inline tags, tables, details, and safe
+links while removing scripts, styles, images, forms, embedded content, classes,
+ids, inline styles, and event handlers. `renderMarkdownHtml` requires an
+explicit sanitizer hook and escapes raw HTML when none is supplied. Fenced code
+blocks accept an optional `codeCopyLabel`; when present, the fence header
+receives a copy button. Export mode suppresses the label, so exported HTML and
+clipboard documents stay static even if a caller passes one.
 
 Heading IDs are generated during the core pass from the heading's plain inline
 text, with duplicate suffixes. A later core rule replaces a `[TOC]` paragraph

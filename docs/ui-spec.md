@@ -308,6 +308,19 @@ ease-out; honor `prefers-reduced-motion`.
 - Fenced code, front matter, and indented code keep their literal markers in
   both modes. The canonical Markdown source is never rewritten.
 
+## Raw HTML
+
+- Raw HTML is off by default. In preview, export, print, and copy it stays
+  escaped text and can never execute.
+- Preferences > Markdown can enable raw HTML preview. A strict sanitizer runs
+  on user HTML before the normal renderer and keeps only safe structural and
+  inline tags such as headings, lists, tables, details, emphasis, code, and
+  links.
+- Scripts, styles, images, forms, embedded content, classes, ids, inline
+  styles, and event handlers are removed. Links keep only safe protocols and
+  open only when the user clicks them. App-generated code, image, table, math,
+  and Mermaid markup is unaffected.
+
 ## Typing assistance
 
 - Auto pair closes `()`, `[]`, `{}`, quotes, and the Markdown markers `*`, `_`,
@@ -355,8 +368,9 @@ ease-out; honor `prefers-reduced-motion`.
   preview and export, including MathML and document-relative image paths. If
   the WebView cannot write rich clipboard data, MarkSI falls back to selecting
   a hidden rendered copy and finally to copying the HTML source.
-- Each action confirms success with a transient toast. Clipboard HTML never
-  introduces raw HTML or remote asset fetches beyond the normal renderer.
+- Each action confirms success with a transient toast. Clipboard HTML follows
+  the raw HTML preference and never fetches remote assets beyond the normal
+  renderer.
 
 ## Export
 

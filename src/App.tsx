@@ -733,6 +733,7 @@ export default function App() {
           content: state.doc.content,
           language: state.settings.language,
           strictMode: state.settings.strictMode,
+          rawHtml: state.settings.renderRawHtml,
           exportOptions,
         });
         const meta = await saveHtmlFile(
@@ -928,6 +929,7 @@ export default function App() {
         theme: resolvedTheme,
         diagrams: format === "html",
         strictMode: state.settings.strictMode,
+        rawHtml: state.settings.renderRawHtml,
         language: state.settings.language,
       });
 

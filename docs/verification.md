@@ -143,6 +143,12 @@ The E2E suite currently covers:
   copy action writes the exact fence content without revealing or rewriting
   it, clicking the card reveals the fence, moving away restores the diagram,
   and the document text is unchanged.
+- Raw HTML preview: raw HTML is escaped by default; enabling the Preferences >
+  Markdown toggle renders safe structure while removing classes, styles, ids,
+  handlers, scripts, images, and `javascript:` links; `https` links and
+  `<details>` remain safe, app-generated code copy controls survive, and
+  disabling the setting restores escaped source. The strict sanitizer is the
+  final boundary before the existing DOMPurify pass.
 - Live-preview GitHub alerts: note and warning blocks style every line with the
   matching accent and one title label each, inactive `[!NOTE]` markers stay
   hidden, an ordinary quote keeps quote styling without an alert class,
