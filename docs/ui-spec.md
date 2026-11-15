@@ -70,9 +70,16 @@ Typography:
   MSI is the enterprise deployment package; its WiX installer UI is `en-US`,
   which does not limit the application's three-language interface. The MSI
   filename is language-neutral (`MarkSI_<version>_x64.msi`), so it does not
-  imply an English-only application. Both installers use branded header,
-  sidebar/banner, and dialog art with publisher/homepage/copyright metadata;
+  imply an English-only application. Both installers use the per-machine
+  `Program Files\MarkSI` location, request administrator rights, and use branded
+  header/sidebar/banner/dialog art with publisher/homepage/copyright metadata;
   the installer license page keeps the repository's MIT `LICENSE` unchanged.
+- Installer art keeps wizard text clear: the NSIS 150×57 header and WiX 493×58
+  banner contain only a product mark (logo on the left/right respectively), the
+  NSIS 164×314 sidebar contains the mark and a large wordmark without small
+  print, and the WiX 493×312 dialog contains only a corner mark. The `.msi`
+  file itself keeps the Windows Installer shell icon; shortcuts and Apps &
+  Features use the product icon.
 - Writing column: 860px by default. The preference range is 680–1100px.
 - Interface zoom: 100% by default. The preference range is 80%–160% in 10%
   steps and scales the whole application surface.

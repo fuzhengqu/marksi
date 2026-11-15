@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <!-- A per-machine NSIS installation shares Program Files with the MSI but
+         uses a different uninstall key. Remove its uninstaller and ARP entry
+         when the MSI is installed so only one installation remains. -->
+    <Component Id="NsisCleanup" Guid="*" Directory="INSTALLDIR" Win64="yes">
+      <RemoveRegistryKey
+        Id="RemoveNsisUninstallKey"
+        Root="HKLM"
+        Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\MarkSI"
+        Action="removeOnInstall" />
+      <RemoveFile
+        Id="RemoveNsisUninstaller"
+        Name="uninstall.exe"
+        On="install" />
+      <RegistryValue
+        Root="HKLM"
+        Key="Software\MarkSI contributors\MarkSI"
+        Name="NsisCleanup"
+        Type="integer"
+        Value="1"
+        KeyPath="yes" />
+    </Component>
+  </Fragment>
+</Wix>

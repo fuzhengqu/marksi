@@ -55,7 +55,9 @@ MarkSI 是一个免费、开源的 Markdown 编辑器，使用 Rust 与 Tauri �
 官方下载位于 [GitHub Releases](https://github.com/fuzhengqu/marksi/releases)。
 **每个版本 tag 都会发布对应的 GitHub Release，包含 Windows/Linux 安装包、
 合并的 `SHA256SUMS.txt` 和第三方声明**，因此可以直接下载最新版本，不需要从
-源码构建。里程碑版本提供手写说明，常规版本自动生成变更说明。也可以从源码运行：
+源码构建。里程碑版本提供手写说明，常规版本自动生成变更说明。Windows 安装器
+安装到 `Program Files\MarkSI` 并请求管理员权限；0.69 的 per-user setup.exe
+会在首次安装 0.70 时自动迁移。也可以从源码运行：
 
 ```bash
 npm install

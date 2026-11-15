@@ -417,7 +417,17 @@ names are normalized from the technical version to the two-part product version
 before checksums are written. Both Windows installers use committed NSIS
 header/sidebar and WiX banner/dialog bitmaps, the installer/uninstaller icon,
 and publisher/homepage/copyright metadata. `bundle.licenseFile` remains the
-repository `LICENSE`; installer branding does not alter the MIT text.
+repository `LICENSE`; installer branding does not alter the MIT text. NSIS and
+MSI both install per-machine under `Program Files\MarkSI`. The NSIS
+`installerHooks` file removes a legacy per-user installation through its silent
+uninstaller before installing. A WiX fragment adds the `NsisCleanup` component,
+which removes the per-machine NSIS uninstall key and `uninstall.exe` when the
+MSI takes over, leaving one Apps & Features entry. The `.msi` file keeps the
+Windows Installer shell icon; product icons appear on shortcuts and in Apps &
+Features, and changing the file icon would require an EXE bootstrapper.
+Installer art is intentionally text-free in the NSIS header and WiX banner,
+with the wordmark only in the NSIS sidebar and a corner mark in the WiX dialog,
+so wizard text never overlays the brand image.
 
 ## Update checks
 

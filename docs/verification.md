@@ -209,19 +209,34 @@ The E2E suite currently covers:
   restored afterward.
 - Windows installer configuration: one NSIS installer includes English,
   Simplified Chinese, and Traditional Chinese, while the WiX MSI remains a
-  single `en-US` installer. Both use branded NSIS header/sidebar and WiX
-  banner/dialog bitmaps, installer/uninstaller icons, a MarkSI Start-menu
-  folder, and publisher/homepage/copyright metadata. `licenseFile` remains
-  `../LICENSE`.
-- Installer art: `scripts/installer-art.ps1` generates the four 24-bit BMPs
-  from the committed app icon. Unit checks verify the exact 150×57, 164×314,
-  493×58, and 493×312 dimensions, and the 0.69 local build produced both NSIS
-  and MSI bundles. The generated `installer.nsi` references the header,
-  sidebar, installer/uninstaller icons, manufacturer, homepage, copyright, and
-  license page; `main.wxs` references the WiX banner/dialog, `LICENSE.rtf`,
-  product icon, Manufacturer, and ARP about/help/update URLs. The NSIS welcome
-  page was launched and visually confirmed to show the branded sidebar without
-  running the installation.
+  single `en-US` installer. Both use per-machine `Program Files\MarkSI`
+  installation, branded NSIS header/sidebar and WiX banner/dialog bitmaps,
+  installer/uninstaller icons, a MarkSI Start-menu folder, and
+  publisher/homepage/copyright metadata. `licenseFile` remains `../LICENSE`.
+  The NSIS hooks remove a legacy per-user install; the WiX `NsisCleanup`
+  component removes the per-machine NSIS uninstall key and uninstaller.
+- Installer art: `scripts/installer-art.ps1` generates the four 24-bit BMPs at
+  4× size and downsamples them. Unit checks verify the exact 150×57, 164×314,
+  493×58, and 493×312 dimensions. Header/banner art is logo-only; the sidebar
+  keeps a large wordmark without small print; the MSI dialog keeps only a corner
+  mark so welcome/finish text is unobstructed. The 0.70 local build produced
+  both NSIS and MSI bundles, and generated sources reference the branded art,
+  per-machine scope, NSIS migration hook, and WiX cleanup component.
+- Installer upgrade structure: the 0.70 build's `installer.nsi` uses
+  `INSTALLMODE perMachine`, `RequestExecutionLevel admin`, includes
+  `nsis-hooks.nsh`, and invokes `NSIS_HOOK_PREINSTALL`. The generated
+  `main.wxs` references `NsisCleanup`; WiX `dark.exe` decompilation confirms the
+  MSI contains the `NsisCleanup` component with `RemoveFile uninstall.exe`
+  (`On="install"`) and `RemoveRegistryKey` for the NSIS uninstall key, and the
+  component is in an installed feature. The local installers are NSIS 5.68 MiB
+  and MSI 7.41 MiB. The `.msi` file keeps the Windows Installer shell icon;
+  product icons are used for shortcuts and Apps & Features.
+- Manual installer upgrade matrix: 0.69 per-user setup → 0.70 setup, 0.69 MSI
+  → 0.70 MSI, 0.69 setup → 0.70 MSI, and 0.69 MSI → 0.70 setup still require a
+  real elevated install because UAC cannot be automated in this environment.
+  The structural build checks above confirm the intended per-machine migration
+  paths; the final release check must confirm one Apps & Features entry and a
+  clean uninstall after each path.
 - System appearance: emulated dark and light system preferences update the
   resolved theme live, an explicit Dark choice ignores the system preference,
   the five theme options are present, and system mode can be restored.

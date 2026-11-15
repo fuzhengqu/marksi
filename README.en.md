@@ -76,7 +76,10 @@ Official downloads are published on
 tag publishes a GitHub Release with Windows/Linux installers, a combined
 `SHA256SUMS.txt`, and third-party notices**, so the latest version is always
 available without a source build. Milestone versions include curated notes;
-routine versions use generated change notes. You can also run from source:
+routine versions use generated change notes. Windows installers install
+per-machine under `Program Files\MarkSI` and request administrator rights; a
+legacy 0.69 per-user setup.exe is migrated automatically by the 0.70 installer.
+You can also run from source:
 
 ```bash
 npm install

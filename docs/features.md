@@ -514,6 +514,7 @@ save the imported document to choose its final location.
 | GitHub Releases with installers for every product tag | done | M6 |
 | GitHub update check (manual + opt-in automatic) | done | M6 |
 | Windows installer branding and metadata | done | M6 |
+| Per-machine NSIS/MSI upgrade migration | done | M6 |
 | Single NSIS installer with system-language selection | done | M6 |
 | Language-neutral MSI artifact name | done | M6 |
 | Linux deb/rpm/AppImage | done | M6 |
@@ -550,6 +551,15 @@ of silently running an unsigned installer. An opt-in preference checks at most
 once every 24 hours after startup, shows a non-modal notice, and never sends
 document data. Both Windows installers use branded header/sidebar/banner/dialog
 images, publisher/homepage/copyright metadata, and the existing MIT license file.
+
+The NSIS and MSI installers now share the per-machine `Program Files\MarkSI`
+location and administrator requirement. The NSIS installer removes a legacy
+per-user installation through its silent uninstaller before installing; the MSI
+removes the per-machine NSIS uninstall key and uninstaller when it takes over.
+Installer art uses a logo-only header/banner and a corner mark on the MSI dialog
+so wizard text never sits on top of the artwork. The `.msi` file itself keeps
+the Windows Installer shell icon; product icons appear on shortcuts and in Apps
+& Features.
 
 ## Explicit non-goals
 

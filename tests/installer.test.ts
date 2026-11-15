@@ -30,6 +30,36 @@ describe("Windows installer packaging", () => {
     expect(config.bundle.windows.wix?.language ?? "en-US").toBe("en-US");
   });
 
+  it("uses per-machine NSIS installation and legacy migration hooks", () => {
+    const nsis = config.bundle.windows.nsis;
+    expect(nsis.installMode).toBe("perMachine");
+    expect(nsis.installerHooks).toBe("installer/nsis-hooks.nsh");
+    const hooks = readFileSync(
+      new URL("../src-tauri/installer/nsis-hooks.nsh", import.meta.url),
+      "utf8",
+    );
+    expect(hooks).toContain("NSIS_HOOK_PREINSTALL");
+    expect(hooks).toContain("HKCU");
+    expect(hooks).toContain("UninstallString");
+    expect(hooks).toContain("ExecWait");
+  });
+
+  it("cleans a per-machine NSIS install from the MSI", () => {
+    const wix = config.bundle.windows.wix;
+    expect(wix.fragmentPaths).toContain(
+      "installer/wix/nsis-cleanup.wxs",
+    );
+    expect(wix.componentRefs).toContain("NsisCleanup");
+    const fragment = readFileSync(
+      new URL("../src-tauri/installer/wix/nsis-cleanup.wxs", import.meta.url),
+      "utf8",
+    );
+    expect(fragment).toContain('Component Id="NsisCleanup"');
+    expect(fragment).toContain("RemoveRegistryKey");
+    expect(fragment).toContain("uninstall.exe");
+    expect(fragment).toContain("removeOnInstall");
+  });
+
   it("keeps the existing MIT license file", () => {
     expect(config.bundle.licenseFile).toBe("../LICENSE");
   });
