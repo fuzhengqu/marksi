@@ -71,13 +71,6 @@ function New-CenteredFormat {
   return $format
 }
 
-New-BrandBitmap (Join-Path $outDir "nsis-header.bmp") 150 57 {
-  param($g)
-  $accentBrush = New-Brush $accent
-  $g.FillRectangle($accentBrush, 0, 54, 150, 3)
-  @($accentBrush) | ForEach-Object { $_.Dispose() }
-}
-
 New-BrandBitmap (Join-Path $outDir "nsis-sidebar.bmp") 164 314 {
   param($g)
   $accentBrush = New-Brush $accent

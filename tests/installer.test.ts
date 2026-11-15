@@ -72,19 +72,13 @@ describe("Windows installer packaging", () => {
     expect(config.bundle.copyright).toContain("MarkSI contributors");
   });
 
-  it("uses branded NSIS installer art", () => {
+  it("uses branded NSIS sidebar art without header image slots", () => {
     const nsis = config.bundle.windows.nsis;
     expect(nsis.installerIcon).toBe("icons/icon.ico");
     expect(nsis.uninstallerIcon).toBe("icons/icon.ico");
     expect(nsis.startMenuFolder).toBe("MarkSI");
-    expect(bitmapSize(nsis.headerImage)).toEqual({
-      width: 150,
-      height: 57,
-    });
-    expect(bitmapSize(nsis.uninstallerHeaderImage)).toEqual({
-      width: 150,
-      height: 57,
-    });
+    expect(nsis.headerImage).toBeUndefined();
+    expect(nsis.uninstallerHeaderImage).toBeUndefined();
     expect(bitmapSize(nsis.sidebarImage)).toEqual({
       width: 164,
       height: 314,

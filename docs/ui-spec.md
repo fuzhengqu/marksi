@@ -74,11 +74,12 @@ Typography:
   `Program Files\MarkSI` location, request administrator rights, and use branded
   header/sidebar/banner/dialog art with publisher/homepage/copyright metadata;
   the installer license page keeps the repository's MIT `LICENSE` unchanged.
-- Installer art keeps wizard text clear: the NSIS 150×57 header and WiX 493×58
-  banner contain no logo, only a bottom accent rule; the NSIS 164×314 sidebar
-  contains the mark and a large wordmark without small print; the WiX 493×312
-  welcome/finish dialog contains a single logo in the left blank area, with the
-  right side left free for wizard text. The `.msi` file itself keeps the
+- Installer art keeps wizard text clear: NSIS has no header or uninstaller
+  header image slots, so license/install/uninstall titles use the full width.
+  Its 164×314 sidebar contains the mark and a large wordmark without small
+  print. The WiX 493×58 banner has no logo, only a bottom accent rule, and the
+  493×312 welcome/finish dialog contains a single logo in the left blank area,
+  with the right side free for wizard text. The `.msi` file itself keeps the
   Windows Installer shell icon; shortcuts and Apps & Features use the product
   icon.
 - Writing column: 860px by default. The preference range is 680–1100px.

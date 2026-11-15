@@ -425,9 +425,10 @@ which removes the per-machine NSIS uninstall key and `uninstall.exe` when the
 MSI takes over, leaving one Apps & Features entry. The `.msi` file keeps the
 Windows Installer shell icon; product icons appear on shortcuts and in Apps &
 Features, and changing the file icon would require an EXE bootstrapper.
-Installer art is intentionally text-free in the NSIS header and WiX banner,
-with the wordmark only in the NSIS sidebar and a single left-side mark in the
-WiX welcome/finish dialog, so wizard text never overlays the brand image.
+Installer art is intentionally text-free in the WiX banner and uses no NSIS
+header image at all, so installer/uninstaller titles can use the full width.
+The wordmark appears only in the NSIS sidebar, with a single left-side mark in
+the WiX welcome/finish dialog, so wizard text never overlays the brand image.
 
 ## Update checks
 
