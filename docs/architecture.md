@@ -414,7 +414,23 @@ The release job downloads both platform artifacts, verifies one installer of
 each type, combines the checksums, attaches Windows and Linux third-party
 notices, and publishes the six installers, checksum file, and notices. Artifact
 names are normalized from the technical version to the two-part product version
-before checksums are written.
+before checksums are written. Both Windows installers use committed NSIS
+header/sidebar and WiX banner/dialog bitmaps, the installer/uninstaller icon,
+and publisher/homepage/copyright metadata. `bundle.licenseFile` remains the
+repository `LICENSE`; installer branding does not alter the MIT text.
+
+## Update checks
+
+`src/lib/updateCheck.ts` owns the fixed GitHub Releases API request, release
+payload validation, product-version parsing, and the monotonic comparison used
+by the Help menu and the opt-in background check. The request is manual by
+default and never runs on startup unless the user enables automatic checks. An
+enabled check runs after the session is ready, at most once every 24 hours,
+uses a 10-second timeout, records the attempt locally, and fails silently. A
+newer release produces a non-modal notice; opening the update dialog shows the
+current/latest versions and release notes, and the download action opens the
+GitHub release page. The fetcher is injectable so E2E never depends on GitHub
+availability or rate limits. No document content, path, or account data is sent.
 
 ## Third-party notices
 
@@ -642,6 +658,8 @@ IPC failure degrades to a normal launch instead of blocking the editor.
 ## Frontend boundaries
 
 - `src/lib/platform.ts` is the only place that calls Tauri APIs for file IO.
+- `src/lib/updateCheck.ts` owns the fixed GitHub release request, release
+  validation, version comparison, automatic-check interval, and test fetcher.
 - `src-tauri/src/single_instance.rs` owns per-user election, tokenized loopback
   handoff, stale-lock recovery, and path validation before the UI opens a
   forwarded file.

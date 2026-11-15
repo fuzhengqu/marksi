@@ -79,7 +79,17 @@ The E2E suite currently covers:
 - Sidebar workspace actions and absence of the old footer.
 - Compact menu-bar replacement, category bar, blank-click close, File contents,
   Quit placement, and absent menu footer.
-- About dialog close behavior and display of the product version.
+- About dialog close behavior, version display, GitHub project and issue links,
+  and third-party notices.
+- Update checks: Help queries an injected GitHub release payload and shows
+  available, current, and error states; the download action opens the release
+  URL through the injected external opener. The opt-in automatic check shows a
+  non-modal notice, opens the dialog, and remembers a dismissed version. The
+  default remains manual-only. The real GitHub Releases endpoint returned
+  `200` with `Access-Control-Allow-Origin: *` during pre-release verification.
+- Installer build: `tauri build --bundles nsis,msi` produced a 5.68 MiB NSIS
+  setup and a 7.41 MiB MSI locally; the generated installer sources contained
+  the branded art, metadata, and unchanged MIT license page.
 - New-document transition, focus, and toast.
 - New-document save dialog default names from the first H1 and the untitled
   fallback. The test suite replaces only the native dialog boundary so the
@@ -199,7 +209,19 @@ The E2E suite currently covers:
   restored afterward.
 - Windows installer configuration: one NSIS installer includes English,
   Simplified Chinese, and Traditional Chinese, while the WiX MSI remains a
-  single `en-US` installer.
+  single `en-US` installer. Both use branded NSIS header/sidebar and WiX
+  banner/dialog bitmaps, installer/uninstaller icons, a MarkSI Start-menu
+  folder, and publisher/homepage/copyright metadata. `licenseFile` remains
+  `../LICENSE`.
+- Installer art: `scripts/installer-art.ps1` generates the four 24-bit BMPs
+  from the committed app icon. Unit checks verify the exact 150×57, 164×314,
+  493×58, and 493×312 dimensions, and the 0.69 local build produced both NSIS
+  and MSI bundles. The generated `installer.nsi` references the header,
+  sidebar, installer/uninstaller icons, manufacturer, homepage, copyright, and
+  license page; `main.wxs` references the WiX banner/dialog, `LICENSE.rtf`,
+  product icon, Manufacturer, and ARP about/help/update URLs. The NSIS welcome
+  page was launched and visually confirmed to show the branded sidebar without
+  running the installation.
 - System appearance: emulated dark and light system preferences update the
   resolved theme live, an explicit Dark choice ignores the system preference,
   the five theme options are present, and system mode can be restored.

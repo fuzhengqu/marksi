@@ -54,7 +54,8 @@ images, math, and Mermaid diagrams — with your documents kept on your machine.
   sepia/high-contrast appearance, local CSS themes, customizable application
   shortcuts, advanced JSON settings, multiple document windows, single-instance
   file forwarding, fullscreen and always-on-top, keyboard-accessible dialogs and
-  sidebar, an optional native title bar, and interface zoom.
+  sidebar, an optional native title bar, interface zoom, and GitHub update
+  checks with project links.
 - **Privacy**: no account and no telemetry; documents stay on your machine; raw
   HTML is escaped by default, and an opt-in strict-sanitized mode keeps safe
   structural tags while removing scripts, styles, images, forms, and embedded

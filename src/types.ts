@@ -177,6 +177,7 @@ export interface AppSettings {
   textDirection: "auto" | "ltr" | "rtl";
   rememberWindowFrame: boolean;
   restoreSession: boolean;
+  checkUpdatesAutomatically: boolean;
   customTheme: string;
   shortcuts: Record<ShortcutId, string>;
 }

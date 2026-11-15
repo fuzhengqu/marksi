@@ -360,6 +360,8 @@ async function resetBase({ clearContent = true } = {}) {
     dev.getState().setSettingsOpen(false);
     dev.closeExport?.();
     dev.closePandoc?.();
+    document.querySelector(".update-dialog .modal-close")?.click();
+    document.querySelector(".update-notice-close")?.click();
     dev.getState().setQuickOpen(false);
     dev.getState().setTheme("light");
     dev.getState().setViewMode("preview");
@@ -591,47 +593,289 @@ async function main() {
     assert(!state.footer, "menu footer must be gone", state);
   });
 
-  await test("About dialog has only its top-right close button", async () => {
-    await clickSelector(".menu-bar-item:nth-child(5)");
-    await clickSelector(".menu-dropdown .menu-item");
-    await waitFor('document.querySelector(".about-dialog")');
-    const state = await evaluate(`({
-      buttons: Array.from(document.querySelectorAll(".about-dialog button")).map((node) => node.textContent?.trim()),
-      bottom: Boolean(document.querySelector(".about-button")),
-      version: document.querySelector(".about-version")?.textContent?.trim() ?? null
-    })`);
-    assert(state.buttons.length === 1, "about should have one close control", state);
-    assert(!state.bottom, "about footer button must be removed", state);
-    assert(
-      state.version?.includes(productVersion),
-      `About should show version ${productVersion}`,
-      state,
-    );
-    await clickSelector(".about-notices summary");
-    await sleep(180);
-    const notices = await evaluate(`(() => {
-      const details = document.querySelector(".about-notices");
-      const text = details?.querySelector("pre")?.textContent ?? "";
-      return {
-        open: details?.hasAttribute("open") ?? false,
-        length: text.length,
-        npm: text.includes("## npm dependencies"),
-        rust: text.includes("## Rust dependencies"),
-        react: text.includes("| react |"),
-        license: text.includes("Permission is hereby granted")
-      };
+  await test("About dialog shows project links and third-party notices", async () => {
+    await resetBase();
+    await evaluate(`(() => {
+      window.__openedLinks = [];
+      window.__MARKSI_DEV__.setExternalLinkHandler((url) => {
+        window.__openedLinks.push(url);
+        return Promise.resolve();
+      });
     })()`);
-    assert(notices.open, "third-party notices should expand", notices);
-    assert(notices.length > 100_000, "notices text is incomplete", {
-      length: notices.length,
-    });
-    assert(
-      notices.npm && notices.rust && notices.react && notices.license,
-      "notices should include package tables and license texts",
-      notices,
-    );
-    await clickSelector(".about-dialog .modal-close");
-    await waitFor('!document.querySelector(".about-dialog")');
+    try {
+      await clickSelector(".menu-button");
+      await clickSelector(".menu-bar-item:nth-child(5)");
+      const opened = await evaluate(`(() => {
+        const item = Array.from(document.querySelectorAll(".menu-dropdown .menu-item"))
+          .find((node) => node.textContent?.includes("关于 MarkSI"));
+        item?.click();
+        return Boolean(item);
+      })()`);
+      assert(opened, "About menu item is missing");
+      await waitFor('document.querySelector(".about-dialog")');
+      const state = await evaluate(`({
+        links: Array.from(document.querySelectorAll(".about-links button"))
+          .map((node) => node.textContent?.trim()),
+        close: Boolean(document.querySelector(".about-dialog .modal-close")),
+        bottom: Boolean(document.querySelector(".about-button")),
+        version: document.querySelector(".about-version")?.textContent?.trim() ?? null
+      })`);
+      assert(state.close, "about should keep its top-right close control", state);
+      assert(!state.bottom, "about footer button must be removed", state);
+      assert(
+        state.links.includes("GitHub 项目") &&
+          state.links.includes("报告问题"),
+        "about should show GitHub and issue links",
+        state,
+      );
+      assert(
+        state.version?.includes(productVersion),
+        `About should show version ${productVersion}`,
+        state,
+      );
+
+      await evaluate(`(() => {
+        const button = Array.from(document.querySelectorAll(".about-links button"))
+          .find((node) => node.textContent?.includes("GitHub 项目"));
+        button?.click();
+        return Boolean(button);
+      })()`);
+      await waitFor("window.__openedLinks.length === 1", 10_000);
+      assert(
+        (await evaluate("window.__openedLinks[0]")) ===
+          "https://github.com/fuzhengqu/marksi",
+        "about GitHub link is wrong",
+      );
+      await evaluate(`(() => {
+        const button = Array.from(document.querySelectorAll(".about-links button"))
+          .find((node) => node.textContent?.includes("报告问题"));
+        button?.click();
+        return Boolean(button);
+      })()`);
+      await waitFor("window.__openedLinks.length === 2", 10_000);
+      assert(
+        (await evaluate("window.__openedLinks[1]")) ===
+          "https://github.com/fuzhengqu/marksi/issues",
+        "about issue link is wrong",
+      );
+
+      await clickSelector(".about-notices summary");
+      await sleep(180);
+      const notices = await evaluate(`(() => {
+        const details = document.querySelector(".about-notices");
+        const text = details?.querySelector("pre")?.textContent ?? "";
+        return {
+          open: details?.hasAttribute("open") ?? false,
+          length: text.length,
+          npm: text.includes("## npm dependencies"),
+          rust: text.includes("## Rust dependencies"),
+          react: text.includes("| react |"),
+          license: text.includes("Permission is hereby granted")
+        };
+      })()`);
+      assert(notices.open, "third-party notices should expand", notices);
+      assert(notices.length > 100_000, "notices text is incomplete", {
+        length: notices.length,
+      });
+      assert(
+        notices.npm && notices.rust && notices.react && notices.license,
+        "notices should include package tables and license texts",
+        notices,
+      );
+      await clickSelector(".about-dialog .modal-close");
+      await waitFor('!document.querySelector(".about-dialog")');
+    } finally {
+      await evaluate(`(() => {
+        window.__MARKSI_DEV__.setExternalLinkHandler(null);
+        delete window.__openedLinks;
+      })()`).catch(() => {});
+      await resetBase();
+    }
+  });
+
+  await test("Help checks GitHub releases and shows update states", async () => {
+    await resetBase();
+    await evaluate(`(() => {
+      window.__openedLinks = [];
+      window.__MARKSI_DEV__.setExternalLinkHandler((url) => {
+        window.__openedLinks.push(url);
+        return Promise.resolve();
+      });
+      window.__MARKSI_DEV__.setReleaseFetcher(async () => ({
+        tag: "v0.99",
+        name: "MarkSI 0.99",
+        url: "https://github.com/fuzhengqu/marksi/releases/tag/v0.99",
+        notes: "Highlights\\n- Test release",
+        publishedAt: "2026-11-15T00:00:00Z"
+      }));
+    })()`);
+
+    async function openHelpItem(label) {
+      await clickSelector(".menu-button");
+      await clickSelector(".menu-bar-item:nth-child(5)");
+      const opened = await evaluate(`(() => {
+        const item = Array.from(document.querySelectorAll(".menu-dropdown .menu-item"))
+          .find((node) => node.textContent?.includes(${JSON.stringify(label)}));
+        item?.click();
+        return Boolean(item);
+      })()`);
+      assert(opened, `Help menu item is missing: ${label}`);
+    }
+
+    try {
+      await openHelpItem("检查更新");
+      await waitFor('document.querySelector(".update-dialog")');
+      await waitFor('document.querySelector(".update-status-available")', 10_000);
+      const available = await evaluate(`({
+        title: document.querySelector("#update-title")?.textContent ?? null,
+        status: document.querySelector(".update-status-available")?.textContent ?? null,
+        meta: document.querySelector(".update-meta")?.textContent ?? null,
+        notes: document.querySelector(".update-notes")?.textContent ?? null,
+        actions: Array.from(document.querySelectorAll(".update-actions .button"))
+          .map((node) => node.textContent?.trim())
+      })`);
+      assert(
+        available.title === "检查更新",
+        "update dialog title is missing",
+        available,
+      );
+      assert(
+        available.status?.includes("0.99") &&
+          available.meta?.includes(productVersion) &&
+          available.notes?.includes("Test release"),
+        "available update details are incomplete",
+        available,
+      );
+      assert(
+        available.actions.includes("前往 GitHub 下载"),
+        "update download action is missing",
+        available,
+      );
+      await evaluate(`(() => {
+        const button = Array.from(document.querySelectorAll(".update-actions .button"))
+          .find((node) => node.textContent?.includes("前往 GitHub 下载"));
+        button?.click();
+        return Boolean(button);
+      })()`);
+      await waitFor("window.__openedLinks.length === 1", 10_000);
+      assert(
+        (await evaluate("window.__openedLinks[0]")) ===
+          "https://github.com/fuzhengqu/marksi/releases/tag/v0.99",
+        "update download link is wrong",
+      );
+      await clickSelector(".update-dialog .modal-close");
+      await waitFor('!document.querySelector(".update-dialog")');
+
+      await evaluate(`window.__MARKSI_DEV__.setReleaseFetcher(async () => ({
+        tag: "v0.68",
+        name: "MarkSI 0.68",
+        url: "https://github.com/fuzhengqu/marksi/releases/tag/v0.68",
+        notes: "",
+        publishedAt: null
+      }))`);
+      await openHelpItem("检查更新");
+      await waitFor('document.querySelector(".update-status-current")', 10_000);
+      const current = await evaluate(
+        'document.querySelector(".update-status-current")?.textContent ?? null',
+      );
+      assert(
+        current?.includes("已是最新版本"),
+        "current update state is missing",
+        current,
+      );
+      await clickSelector(".update-dialog .modal-close");
+      await waitFor('!document.querySelector(".update-dialog")');
+
+      await evaluate(
+        'window.__MARKSI_DEV__.setReleaseFetcher(async () => { throw new Error("offline"); })',
+      );
+      await openHelpItem("检查更新");
+      await waitFor('document.querySelector(".update-status-error")', 10_000);
+      const error = await evaluate(
+        'document.querySelector(".update-status-error")?.textContent ?? null',
+      );
+      assert(
+        error?.includes("无法检查更新"),
+        "update error state is missing",
+        error,
+      );
+      await clickSelector(".update-dialog .modal-close");
+      await waitFor('!document.querySelector(".update-dialog")');
+    } finally {
+      await evaluate(`(() => {
+        window.__MARKSI_DEV__.setReleaseFetcher(null);
+        window.__MARKSI_DEV__.setExternalLinkHandler(null);
+        delete window.__openedLinks;
+      })()`).catch(() => {});
+      await resetBase();
+    }
+  });
+
+  await test("automatic update check shows a non-modal notice", async () => {
+    await resetBase();
+    await evaluate(`(() => {
+      localStorage.removeItem("marksi-last-update-check");
+      localStorage.removeItem("marksi-dismissed-update");
+      window.__MARKSI_DEV__.setReleaseFetcher(async () => ({
+        tag: "v0.99",
+        name: "MarkSI 0.99",
+        url: "https://github.com/fuzhengqu/marksi/releases/tag/v0.99",
+        notes: "",
+        publishedAt: null
+      }));
+      window.__MARKSI_DEV__.setSettings({
+        checkUpdatesAutomatically: true
+      });
+    })()`);
+    try {
+      await waitFor('document.querySelector(".update-notice")', 15_000);
+      const notice = await evaluate(`({
+        text: document.querySelector(".update-notice")?.textContent ?? "",
+        dialog: Boolean(document.querySelector(".update-dialog")),
+        setting: window.__MARKSI_DEV__.getState().settings.checkUpdatesAutomatically
+      })`);
+      assert(
+        notice.setting === true &&
+          notice.text.includes("0.99") &&
+          notice.dialog === false,
+        "automatic update check should show a non-modal notice",
+        notice,
+      );
+      await clickSelector(".update-notice .button-primary");
+      await waitFor(
+        'document.querySelector(".update-dialog .update-status-available")',
+        10_000,
+      );
+      await clickSelector(".update-dialog .modal-close");
+      await waitFor('!document.querySelector(".update-dialog")');
+
+      await evaluate('localStorage.removeItem("marksi-last-update-check")');
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ checkUpdatesAutomatically: false })',
+      );
+      await evaluate(
+        'window.__MARKSI_DEV__.setSettings({ checkUpdatesAutomatically: true })',
+      );
+      await waitFor('document.querySelector(".update-notice")', 15_000);
+      await clickSelector(".update-notice-close");
+      await waitFor('!document.querySelector(".update-notice")');
+      const dismissed = await evaluate(
+        'localStorage.getItem("marksi-dismissed-update")',
+      );
+      assert(
+        dismissed === "v0.99",
+        "dismissing an update should remember the version",
+        dismissed,
+      );
+    } finally {
+      await evaluate(`(() => {
+        document.querySelector(".update-notice-close")?.click();
+        window.__MARKSI_DEV__.setReleaseFetcher(null);
+        localStorage.removeItem("marksi-last-update-check");
+        localStorage.removeItem("marksi-dismissed-update");
+      })()`).catch(() => {});
+      await resetBase();
+    }
   });
 
   await test("new document focuses a blank preview", async () => {

@@ -12,6 +12,8 @@ import { Sidebar } from "./components/Sidebar";
 import { StatusBar } from "./components/StatusBar";
 import { TitleBar } from "./components/TitleBar";
 import { Toast } from "./components/Toast";
+import { UpdateDialog } from "./components/UpdateDialog";
+import { UpdateNotice } from "./components/UpdateNotice";
 
 import {
   dispatchEditorCommand,
@@ -111,6 +113,16 @@ import {
 import { setCodeCopyHandler } from "./lib/codeCopy";
 import { setExternalLinkHandler } from "./lib/linkActions";
 import {
+  AUTO_UPDATE_DELAY_MS,
+  checkForUpdate,
+  dismissedUpdateVersion,
+  dismissUpdate,
+  markUpdateChecked,
+  setReleaseFetcher,
+  shouldCheckForUpdates,
+  type ReleaseInfo,
+} from "./lib/updateCheck";
+import {
   clearWindowFrame,
   fitWindowFrame,
   loadWindowFrame,
@@ -194,6 +206,10 @@ export default function App() {
   const [pandocOpen, setPandocOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [encodingOpen, setEncodingOpen] = useState(false);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [availableUpdate, setAvailableUpdate] = useState<ReleaseInfo | null>(
+    null,
+  );
   const [sessionReady, setSessionReady] = useState(false);
   const [themeRevision, setThemeRevision] = useState(0);
   const [forceLargePreview, setForceLargePreview] = useState(false);
@@ -489,6 +505,36 @@ export default function App() {
       setSessionReady(true);
     });
   }, [applySavedSession, draftToRecover, handleOpenPath]);
+
+  useEffect(() => {
+    if (
+      !isTauri() ||
+      !MAIN_WINDOW ||
+      !sessionReady ||
+      !settings.checkUpdatesAutomatically ||
+      !shouldCheckForUpdates()
+    ) {
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void checkForUpdate().then((result) => {
+        markUpdateChecked();
+        if (
+          cancelled ||
+          result.status !== "available" ||
+          dismissedUpdateVersion() === result.release.tag
+        ) {
+          return;
+        }
+        setAvailableUpdate(result.release);
+      });
+    }, AUTO_UPDATE_DELAY_MS);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [sessionReady, settings.checkUpdatesAutomatically]);
 
   useEffect(() => {
     if (!isTauri() || !sessionReady) {
@@ -860,6 +906,11 @@ export default function App() {
 
   const handleOpenPandoc = useCallback(() => {
     setPandocOpen(true);
+  }, []);
+
+  const handleCheckForUpdates = useCallback(() => {
+    setAvailableUpdate(null);
+    setUpdateDialogOpen(true);
   }, []);
 
   const handlePandocImport = useCallback(async () => {
@@ -1852,6 +1903,7 @@ export default function App() {
       gotoLine: (line: number) => useAppStore.getState().requestGotoLine(line),
       setExternalLinkHandler,
       setCodeCopyHandler,
+      setReleaseFetcher,
       toggleView: handleToggleView,
       setViewMode: (mode: "source" | "preview" | "reading") =>
         useAppStore.getState().setViewMode(mode),
@@ -2085,6 +2137,7 @@ export default function App() {
           }
         }}
         onOpenSettings={() => useAppStore.getState().setSettingsOpen(true)}
+        onCheckForUpdates={handleCheckForUpdates}
       />
       <QuickOpen onOpen={(path) => void handleOpenPath(path)} />
       <SettingsDialog />
@@ -2117,6 +2170,23 @@ export default function App() {
           onDiscard={discardDraft}
         />
       ) : null}
+      {availableUpdate ? (
+        <UpdateNotice
+          release={availableUpdate}
+          onView={() => {
+            setAvailableUpdate(null);
+            setUpdateDialogOpen(true);
+          }}
+          onDismiss={() => {
+            dismissUpdate(availableUpdate.tag);
+            setAvailableUpdate(null);
+          }}
+        />
+      ) : null}
+      <UpdateDialog
+        open={updateDialogOpen}
+        onClose={() => setUpdateDialogOpen(false)}
+      />
       <Toast />
     </div>
   );

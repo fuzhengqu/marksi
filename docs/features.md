@@ -512,6 +512,8 @@ save the imported document to choose its final location.
 | Windows 11 installer (NSIS/MSI) | done | M6 |
 | Monotonic versionCode and two-part release tags | done | M6 |
 | GitHub Releases with installers for every product tag | done | M6 |
+| GitHub update check (manual + opt-in automatic) | done | M6 |
+| Windows installer branding and metadata | done | M6 |
 | Single NSIS installer with system-language selection | done | M6 |
 | Language-neutral MSI artifact name | done | M6 |
 | Linux deb/rpm/AppImage | done | M6 |
@@ -541,6 +543,13 @@ supported Markdown/text path, it forwards that path to the running main window
 and exits before creating a window. Without a path it only raises and focuses
 the existing window. The main window applies the normal unsaved-change guard
 before opening forwarded files.
+
+Help > Check for updates queries the fixed GitHub Releases API and compares the
+latest product tag with the running version. It opens the release page instead
+of silently running an unsigned installer. An opt-in preference checks at most
+once every 24 hours after startup, shows a non-modal notice, and never sends
+document data. Both Windows installers use branded header/sidebar/banner/dialog
+images, publisher/homepage/copyright metadata, and the existing MIT license file.
 
 ## Explicit non-goals
 

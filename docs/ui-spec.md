@@ -70,7 +70,9 @@ Typography:
   MSI is the enterprise deployment package; its WiX installer UI is `en-US`,
   which does not limit the application's three-language interface. The MSI
   filename is language-neutral (`MarkSI_<version>_x64.msi`), so it does not
-  imply an English-only application.
+  imply an English-only application. Both installers use branded header,
+  sidebar/banner, and dialog art with publisher/homepage/copyright metadata;
+  the installer license page keeps the repository's MIT `LICENSE` unchanged.
 - Writing column: 860px by default. The preference range is 680–1100px.
 - Interface zoom: 100% by default. The preference range is 80%–160% in 10%
   steps and scales the whole application surface.
@@ -115,7 +117,9 @@ ease-out; honor `prefers-reduced-motion`.
   switches the dropdown while it is open. Clicking blank space closes the bar
   and restores the hamburger. Escape also closes it. Export, Preferences, and
   Quit MarkSI are File items; Edit contains the copy actions. The menu has no
-  per-dropdown footer. About uses only its top-right close button.
+  per-dropdown footer. Help contains Check for updates and About MarkSI. About
+  keeps only its top-right close button, shows the GitHub project and issue
+  links, and performs no network request when opened.
 - Native title bar is off by default. When enabled, the custom minimize,
   maximize, and close controls disappear, the custom drag region is removed, and
   the operating system frame supplies those controls and Snap Layouts where
@@ -201,6 +205,12 @@ ease-out; honor `prefers-reduced-motion`.
 - About includes a collapsed Third-party notices section. Expanding it shows the
   generated dependency inventory and license texts in a scrollable monospace
   panel; opening About performs no network request.
+- Preferences > Updates can enable automatic update checks. When enabled, the
+  app checks the fixed GitHub Releases API at most once every 24 hours after
+  startup, shows a non-modal notice, and never sends document data. Help >
+  Check for updates is always available and opens a compact dialog with the
+  current/latest version, release notes, and a GitHub download action. Update
+  checks are disabled by default.
 - Unsaved changes are always visible via a dot next to the title.
 - The initial empty untitled document uses the normal editor surface; typing,
   opening a file, or choosing New document replaces the empty state directly.

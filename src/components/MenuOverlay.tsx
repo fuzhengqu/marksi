@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import type { EditorCommand } from "../editor/format";
 import { useT } from "../i18n";
+import { openExternalLink } from "../lib/linkActions";
 import { closeApplication, getAppVersion } from "../lib/platform";
 import { displayVersion } from "../lib/version";
 import { ZOOM_MAX, ZOOM_MIN } from "../lib/zoom";
@@ -94,6 +95,7 @@ interface MenuOverlayProps {
   onQuickOpen: () => void;
   onSearchWorkspace: () => void;
   onOpenSettings: () => void;
+  onCheckForUpdates: () => void;
 }
 
 export function MenuOverlay({
@@ -123,6 +125,7 @@ export function MenuOverlay({
   onQuickOpen,
   onSearchWorkspace,
   onOpenSettings,
+  onCheckForUpdates,
 }: MenuOverlayProps) {
   const t = useT();
   const open = useAppStore((state) => state.menuOpen);
@@ -550,6 +553,14 @@ export function MenuOverlay({
           {activeSection === "help" ? (
             <>
               <MenuItem
+                icon={<RefreshCw size={16} strokeWidth={1.8} />}
+                label={t("Check for updates")}
+                onClick={() => {
+                  setOpen(false);
+                  onCheckForUpdates();
+                }}
+              />
+              <MenuItem
                 icon={<Info size={16} strokeWidth={1.8} />}
                 label={t("About MarkSI")}
                 onClick={() => {
@@ -645,6 +656,17 @@ function AboutDialog({ open, onClose }: AboutDialogProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
+  function openAboutLink(url: string): void {
+    void openExternalLink(url).catch((error) => {
+      useAppStore.getState().showToast(
+        t("Could not open link: {error}", {
+          error: error instanceof Error ? error.message : String(error),
+        }),
+        "error",
+      );
+    });
+  }
+
   if (!open) {
     return null;
   }
@@ -681,6 +703,28 @@ function AboutDialog({ open, onClose }: AboutDialogProps) {
           <span>{t("MIT license")}</span>
           <span>{t("No account")}</span>
           <span>{t("No telemetry")}</span>
+        </div>
+        <div className="about-links">
+          <button
+            className="button button-quiet"
+            type="button"
+            onClick={() =>
+              openAboutLink("https://github.com/fuzhengqu/marksi")
+            }
+          >
+            <Link2 size={14} strokeWidth={1.8} />
+            {t("GitHub project")}
+          </button>
+          <button
+            className="button button-quiet"
+            type="button"
+            onClick={() =>
+              openAboutLink("https://github.com/fuzhengqu/marksi/issues")
+            }
+          >
+            <Link2 size={14} strokeWidth={1.8} />
+            {t("Report an issue")}
+          </button>
         </div>
         <details className="about-notices">
           <summary>{t("Third-party notices")}</summary>

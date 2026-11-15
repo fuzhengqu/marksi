@@ -157,6 +157,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   textDirection: "auto",
   rememberWindowFrame: true,
   restoreSession: true,
+  checkUpdatesAutomatically: false,
   customTheme: "",
   shortcuts: { ...DEFAULT_SHORTCUTS },
 };
@@ -540,6 +541,10 @@ export const useAppStore = create<AppStore>()(
               typeof saved.settings?.restoreSession === "boolean"
                 ? saved.settings.restoreSession
                 : true,
+            checkUpdatesAutomatically:
+              typeof saved.settings?.checkUpdatesAutomatically === "boolean"
+                ? saved.settings.checkUpdatesAutomatically
+                : false,
             customTheme:
               typeof saved.settings?.customTheme === "string" &&
               saved.settings.customTheme.length <= 128 &&

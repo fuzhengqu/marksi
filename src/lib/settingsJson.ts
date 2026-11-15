@@ -23,6 +23,7 @@ const BOOLEAN_KEYS = [
   "nativeTitleBar",
   "rememberWindowFrame",
   "restoreSession",
+  "checkUpdatesAutomatically",
 ] as const;
 
 const AUTO_SAVE_DELAYS = [800, 1500, 3000, 5000];
@@ -57,6 +58,7 @@ const SETTING_KEYS = new Set([
   "textDirection",
   "rememberWindowFrame",
   "restoreSession",
+  "checkUpdatesAutomatically",
   "customTheme",
   "shortcuts",
 ]);

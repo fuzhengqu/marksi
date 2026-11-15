@@ -1,11 +1,19 @@
 {
   "name": "marksi",
   "private": true,
-  "version": "0.68.0",
-  "versionCode": 68,
+  "version": "0.69.0",
+  "versionCode": 69,
   "description": "MarkSI - a focused Markdown studio for Windows and Linux",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fuzhengqu/marksi.git"
+  },
+  "homepage": "https://github.com/fuzhengqu/marksi",
+  "bugs": {
+    "url": "https://github.com/fuzhengqu/marksi/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

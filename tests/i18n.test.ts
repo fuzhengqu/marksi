@@ -100,6 +100,14 @@ describe("translate", () => {
     expect(translate("zh-Hant", "Mermaid source")).toBe("Mermaid 原始碼");
     expect(translate("zh-Hans", "Render raw HTML")).toBe("渲染原始 HTML");
     expect(translate("zh-Hant", "Render raw HTML")).toBe("渲染原始 HTML");
+    expect(translate("zh-Hans", "Check for updates")).toBe("检查更新");
+    expect(translate("zh-Hant", "Check for updates")).toBe("檢查更新");
+    expect(translate("zh-Hans", "Check for updates automatically")).toBe(
+      "自动检查更新",
+    );
+    expect(translate("zh-Hant", "Check for updates automatically")).toBe(
+      "自動檢查更新",
+    );
   });
 
   it("returns the source label for English", () => {

@@ -7,6 +7,7 @@ import {
   Image as ImageIcon,
   Keyboard,
   Palette,
+  RefreshCw,
   RotateCcw,
   Save,
   Settings,
@@ -822,6 +823,35 @@ export function SettingsDialog() {
             <p className="settings-note">
               {t(
                 "Unsaved drafts are always kept locally for crash recovery. MarkSI never sends document content anywhere.",
+              )}
+            </p>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-heading">
+              <RefreshCw size={15} strokeWidth={1.8} />
+              <span>{t("Updates")}</span>
+            </div>
+            <div className="settings-row">
+              <div className="settings-copy">
+                <span>{t("Check for updates automatically")}</span>
+                <small>
+                  {t(
+                    "Check GitHub at most once every 24 hours. MarkSI never sends document data.",
+                  )}
+                </small>
+              </div>
+              <Toggle
+                label={t("Check for updates automatically")}
+                checked={settings.checkUpdatesAutomatically}
+                onChange={(value) =>
+                  update("checkUpdatesAutomatically", value)
+                }
+              />
+            </div>
+            <p className="settings-note">
+              {t(
+                "You can also check manually from Help > Check for updates.",
               )}
             </p>
           </section>

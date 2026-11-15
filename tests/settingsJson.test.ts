@@ -25,6 +25,7 @@ describe("advanced settings JSON", () => {
         loadRemoteImages: true,
         nativeTitleBar: true,
         renderRawHtml: true,
+        checkUpdatesAutomatically: true,
         textDirection: "rtl",
         theme: "dark",
       }),
@@ -39,6 +40,7 @@ describe("advanced settings JSON", () => {
     expect(result.settings.loadRemoteImages).toBe(true);
     expect(result.settings.nativeTitleBar).toBe(true);
     expect(result.settings.renderRawHtml).toBe(true);
+    expect(result.settings.checkUpdatesAutomatically).toBe(true);
     expect(result.settings.textDirection).toBe("rtl");
     expect(result.warnings).toContain("Unknown setting ignored: theme");
   });
