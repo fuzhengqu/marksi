@@ -217,11 +217,13 @@ The E2E suite currently covers:
   component removes the per-machine NSIS uninstall key and uninstaller.
 - Installer art: `scripts/installer-art.ps1` generates the four 24-bit BMPs at
   4× size and downsamples them. Unit checks verify the exact 150×57, 164×314,
-  493×58, and 493×312 dimensions. Header/banner art is logo-only; the sidebar
-  keeps a large wordmark without small print; the MSI dialog keeps only a corner
-  mark so welcome/finish text is unobstructed. The 0.70 local build produced
-  both NSIS and MSI bundles, and generated sources reference the branded art,
-  per-machine scope, NSIS migration hook, and WiX cleanup component.
+  493×58, and 493×312 dimensions. The NSIS header and WiX banner contain no
+  logo, only the bottom accent rule; the sidebar keeps a large wordmark without
+  small print; the MSI welcome/finish dialog places one mark in the left blank
+  area and leaves the right side free for wizard text. The 0.71 local build
+  produced both NSIS and MSI bundles, and generated sources reference the
+  branded art, per-machine scope, NSIS migration hook, and WiX cleanup
+  component.
 - Installer upgrade structure: the 0.70 build's `installer.nsi` uses
   `INSTALLMODE perMachine`, `RequestExecutionLevel admin`, includes
   `nsis-hooks.nsh`, and invokes `NSIS_HOOK_PREINSTALL`. The generated

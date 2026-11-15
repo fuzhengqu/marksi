@@ -74,11 +74,8 @@ function New-CenteredFormat {
 New-BrandBitmap (Join-Path $outDir "nsis-header.bmp") 150 57 {
   param($g)
   $accentBrush = New-Brush $accent
-  $accentSoftBrush = New-Brush $accentSoft
-  $g.FillRectangle($accentSoftBrush, 8, 8, 41, 41)
-  $g.DrawImage($icon, [System.Drawing.Rectangle]::new(10, 10, 37, 37))
   $g.FillRectangle($accentBrush, 0, 54, 150, 3)
-  @($accentBrush, $accentSoftBrush) | ForEach-Object { $_.Dispose() }
+  @($accentBrush) | ForEach-Object { $_.Dispose() }
 }
 
 New-BrandBitmap (Join-Path $outDir "nsis-sidebar.bmp") 164 314 {
@@ -99,19 +96,16 @@ New-BrandBitmap (Join-Path $outDir "nsis-sidebar.bmp") 164 314 {
 New-BrandBitmap (Join-Path $outDir "wix-banner.bmp") 493 58 {
   param($g)
   $accentBrush = New-Brush $accent
-  $accentSoftBrush = New-Brush $accentSoft
-  $g.FillRectangle($accentSoftBrush, 445, 11, 36, 36)
-  $g.DrawImage($icon, [System.Drawing.Rectangle]::new(447, 13, 32, 32))
   $g.FillRectangle($accentBrush, 0, 55, 493, 3)
-  @($accentBrush, $accentSoftBrush) | ForEach-Object { $_.Dispose() }
+  @($accentBrush) | ForEach-Object { $_.Dispose() }
 }
 
 New-BrandBitmap (Join-Path $outDir "wix-dialog.bmp") 493 312 {
   param($g)
   $accentBrush = New-Brush $accent
   $accentSoftBrush = New-Brush $accentSoft
-  $g.FillEllipse($accentSoftBrush, 416, 10, 64, 64)
-  $g.DrawImage($icon, [System.Drawing.Rectangle]::new(424, 18, 48, 48))
+  $g.FillEllipse($accentSoftBrush, 16, 108, 88, 88)
+  $g.DrawImage($icon, [System.Drawing.Rectangle]::new(24, 116, 72, 72))
   $g.FillRectangle($accentBrush, 0, 309, 493, 3)
   @($accentBrush, $accentSoftBrush) | ForEach-Object { $_.Dispose() }
 }

@@ -1,8 +1,8 @@
 {
   "name": "marksi",
   "private": true,
-  "version": "0.70.0",
-  "versionCode": 70,
+  "version": "0.71.0",
+  "versionCode": 71,
   "description": "MarkSI - a focused Markdown studio for Windows and Linux",
   "type": "module",
   "license": "MIT",
